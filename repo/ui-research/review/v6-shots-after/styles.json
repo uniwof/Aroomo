@@ -1,0 +1,142 @@
+{
+ "light-1440": {
+  "theme": "light",
+  "head": "#ed8936",
+  "ink": "#151412",
+  "btn": {
+   "background-color": "rgb(237, 137, 54)",
+   "color": "rgb(21, 20, 18)",
+   "box-shadow": "rgb(21, 20, 18) 4px 4px 0px 0px",
+   "rect": [
+    12,
+    66,
+    262,
+    52
+   ]
+  },
+  "logo": {
+   "color": "rgb(21, 20, 18)",
+   "width": "40px",
+   "rect": [
+    18,
+    14,
+    40,
+    40
+   ]
+  },
+  "logoPath": "rgb(21, 20, 18)",
+  "fav": [
+   "/favicon.svg|image/svg+xml",
+   "/favicon-32.png|image/png",
+   "/favicon-16.png|image/png",
+   "/favicon-48.png|image/png"
+  ],
+  "fonts": true
+ },
+ "light": {
+  "theme": "light",
+  "head": "#ed8936",
+  "ink": "#151412",
+  "btn": {
+   "background-color": "rgb(237, 137, 54)",
+   "color": "rgb(21, 20, 18)",
+   "box-shadow": "rgb(21, 20, 18) 4px 4px 0px 0px",
+   "rect": [
+    12,
+    74,
+    294,
+    52
+   ]
+  },
+  "logo": {
+   "color": "rgb(21, 20, 18)",
+   "width": "40px",
+   "rect": [
+    18,
+    18,
+    40,
+    40
+   ]
+  },
+  "logoPath": "rgb(21, 20, 18)",
+  "fav": [
+   "/favicon.svg|image/svg+xml",
+   "/favicon-32.png|image/png",
+   "/favicon-16.png|image/png",
+   "/favicon-48.png|image/png"
+  ],
+  "fonts": true,
+  "px_btn": "#ed8936",
+  "px_logo_center": "#151412"
+ },
+ "dark-1440": {
+  "theme": "dark",
+  "head": "#c4651a",
+  "ink": "#f5efe3",
+  "btn": {
+   "background-color": "rgb(196, 101, 26)",
+   "color": "rgb(21, 20, 18)",
+   "box-shadow": "rgb(0, 0, 0) 4px 4px 0px 0px, rgb(239, 233, 220) 4px 4px 0px 2px",
+   "rect": [
+    12,
+    66,
+    262,
+    52
+   ]
+  },
+  "logo": {
+   "color": "rgb(245, 239, 227)",
+   "width": "40px",
+   "rect": [
+    18,
+    14,
+    40,
+    40
+   ]
+  },
+  "logoPath": "rgb(245, 239, 227)",
+  "fav": [
+   "/favicon.svg|image/svg+xml",
+   "/favicon-32.png|image/png",
+   "/favicon-16.png|image/png",
+   "/favicon-48.png|image/png"
+  ],
+  "fonts": true
+ },
+ "dark": {
+  "theme": "dark",
+  "head": "#c4651a",
+  "ink": "#f5efe3",
+  "btn": {
+   "background-color": "rgb(196, 101, 26)",
+   "color": "rgb(21, 20, 18)",
+   "box-shadow": "rgb(0, 0, 0) 4px 4px 0px 0px, rgb(239, 233, 220) 4px 4px 0px 2px",
+   "rect": [
+    12,
+    74,
+    294,
+    52
+   ]
+  },
+  "logo": {
+   "color": "rgb(245, 239, 227)",
+   "width": "40px",
+   "rect": [
+    18,
+    18,
+    40,
+    40
+   ]
+  },
+  "logoPath": "rgb(245, 239, 227)",
+  "fav": [
+   "/favicon.svg|image/svg+xml",
+   "/favicon-32.png|image/png",
+   "/favicon-16.png|image/png",
+   "/favicon-48.png|image/png"
+  ],
+  "fonts": true,
+  "px_btn": "#c4651a",
+  "px_logo_center": "#f5efe3"
+ }
+}

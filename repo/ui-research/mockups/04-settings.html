@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设置 · 权限与安全 · AI 团队群聊（样稿）</title>
+<link rel="stylesheet" href="fonts/geist.css">
+<link rel="stylesheet" href="base.css">
+<style>
+  .shell { grid-template-columns: 248px 220px 1fr; }
+  .subnav { padding:28px 12px; border-right:1px solid var(--border); }
+  .subnav h2 { font-size:15px; color:var(--muted); font-weight:400; padding:0 10px 8px; }
+  .wrap { max-width:1120px; }
+  .sec { display:grid; grid-template-columns: 300px minmax(0,1fr); gap:32px; padding:32px 0; border-top:1px solid var(--border); }
+  .sec:first-of-type { border-top:0; padding-top:8px; }
+  .sec .lab h2 { font-size:17px; }
+  .sec .lab p { color:var(--muted); font-size:15px; margin:6px 0 0; }
+  .box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:4px 20px; }
+  .perm th, .perm td { font-size:15px; }
+  .perm td:first-child { font-weight:600; }
+  .perm .d { display:block; font-weight:400; color:var(--muted); font-size:14px; }
+  select { min-height:44px; border:1px solid var(--control); border-radius:6px; padding:0 10px; font:inherit; font-size:15px; background:var(--surface); color:var(--text); }
+  .switchrow { display:grid; grid-template-columns:1fr auto; gap:4px 16px; padding:16px 0; border-bottom:1px solid var(--rule); align-items:center; }
+  .switchrow:last-child { border-bottom:0; }
+  .switchrow b { font-size:16px; }
+  .switchrow p { grid-column:1; margin:0; color:var(--muted); font-size:15px; }
+  .switch { grid-row:1 / span 2; grid-column:2; width:52px; height:32px; border-radius:999px; background:var(--control); border:0; position:relative; padding:0; cursor:pointer; }
+  .switch::after { content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#fff; }
+  .switch[aria-checked="true"] { background:var(--good); }
+  .switch[aria-checked="true"]::after { left:23px; }
+  .preview { margin:4px 0 16px; padding:12px 14px; border-radius:8px; background:var(--raised); font-size:15px; display:flex; gap:10px; align-items:flex-start; }
+  .preview svg { width:20px; height:20px; flex:none; stroke:var(--good); fill:none; stroke-width:1.8; margin-top:2px; }
+  .auditbar { display:flex; gap:8px; flex-wrap:wrap; padding:14px 0 6px; }
+  .audit td { font-size:15px; }
+  .audit .t { color:var(--muted); white-space:nowrap; }
+  .audit .act b { font-weight:600; }
+  @media (max-width: 1200px) { .shell { grid-template-columns: 220px 1fr; } .subnav { display:none; } }
+  @media (max-width: 1000px) { .sec { grid-template-columns:1fr; gap:14px; } }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns:1fr; }
+    .perm thead { display:none; }
+    .perm tr { display:grid; grid-template-columns:1fr; gap:8px; padding:14px 0; border-bottom:1px solid var(--rule); }
+    .perm td { border:0; padding:0; }
+    .perm td[data-l]::before { content: attr(data-l) "："; color:var(--muted); font-size:14px; margin-right:6px; }
+    .audit thead { display:none; }
+    .audit tr { display:grid; grid-template-columns:1fr; gap:2px; padding:12px 0; border-bottom:1px solid var(--rule); }
+    .audit td { border:0; padding:0; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="iconbtn" href="01-chat.html" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <div class="t">权限与安全</div>
+</header>
+<div class="shell">
+  <nav class="side" aria-label="主导航">
+    <div class="brand"><span class="mark" aria-hidden="true">群</span>AI 团队群聊</div>
+    <div class="nav">
+      <a href="01-chat.html"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>群聊</a>
+      <a href="03-roster.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>AI成员</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M14 6l4 4-8 8H6v-4z"/></svg>工具库</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>对比归档</a>
+    </div>
+    <div class="nav foot"><button class="btn ghost" style="justify-content:flex-start;width:100%" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme==='dark'?'':'dark'">切换深色 / 浅色</button><a href="#" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>设置</a></div>
+  </nav>
+  <nav class="subnav" aria-label="设置分类">
+    <h2>设置</h2>
+    <div class="nav">
+      <a href="#">接入资源<span class="count">23</span></a>
+      <a href="#" aria-current="page">权限与安全</a>
+      <a href="#">额度与预算</a>
+      <a href="#">通知与语音</a>
+      <a href="#">字号与显示</a>
+      <a href="#">备份与导出</a>
+    </div>
+  </nav>
+
+  <main class="canvas">
+    <div class="wrap">
+      <div class="titlerow"><div><h1>权限与安全</h1><p class="sub">每项改动立即生效，并记进下面的审计日志。</p></div></div>
+
+      <section class="sec" aria-labelledby="p1">
+        <div class="lab"><h2 id="p1">成员能做什么</h2><p>按动作分级。「先问我」的动作会在群里弹出确认卡，你点同意才执行。</p></div>
+        <div class="box">
+          <table class="perm">
+            <thead><tr><th>动作</th><th>默认</th><th>例外</th></tr></thead>
+            <tbody>
+              <tr><td>回答、互评<span class="d">只在群里说话</span></td><td data-l="默认"><select aria-label="回答、互评的默认权限"><option>直接做</option></select></td><td data-l="例外">—</td></tr>
+              <tr><td>调用工具<span class="d">沙盒、浏览器、搜索</span></td><td data-l="默认"><select aria-label="调用工具的默认权限"><option>直接做</option></select></td><td data-l="例外">浏览器登录你的账号：先问我</td></tr>
+              <tr><td>花钱<span class="d">付费来源、付费工具</span></td><td data-l="默认"><select aria-label="花钱的默认权限"><option>项目预算内直接做</option></select></td><td data-l="例外">单次超过 ¥2：先问我</td></tr>
+              <tr><td>对外发东西<span class="d">发邮件、发帖、注册账号</span></td><td data-l="默认"><select aria-label="对外发东西的默认权限"><option>先问我</option></select></td><td data-l="例外">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="p2">
+        <div class="lab"><h2 id="p2">敏感内容</h2><p>中转站和公益站能看到你发的全文。命中下面的规则时，这条消息只发给品牌官方来源或本地模型。</p></div>
+        <div class="box">
+          <div class="switchrow"><b>敏感内容不发给中转站</b><button class="switch" role="switch" aria-checked="true" aria-label="敏感内容不发给中转站"></button><p>密码、密钥、身份证号、银行卡号、住址自动识别。</p></div>
+          <div class="preview" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg><span>示例：「我的 Groq key 是 gsk_…」会被拦下，只交给 Workers AI 处理，群里显示为「已隐藏 1 段密钥」。</span></div>
+          <div class="switchrow"><b>自定义关键词</b><button class="btn" style="grid-row:1 / span 2;grid-column:2">编辑 3 个</button><p>家人姓名、公司名、门牌号</p></div>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="p3">
+        <div class="lab"><h2 id="p3">审计日志</h2><p>谁、在哪个项目、做了什么、走了哪个来源。保存 180 天。</p></div>
+        <div class="box">
+          <div class="auditbar" role="group" aria-label="筛选日志">
+            <select aria-label="按成员筛选"><option>全部成员</option></select>
+            <select aria-label="按动作筛选"><option>全部动作</option></select>
+            <select aria-label="按时间筛选"><option>最近 7 天</option></select>
+            <button class="btn" style="margin-left:auto">导出 CSV</button>
+          </div>
+          <table class="audit">
+            <thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td class="t num">今天 07:43</td><td>gpt-oss-120b</td><td class="act">来源从 Workers AI <b>换到 Groq</b>（额度用完）</td><td><span class="pill">自动</span></td></tr>
+              <tr><td class="t num">今天 07:43</td><td>系统</td><td class="act">一段消息含密钥，<b>没发给</b> HappyCoding</td><td><span class="pill good">已拦下</span></td></tr>
+              <tr><td class="t num">今天 07:41</td><td>你</td><td class="act">同意 Hark 的分工</td><td><span class="pill">已执行</span></td></tr>
+              <tr><td class="t num">昨天 22:10</td><td>Poke</td><td class="act">想在 fish.audio <b>注册账号</b></td><td><span class="pill warn">等你同意</span></td></tr>
+              <tr><td class="t num">昨天 21:02</td><td>你</td><td class="act">把「花钱」上限从 ¥5 改成 ¥2</td><td><span class="pill">已保存</span></td></tr>
+            </tbody>
+          </table>
+          <p class="sub" style="font-size:14px;margin:8px 0 14px">显示 5 / 214 条 · <a href="#">加载更多</a></p>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

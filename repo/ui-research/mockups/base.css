@@ -1,0 +1,113 @@
+/* AI 团队群聊 · Phase 3 样稿共用样式
+   风格：achromatic-ledger（taste-skill 发牌 seed 2103933038），唯一改动：主按钮用珊瑚色（用户 2026-10-23 定的品牌色）。
+   规则：颜色只上数据、状态、主操作和选中态；正文永远是墨色；珊瑚色文字只用 800 档（白底 8.31:1）。 */
+@font-face { font-family: "Noto Sans SC Local"; src: url("../../../../tools/fonts/NotoSansSC.ttf"); font-weight: 100 900; font-display: swap; }
+
+:root {
+  /* 珊瑚色阶（OKLCH 推算，400 = 品牌 #FF7F50） */
+  --coral-50:#FFF4F1; --coral-100:#FFE7DF; --coral-200:#FFCEBD; --coral-300:#FFAD90; --coral-400:#FF7F50;
+  --coral-500:#F37649; --coral-600:#D25E39; --coral-700:#B04429; --coral-800:#8F2B18; --coral-900:#721409; --coral-950:#4B0001;
+
+  /* 浅色 */
+  --ground:#F6F6F4; --surface:#FFFFFF; --raised:#EFEFEC; --active:#E9E9E6;
+  --border:#E3E3DF; --rule:#EEEEEB; --control:#C9C9C3;
+  --text:#1A1A19; --muted:#52524E;          /* 17.42:1 / 7.85:1 白底，眼疾用户：两档文字都过 AAA 7:1 */
+  --brand-fill:var(--coral-400); --on-brand:#141413;   /* 墨字在珊瑚上 ≈7:1 */
+  --brand-text:var(--coral-800);                       /* 珊瑚色文字 8.31:1 */
+  --brand-tint:var(--coral-50); --brand-line:var(--coral-600); /* 选中底 / 焦点环 3.89:1 */
+  --good:#2B6E3F; --warn:#8A5A00; --bad:#B42318;       /* 6.17 / 5.93 / 6.57（白底） */
+  --good-bg:#E3F3E7; --warn-bg:#FBF0D9; --bad-bg:#FCE6E3;
+
+  --radius-card:8px; --radius-control:6px;
+  --gap:16px; --pad:24px;
+  --fs-title:24px; --fs-section:17px; --fs-body:16px; --fs-small:14px; --fs-kpi:30px;
+  --font: "Geist", -apple-system, "PingFang SC", "Noto Sans SC Local", "Noto Sans SC", system-ui, sans-serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --ground:#141413; --surface:#1E1E1C; --raised:#262624; --active:#2E2E2B;
+  --border:#2F2F2C; --rule:#262624; --control:#55554F;
+  --text:#F2F2F0; --muted:#B8B8B2;          /* 16.45:1 / 9.25:1 */
+  --brand-fill:var(--coral-400); --on-brand:#141413;
+  --brand-text:var(--coral-300);            /* 10.2:1 深底 */
+  --brand-tint:#3A1F17; --brand-line:var(--coral-400);
+  --good:#7BD48F; --warn:#E8B54A; --bad:#FF8F80;
+  --good-bg:#17291C; --warn-bg:#2E2412; --bad-bg:#33191A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { font-size: var(--fs-body); }
+body { margin:0; background:var(--ground); color:var(--text); font-family:var(--font); line-height:1.55; -webkit-font-smoothing:antialiased; }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--brand-text); text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--brand-line); outline-offset: 2px; border-radius: 4px; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+
+/* 字体：Geist 管拉丁字母和数字（taste-skill 发牌），中文落到 PingFang SC / 思源黑体 */
+/* 外壳：开放平面 */
+.shell { display:grid; grid-template-columns: 248px 1fr; min-height:100vh; }
+.side { padding:20px 12px; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:4px; }
+.brand { display:flex; align-items:center; gap:10px; padding:4px 10px 18px; font-weight:700; font-size:17px; }
+.mark { width:32px; height:32px; border-radius:8px; background:var(--brand-fill); color:var(--on-brand); display:grid; place-items:center; font-weight:700; font-size:15px; flex:none; }
+.navlabel { font-size:14px; color:var(--muted); padding:18px 10px 6px; }
+.nav a { display:flex; align-items:center; gap:10px; min-height:44px; padding:0 10px; border-radius:8px; color:var(--text); text-decoration:none; font-size:16px; }
+.nav a[aria-current="page"] { background:var(--active); font-weight:600; }
+.nav a .count { margin-left:auto; font-size:14px; color:var(--muted); }
+.nav svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.6; flex:none; }
+.side .foot { margin-top:auto; }
+
+.canvas { padding:28px 32px 48px; min-width:0; }
+h1 { font-size:var(--fs-title); line-height:1.25; margin:0; font-weight:700; }
+h2 { font-size:var(--fs-section); margin:0; font-weight:600; }
+h3 { font-size:16px; margin:0; font-weight:600; }
+.sub { color:var(--muted); margin:6px 0 0; font-size:16px; }
+.titlerow { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card); padding:20px; }
+.panel > header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.panel > header .meta { color:var(--muted); font-size:14px; }
+
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border-radius:var(--radius-control); border:1px solid var(--control); background:var(--surface); color:var(--text); font:inherit; font-weight:600; cursor:pointer; text-decoration:none; }
+.btn.primary { background:var(--brand-fill); border-color:var(--brand-fill); color:var(--on-brand); }
+.btn.ghost { border-color:transparent; background:transparent; }
+.btn svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+.pill { display:inline-flex; align-items:center; gap:6px; min-height:26px; padding:0 10px; border-radius:999px; font-size:14px; font-weight:500; white-space:nowrap; flex:none; background:var(--raised); color:var(--text); }
+.pill.good { background:var(--good-bg); color:var(--good); }
+.pill.warn { background:var(--warn-bg); color:var(--warn); }
+.pill.bad { background:var(--bad-bg); color:var(--bad); }
+.pill.brand { background:var(--brand-tint); color:var(--brand-text); }
+
+.avatar { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:15px; flex:none; color:#1A1A19; }
+.a1 { background:#F6D9CF; } .a2 { background:#D7E4F2; } .a3 { background:#DCEBD9; } .a4 { background:#EBDDF0; } .a5 { background:#F1E6C8; } .a6 { background:#D5ECEA; }
+.avatar.you { background:var(--text); color:var(--surface); }
+
+/* 额度条：真实比例，两端标注 */
+.meter { height:8px; border-radius:999px; background:var(--raised); overflow:hidden; }
+.meter > i { display:block; height:100%; background:var(--text); border-radius:999px; }
+.meter.low > i { background:var(--bad); }
+.meter.coral > i { background:var(--brand-fill); }
+.meterline { display:flex; justify-content:space-between; font-size:14px; color:var(--muted); margin-top:4px; }
+
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-weight:400; color:var(--muted); font-size:14px; padding:8px 10px; border-bottom:1px solid var(--border); }
+td { padding:12px 10px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+td.num, th.num { text-align:right; }
+
+.themebtn { position:fixed; right:16px; bottom:16px; z-index:5; }
+
+/* 手机：侧栏收起成顶栏 */
+.topbar { display:none; }
+@media (max-width: 900px) {
+  html { font-size:17px; }
+  .shell { grid-template-columns: 1fr; }
+  .side { display:none; }
+  .topbar { display:flex; align-items:center; gap:8px; height:56px; padding:0 8px 0 12px; border-bottom:1px solid var(--border); background:var(--ground); position:sticky; top:0; z-index:4; }
+  .topbar .t { font-weight:700; font-size:18px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .iconbtn { width:48px; height:48px; display:grid; place-items:center; border:0; background:transparent; color:var(--text); border-radius:10px; }
+  .iconbtn svg { width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.8; }
+  .canvas { padding:16px 16px 40px; }
+  .themebtn { display:none; }
+}

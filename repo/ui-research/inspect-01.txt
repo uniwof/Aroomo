@@ -1,0 +1,28 @@
+TASTESKILL · INSPECT   mockups/01-chat.html
+
+MEASURED (first viewport listed)
+  hero headline   "洞箫口播稿 · 第 12 期"  5 words · 1 line(s) · 24px (1.7vw) · -apple-system 700 · tracking 0em · leading 1.25
+  @768px          1 line(s) · 18px
+  @390px          1 line(s) · 18px
+  typefaces       -apple-system 100%
+  sizes in use    13 / 14 / 15 / 16 / 17 / 24 / 30 px   body 15px / 1.55
+  colour          page #f6f6f4 · button #ffffff
+  page            1.3 screens · 186 words · 0 images · hero media none
+  headings        1 · longest 1 line(s) · median - words
+
+FAIL — fix every one of these
+  [font-not-dealt] @1440px  The sheet dealt Geist, but the page renders -apple-system.
+      → Load the dealt face (the link on the sheet) and put it first in font-family. A build that falls back to a default face lands on the default look.
+  [no-title] @768px (+390)  The screen has no h1.
+      → Name the screen in an h1 at the top of the canvas (18–28px): "Overview", "Payouts", the project's name.
+
+LOOK AT THE RENDER — open these with your image viewer / Read tool before saying anything about quality:
+  desktop 1440px  .taste-skill/inspect/desktop-fold.jpg
+                  .taste-skill/inspect/desktop-page-01.jpg
+  tablet 768px    .taste-skill/inspect/tablet-fold.jpg
+                  .taste-skill/inspect/tablet-page-01.jpg
+  mobile 390px    .taste-skill/inspect/mobile-fold.jpg
+                  .taste-skill/inspect/mobile-page-01.jpg
+
+report: .taste-skill/inspect/report.json
+RESULT: 2 FAIL, 0 WARN — not done.

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gpt-oss-120b · AI成员资料卡 · AI 团队群聊（样稿）</title>
+<link rel="stylesheet" href="fonts/geist.css">
+<link rel="stylesheet" href="base.css">
+<style>
+  .hero { display:grid; grid-template-columns:auto 1fr auto; gap:20px; align-items:start; margin-bottom:var(--gap); }
+  .hero .avatar { width:72px; height:72px; font-size:24px; border-radius:16px; }
+  .hero .id { font-family: ui-monospace, "SF Mono", Menlo, "PingFang SC", "Noto Sans SC Local", monospace; font-size:14px; color:var(--muted); }
+  .hero .intro { margin:8px 0 0; font-size:17px; max-width:62ch; }
+  .score { text-align:right; }
+  .score .big { font-size:36px; font-weight:700; line-height:1; }
+  .score .big small { font-size:17px; font-weight:400; color:var(--muted); }
+  .score p { margin:6px 0 0; color:var(--muted); font-size:14px; }
+  .hero .acts { display:flex; gap:10px; margin-top:14px; justify-content:flex-end; flex-wrap:wrap; }
+  .grid { display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:var(--gap); align-items:start; }
+  .col { display:flex; flex-direction:column; gap:var(--gap); }
+  /* 岗位标签：标签 + 来源 + 证据，一行一个，好读 */
+  .tagrow { display:grid; grid-template-columns: minmax(0,1fr) auto; gap:4px 12px; padding:12px 0; border-bottom:1px solid var(--rule); }
+  .tagrow:last-child { border-bottom:0; }
+  .tagname { font-weight:600; font-size:17px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tagname .mark-good { width:10px; height:10px; border-radius:2px; background:var(--good); flex:none; }
+  .tagname .mark-bad { width:10px; height:10px; border-radius:2px; border:2px solid var(--bad); flex:none; }
+  .evidence { color:var(--muted); font-size:14px; grid-column:1 / -1; }
+  .srcchips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chip { font-size:13px; border:1px solid var(--control); border-radius:4px; padding:1px 6px; color:var(--text); white-space:nowrap; }
+  .chip.now { border-color:var(--brand-line); color:var(--brand-text); }
+  .trend { font-size:14px; color:var(--muted); white-space:nowrap; align-self:center; }
+  /* 来源表 */
+  .src td:first-child { font-weight:600; }
+  .src .kind { display:block; font-weight:400; color:var(--muted); font-size:14px; }
+  .src .m { min-width:140px; }
+  .uptime { display:flex; gap:2px; }
+  .uptime i { width:6px; height:22px; border-radius:2px; background:var(--good); opacity:.85; }
+  .uptime i.p { background:var(--warn); } .uptime i.d { background:var(--bad); } .uptime i.n { background:var(--raised); }
+  .bars .row { display:grid; grid-template-columns: 7em 1fr 3em; gap:10px; align-items:center; padding:8px 0; font-size:15px; }
+  .bars .row b { text-align:right; font-weight:600; }
+  .quote { margin:12px 0 0; padding:10px 0 0; border-top:1px solid var(--rule); font-size:15px; }
+  .quote span { display:block; color:var(--muted); font-size:14px; margin-top:2px; }
+  .who2 { display:flex; gap:16px; color:var(--muted); font-size:14px; margin-top:8px; }
+  .list { list-style:none; margin:0; padding:0; }
+  .list li { display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--rule); font-size:16px; }
+  .list li:last-child { border-bottom:0; }
+  .list .r { color:var(--muted); font-size:14px; white-space:nowrap; }
+  .caps { display:flex; flex-wrap:wrap; gap:8px; }
+  .note { font-size:14px; color:var(--muted); margin:10px 0 0; }
+  @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns:auto 1fr; }
+    .hero .avatar { width:56px; height:56px; font-size:20px; }
+    .score { grid-column:1 / -1; text-align:left; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .score p { margin:0; }
+    .hero .acts { justify-content:flex-start; width:100%; }
+    .hero .acts .btn { flex:1; }
+    .src thead { display:none; }
+    .src tr { display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:12px 0; border-bottom:1px solid var(--rule); }
+    .src td { border:0; padding:0; }
+    .src td.m { grid-column:1 / -1; }
+    .src td.up { display:none; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="iconbtn" href="03-roster.html" aria-label="返回成员名册"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <div class="t">gpt-oss-120b</div>
+  <button class="iconbtn" aria-label="更多操作"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
+</header>
+<div class="shell">
+  <nav class="side" aria-label="主导航">
+    <div class="brand"><span class="mark" aria-hidden="true">群</span>AI 团队群聊</div>
+    <div class="nav">
+      <a href="01-chat.html"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>群聊</a>
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>AI成员<span class="count">12</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M14 6l4 4-8 8H6v-4z"/></svg>工具库</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>对比归档</a>
+    </div>
+    <div class="nav foot"><button class="btn ghost" style="justify-content:flex-start;width:100%" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme==='dark'?'':'dark'">切换深色 / 浅色</button><a href="04-settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>设置</a></div>
+  </nav>
+
+  <main class="canvas">
+    <section class="hero" aria-labelledby="mname">
+      <span class="avatar a2" aria-hidden="true">G</span>
+      <div>
+        <h1 id="mname">gpt-oss-120b</h1>
+        <div class="id">openai/gpt-oss-120b · OpenAI 开放权重 · 117B MoE</div>
+        <p class="intro">本群的「事实审查员」：挑史实和数据错误很准，中文文采一般。适合放在写手后面把关，不适合独立写长文。</p>
+      </div>
+      <div class="score">
+        <div class="big num">4.3 <small>/ 5 口碑</small></div>
+        <p class="num">23 次评分：你 9 次 · 成员互评 14 次</p>
+        <div class="acts"><a class="btn primary" href="01-chat.html">派活给它</a><button class="btn">拉进项目</button></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <div class="col">
+        <section class="panel" aria-labelledby="good">
+          <header><h2 id="good">擅长岗位</h2><span class="meta">按效果排序 · 派工按这里走</span></header>
+          <div class="tagrow">
+            <div class="tagname"><span class="mark-good" aria-hidden="true"></span>挑事实错误<span class="srcchips"><span class="chip">社区评价</span><span class="chip now">实测 9/10</span></span></div>
+            <span class="trend num">近 5 次 ↑</span>
+            <p class="evidence">入职时 r/LocalLLaMA 评价「推理强」；本群 3 个项目里抓出 9 处史实错误，被你采纳 8 处。</p>
+          </div>
+          <div class="tagrow">
+            <div class="tagname"><span class="mark-good" aria-hidden="true"></span>代码审查<span class="srcchips"><span class="chip">社区评价</span><span class="chip now">互评 4.4</span></span></div>
+            <span class="trend num">持平</span>
+            <p class="evidence">CaretReader 项目里被 Kimi K3、Qwen3 评为「指出的问题都能复现」。</p>
+          </div>
+          <div class="tagrow">
+            <div class="tagname"><span class="mark-good" aria-hidden="true"></span>分步推理 / 数学<span class="srcchips"><span class="chip">社区评价</span></span></div>
+            <span class="trend">还没在本群验证</span>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="bad">
+          <header><h2 id="bad">不擅长</h2><span class="meta">派工会避开</span></header>
+          <div class="tagrow">
+            <div class="tagname"><span class="mark-bad" aria-hidden="true"></span>古诗词押韵<span class="srcchips"><span class="chip now">你打分 2/5 ×3</span></span></div>
+            <p class="evidence">洞箫第 11 期里 3 次被你打低分：平仄不对。</p>
+          </div>
+          <div class="tagrow">
+            <div class="tagname"><span class="mark-bad" aria-hidden="true"></span>超过 150 字的回答<span class="srcchips"><span class="chip now">实测</span></span></div>
+            <p class="evidence">爱列 3 条长要点，常超字数限制。</p>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="srcs">
+          <header><h2 id="srcs">来源 3</h2><span class="meta">同一个模型，从哪里调用；用完自动换下一个</span></header>
+          <table class="src">
+            <thead><tr><th>顺序 · 来源</th><th>今日额度</th><th>状态</th><th class="up">近 14 天</th></tr></thead>
+            <tbody>
+              <tr><td>1 · Workers AI<span class="kind">品牌官方 · 免费</span></td><td class="m"><div class="meter low"><i style="width:0%"></i></div><div class="meterline num"><span>已用完</span><span>01:00 重置</span></div></td><td><span class="pill bad">额度用完</span></td><td class="up"><div class="uptime" aria-label="近 14 天：12 天正常，2 天额度用完"><i></i><i></i><i></i><i></i><i></i><i></i><i class="d"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="d"></i></div></td></tr>
+              <tr><td>2 · Groq<span class="kind">品牌官方 · 免费层</span></td><td class="m"><div class="meter low"><i style="width:18%"></i></div><div class="meterline num"><span>剩 18%</span><span>按分钟限速</span></div></td><td><span class="pill good">正在用</span></td><td class="up"><div class="uptime" aria-label="近 14 天全部正常"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></td></tr>
+              <tr><td>3 · OpenRouter<span class="kind">中转 · $0.03 / $0.15 每百万</span></td><td class="m"><div class="meter"><i style="width:100%"></i></div><div class="meterline num"><span>付费，计入项目预算</span><span>¥20 上限</span></div></td><td><span class="pill">备用</span></td><td class="up"><div class="uptime" aria-label="近 14 天：13 天正常，1 天部分故障"><i></i><i></i><i></i><i></i><i class="p"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></td></tr>
+            </tbody>
+          </table>
+          <p class="note">拖动顺序即可改接班次序。中转站来源不会收到标为「敏感」的内容。</p>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="panel bars" aria-labelledby="sc">
+          <header><h2 id="sc">口碑构成</h2><span class="meta">近 90 天</span></header>
+          <div class="row"><span>准确</span><div class="meter"><i style="width:92%"></i></div><b class="num">4.6</b></div>
+          <div class="row"><span>听指挥</span><div class="meter"><i style="width:84%"></i></div><b class="num">4.2</b></div>
+          <div class="row"><span>速度</span><div class="meter"><i style="width:96%"></i></div><b class="num">4.8</b></div>
+          <div class="row"><span>中文表达</span><div class="meter"><i style="width:72%"></i></div><b class="num">3.6</b></div>
+          <blockquote class="quote">「指出的 3 处史实错误都对，就是话太多。」<span>你 · 洞箫第 11 期</span></blockquote>
+          <blockquote class="quote">「它提的问题都能复现。」<span>Kimi K3 互评 · CaretReader</span></blockquote>
+          <div class="who2"><span>你的评分权重 ×2</span><a href="#">看全部 23 条</a></div>
+        </section>
+        <section class="panel" aria-labelledby="tools">
+          <header><h2 id="tools">能用的工具</h2><a class="meta" href="#">去工具库</a></header>
+          <ul class="list">
+            <li>E2B 沙盒<span class="r">只读 · 每次 ≤ 5 分钟</span></li>
+            <li>网页搜索<span class="r">不限</span></li>
+            <li>项目共享记忆<span class="r">读写</span></li>
+          </ul>
+          <p class="note">执行能力：查网页 · 写文件 · 不能收验证码 · 不能注册账号</p>
+        </section>
+        <section class="panel" aria-labelledby="cv">
+          <header><h2 id="cv">做过的项目 3</h2></header>
+          <ul class="list">
+            <li>洞箫口播稿 · 第 11 期<span class="r num">审查 · 4.5</span></li>
+            <li>CaretReader 改版<span class="r num">代码审查 · 4.4</span></li>
+            <li>梦境复古色板<span class="r num">挑错 · 3.9</span></li>
+          </ul>
+        </section>
+        <section class="panel" aria-labelledby="pv">
+          <header><h2 id="pv">隐私</h2><a class="meta" href="04-settings.html">规则</a></header>
+          <p class="note" style="margin:0">经中转站来源时，不会收到标为「敏感」的内容；走 Workers AI、Groq 时可以。</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+
+1 file scanned with regex matching only (.css).
+Rules that need a parsed page (tiny-text, low-contrast and other element rules) did not run on them; findings are an undercount, not a clean bill of health.
+For the full check, scan the running dev server (npx impeccable detect http://localhost:PORT) or a static site's built .html.
+
+/workspace/projects-src/ai-groupchat/ui-research/mockups/01-chat.html
+  [side-tab] border-left: 4px + border-radius: 8px
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.
+  [skipped-heading] <h1> "洞箫口播稿 · 第 12 期" followed by <h3> "我打算这样分工" (missing h2)
+    → Heading levels should not skip (e.g. h1 then h3 with no h2). Screen readers use heading hierarchy for navigation. Skipping levels breaks the document outline.
+
+2 anti-patterns found.
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

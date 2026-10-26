@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>群聊 · 洞箫口播稿 · AI 团队群聊（样稿）</title>
+<link rel="stylesheet" href="fonts/geist.css">
+<link rel="stylesheet" href="base.css">
+<style>
+  .shell { grid-template-columns: 248px 1fr 336px; }
+  .thread { display:flex; flex-direction:column; min-height:100vh; border-right:1px solid var(--border); }
+  .thread-head { display:flex; align-items:center; gap:16px; padding:20px 28px; border-bottom:1px solid var(--border); }
+  .thread-head .sub { margin:2px 0 0; font-size:15px; }
+  .msgs { flex:1; padding:20px 28px 8px; display:flex; flex-direction:column; gap:18px; max-width:860px; width:100%; }
+  .msg { display:flex; gap:12px; }
+  .msg .body { min-width:0; flex:1; }
+  .who { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:15px; }
+  .who b { font-size:16px; }
+  .who .src { color:var(--muted); font-size:14px; }
+  .text { margin-top:4px; font-size:17px; line-height:1.65; max-width:68ch; }
+  .text ol { margin:6px 0 0; padding-left:22px; }
+  .voice { display:inline-flex; align-items:center; gap:10px; margin-top:6px; padding:8px 12px; border-radius:10px; background:var(--raised); font-size:15px; }
+  .voice svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.8; }
+  /* 派工卡：唯一带珊瑚描边的卡，因为它要用户决定 */
+  .dispatch { border:2px solid var(--brand-line); border-radius:8px; background:var(--surface); padding:16px 18px; margin-top:6px; }
+  .dispatch h2 { font-size:16px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .assign { display:grid; grid-template-columns: auto 1fr; gap:10px 12px; align-items:start; }
+  .assign .avatar { width:32px; height:32px; font-size:13px; }
+  .assign p { margin:0; font-size:16px; }
+  .assign .why { color:var(--muted); font-size:15px; margin-top:2px; }
+  .tagsrc { font-size:13px; color:var(--muted); border:1px solid var(--border); border-radius:4px; padding:0 5px; margin-left:4px; white-space:nowrap; }
+  .dispatch .acts { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  /* 系统行：接班 / 换来源，居中一行，不抢正文 */
+  .sys { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:8px; background:var(--raised); font-size:15px; line-height:1.55; }
+  .sys svg { width:20px; height:20px; stroke:var(--warn); fill:none; stroke-width:1.8; flex:none; margin-top:2px; }
+  .sys b { font-weight:600; }
+  .done { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface); font-size:15px; }
+  .composer { position:sticky; bottom:0; padding:14px 28px 20px; background:var(--ground); border-top:1px solid var(--border); }
+  .composer form { display:flex; gap:10px; align-items:flex-end; max-width:860px; }
+  .composer label.sr + textarea, .composer textarea { flex:1; min-height:52px; max-height:160px; resize:none; border:1px solid var(--control); border-radius:10px; padding:13px 14px; font:inherit; font-size:17px; background:var(--surface); color:var(--text); }
+  .mic { width:52px; height:52px; border-radius:50%; padding:0; }
+  .hint { color:var(--muted); font-size:14px; margin:8px 0 0; }
+  /* 右栏 */
+  .rail { padding:24px 20px; display:flex; flex-direction:column; gap:16px; }
+  .rail h2 { font-size:16px; }
+  .mrow { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; padding:12px 0; border-bottom:1px solid var(--rule); }
+  .mrow:last-child { border-bottom:0; }
+  .mrow .avatar { grid-row: span 3; width:36px; height:36px; font-size:13px; }
+  .mrow .name { display:flex; align-items:baseline; gap:4px 8px; flex-wrap:wrap; font-weight:600; font-size:16px; }
+  .mrow .role { color:var(--muted); font-size:14px; font-weight:400; white-space:nowrap; }
+  .state { font-size:14px; display:flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--good); flex:none; }
+  .dot.busy { background:var(--brand-fill); } .dot.off { background:var(--control); } .dot.warn { background:var(--warn); }
+  .budget .big { font-size:var(--fs-kpi); font-weight:700; line-height:1.1; }
+  .budget .big small { font-size:16px; font-weight:400; color:var(--muted); }
+  .mobile-strip { display:none; }
+  @media (max-width: 1200px) { .shell { grid-template-columns: 220px 1fr; } .rail { display:none; } }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .thread { border-right:0; min-height:auto; }
+    .thread-head { padding:14px 16px 10px; border-bottom:0; }
+    .thread-head h1 { font-size:20px; }
+    .thread-head .sub, .thread-head .btn { display:none; }
+    .mobile-strip { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); font-size:15px; background:var(--surface); }
+    .mobile-strip .meter { flex:1; }
+    .msgs { padding:16px; }
+    .text { font-size:18px; }
+    .composer { padding:10px 12px 16px; }
+    .mic { width:56px; height:56px; }
+    .hint { display:none; }
+  }
+</style>
+</head>
+<body>
+<a class="sr" href="#msgs">跳到消息</a>
+<header class="topbar">
+  <button class="iconbtn" aria-label="打开菜单"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="t">群聊</div>
+  <button class="iconbtn" aria-label="查看 5 位成员和额度"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.8 3.1 2.6 3.5 5.2"/></svg></button>
+</header>
+<div class="shell">
+  <nav class="side" aria-label="主导航">
+    <div class="brand"><span class="mark" aria-hidden="true">群</span>AI 团队群聊</div>
+    <div class="nav">
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>群聊<span class="count">2 条待你决定</span></a>
+      <a href="03-roster.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>AI成员<span class="count">试用到期 1</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M14 6l4 4-8 8H6v-4z"/></svg>工具库</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>对比归档</a>
+    </div>
+    <div class="navlabel">项目</div>
+    <div class="nav">
+      <a href="#" aria-current="page">洞箫口播稿 · 第 12 期</a>
+      <a href="#">CaretReader 改版</a>
+      <a href="#">梦境复古色板</a>
+    </div>
+    <div class="nav foot"><button class="btn ghost" style="justify-content:flex-start;width:100%" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme==='dark'?'':'dark'">切换深色 / 浅色</button><a href="04-settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>设置</a></div>
+  </nav>
+
+  <main class="thread" id="msgs">
+    <div class="thread-head">
+      <div style="flex:1;min-width:0">
+        <h1>洞箫口播稿 · 第 12 期</h1>
+        <p class="sub">5 位 AI成员 · 免费额度优先 · 付费上限 ¥20</p>
+      </div>
+      <a class="btn" href="#">并排对比这一轮</a>
+      <a class="btn" href="#">项目记忆 14 条</a>
+    </div>
+    <div class="mobile-strip" role="status"><span class="num">预算剩 83%</span><div class="meter coral" aria-hidden="true"><i style="width:17%"></i></div><span>1 位已接班</span></div>
+
+    <div class="msgs">
+      <article class="msg">
+        <span class="avatar you" aria-hidden="true">我</span>
+        <div class="body">
+          <div class="who"><b>你</b><span class="src">07:41 · 语音</span></div>
+          <div class="voice"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span class="num">0:14</span></div>
+          <p class="text">帮我写第 12 期《洞箫》口播稿，3 分钟，先给大纲。</p>
+        </div>
+      </article>
+
+      <article class="msg">
+        <span class="avatar a6" aria-hidden="true">H</span>
+        <div class="body">
+          <div class="who"><b>Hark</b><span class="pill">负责人</span><span class="src">07:41</span></div>
+          <section class="dispatch" aria-label="派工建议">
+            <h2>我打算这样分工 <span class="pill brand">等你决定</span></h2>
+            <div class="assign">
+              <span class="avatar a1" aria-hidden="true">K</span>
+              <div><p><b>Kimi K3</b> 写大纲和初稿</p><p class="why">擅长「中文长文」<span class="tagsrc">社区评价</span><span class="tagsrc">本群互评 4.6</span></p></div>
+              <span class="avatar a2" aria-hidden="true">G</span>
+              <div><p><b>gpt-oss-120b</b> 核对史实</p><p class="why">擅长「挑事实错误」<span class="tagsrc">实测 9/10</span> · 不擅长「古诗词押韵」</p></div>
+            </div>
+            <p class="why" style="margin:12px 0 0;color:var(--muted);font-size:15px">预计用约 6k tokens，都走免费来源，不动付费预算。</p>
+            <div class="acts"><button class="btn primary">就这样开始</button><button class="btn">换人</button></div>
+          </section>
+        </div>
+      </article>
+
+      <article class="msg">
+        <span class="avatar a1" aria-hidden="true">K</span>
+        <div class="body">
+          <div class="who"><b>Kimi K3</b><span class="pill">写手</span><span class="src">07:42 · 经 OpenRouter</span></div>
+          <div class="text">大纲（3 分钟 ≈ 780 字）：
+            <ol><li>开场：一段洞箫独奏，引出「箫与笛的区别」</li><li>来历：汉代羌笛到唐宋洞箫的演变</li><li>听感：为什么它被叫作「最孤独的乐器」</li><li>收尾：推荐 3 首入门曲</li></ol>
+          </div>
+        </div>
+      </article>
+
+      <div class="sys" role="note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>
+        <span><b>gpt-oss-120b 换了来源：</b>Workers AI 今日额度用完（每天 10,000 neurons，英国时间 01:00 重置），已自动改走 Groq 继续，人没换。</span>
+      </div>
+
+      <article class="msg">
+        <span class="avatar a2" aria-hidden="true">G</span>
+        <div class="body">
+          <div class="who"><b>gpt-oss-120b</b><span class="pill">审查</span><span class="src">07:43 · 经 Groq</span></div>
+          <p class="text">第 2 点有误：羌笛是竖吹还是横吹学界有争议，不能直接说洞箫「由羌笛演变而来」。建议改成「与羌笛同源的竖吹乐器」，并标出处。</p>
+        </div>
+      </article>
+
+      <div class="sys" role="note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+        <span><b>Llama 4 Scout 接不了班</b>（3 个来源都不可用），由 <b>Mistral Small 3.1</b> 接替「挑逻辑漏洞」，它在这个岗位口碑 4.1。<a href="#">改派别人</a></span>
+      </div>
+
+      <div class="done" role="status">
+        <span class="pill good">本轮完成</span>
+        <span>已推送到 Telegram</span>
+        <button class="btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>朗读结论</button>
+        <a href="#">给这轮打分</a>
+      </div>
+    </div>
+
+    <div class="composer">
+      <form onsubmit="return false">
+        <label class="sr" for="say">发消息，用 @ 指定成员</label>
+        <textarea id="say" rows="1" placeholder="说点什么，@ 指定成员"></textarea>
+        <button class="btn primary mic" aria-label="按住说话发任务"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      </form>
+      <p class="hint">按住话筒说话，松开就发；结果出来会朗读。</p>
+    </div>
+  </main>
+
+  <aside class="rail" aria-label="本项目成员和预算">
+    <section class="panel budget">
+      <header><h2>本项目预算</h2><span class="meta">本月</span></header>
+      <div class="big num">¥3.40 <small>/ ¥20.00 已用</small></div>
+      <div class="meter coral" style="margin-top:10px" aria-hidden="true"><i style="width:17%"></i></div>
+      <div class="meterline num"><span>¥0</span><span>上限 ¥20</span></div>
+    </section>
+    <section class="panel">
+      <header><h2>成员 5</h2><a href="03-roster.html" class="meta">调整</a></header>
+      <div class="mrow"><span class="avatar a6" aria-hidden="true">H</span><div class="name">Hark <span class="role">负责人</span></div><div class="state"><span class="dot"></span>在线 · 不耗额度</div></div>
+      <div class="mrow"><span class="avatar a1" aria-hidden="true">K</span><div class="name">Kimi K3 <span class="role">写手</span></div><div class="state"><span class="dot busy"></span>正在写初稿</div><div><div class="meter" aria-label="今日免费额度剩 62%"><i style="width:62%"></i></div><div class="meterline num"><span>OpenRouter 免费</span><span>剩 62%</span></div></div></div>
+      <div class="mrow"><span class="avatar a2" aria-hidden="true">G</span><div class="name">gpt-oss-120b <span class="role">审查</span></div><div class="state"><span class="dot warn"></span>已换到 Groq</div><div><div class="meter low" aria-label="来源 Groq 今日剩 18%"><i style="width:18%"></i></div><div class="meterline num"><span>Groq</span><span>剩 18%</span></div></div></div>
+      <div class="mrow"><span class="avatar a3" aria-hidden="true">M</span><div class="name">Mistral Small 3.1 <span class="role">挑错 · 接班</span></div><div class="state"><span class="dot"></span>待命</div><div><div class="meter" aria-label="今日额度剩 88%"><i style="width:88%"></i></div><div class="meterline num"><span>Workers AI</span><span>剩 88%</span></div></div></div>
+      <div class="mrow"><span class="avatar a4" aria-hidden="true">Q</span><div class="name">Qwen3 30B <span class="role">裁判</span></div><div class="state"><span class="dot off"></span>等最后发言</div></div>
+    </section>
+  </aside>
+</div>
+</body>
+</html>

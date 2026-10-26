@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>AI 群聊</title>
+<style>
+/* 日式极简 · 账本式安静界面：中性灰底、墨色字、细线、无阴影；珊瑚色（coral-scale.json）只给「要你决定的东西」：主按钮、选中态、焦点；正文 19px；手机优先 */
+:root{--bg:#f6f6f4;--paper:#ffffff;--ink:#1a1a19;--muted:#52524e;--line:#deddd8;--soft:#ededea;--accent:#8f2b18;--coral:#ff7f50;--coral-h:#f37649;--coral-bg:#fff4f1;--coral-ln:#d25e39;--focus:#d25e39;--warn:#8a5a00;--ok:#2b6e3f;--bad:#b42318;--gray:#8a8984;--user:#ebeae6}
+:root[data-theme=dark]{--bg:#141413;--paper:#1e1e1c;--ink:#f2f2f0;--muted:#b8b8b2;--line:#363633;--soft:#262624;--accent:#ffad90;--coral:#ff7f50;--coral-h:#f37649;--coral-bg:#2a1d18;--coral-ln:#ff7f50;--focus:#ff7f50;--warn:#e8b54a;--ok:#7bd48f;--bad:#ff8f80;--gray:#77766f;--user:#2a2a27}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141413;--paper:#1e1e1c;--ink:#f2f2f0;--muted:#b8b8b2;--line:#363633;--soft:#262624;--accent:#ffad90;--coral:#ff7f50;--coral-h:#f37649;--coral-bg:#2a1d18;--coral-ln:#ff7f50;--focus:#ff7f50;--warn:#e8b54a;--ok:#7bd48f;--bad:#ff8f80;--gray:#77766f;--user:#2a2a27}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.7 -apple-system,"Hiragino Sans","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;-webkit-text-size-adjust:100%;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+button,select,input,textarea{font:inherit;color:var(--ink)}
+a{color:var(--accent)}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 14px 10px}
+.hrow{display:flex;gap:10px;align-items:center;max-width:860px;margin:0 auto}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:.12em;white-space:nowrap}
+#q{flex:1;min-width:0;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:9px 16px;min-height:46px}
+.icon{border:1px solid var(--line);background:transparent;border-radius:999px;min-width:46px;min-height:46px;cursor:pointer}
+main{max-width:860px;margin:0 auto;padding:10px 14px 200px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:none;padding:12px 4px;min-height:58px;color:var(--muted);cursor:pointer;font-size:17px}
+nav.tabs button.on{color:var(--ink);font-weight:700;box-shadow:inset 0 3px 0 var(--coral-ln)}
+.view{display:none}.view.on{display:block}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 12px}
+.bar select,.bar button,.btn{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:8px 14px;min-height:46px;cursor:pointer}
+.btn.primary{background:var(--coral);color:#141413;border-color:var(--coral);font-weight:700;min-height:52px}
+.btn.primary:hover{background:var(--coral-h)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.title{font-size:21px;font-weight:600;margin:4px 0 2px;line-height:1.5}
+.sub{color:var(--muted);font-size:16px}
+.empty{color:var(--muted);text-align:center;margin:3em 0;line-height:2}
+/* 消息：头像左；右侧「产品原名（角色）」+ 气泡，左对齐垂直堆叠；整体垂直居中 */
+.msg{display:flex;gap:12px;align-items:center;margin:16px 0}
+.msg .col{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
+.who{font-size:16px;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;margin:0 0 4px 2px}
+.who b{color:var(--ink);font-weight:600}
+.bubble{border-radius:4px 16px 16px 16px;padding:11px 15px;white-space:pre-wrap;word-break:break-word;max-width:100%;background:var(--c);color:var(--fg);border:1px solid transparent}
+.bubble.inv{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.msg.user{justify-content:flex-end}
+.msg.user .bubble{background:var(--user);color:var(--ink);border-radius:16px 4px 16px 16px;max-width:86%}
+.note{color:var(--muted);text-align:center;font-size:16px;margin:12px 0}
+.waiting .bubble{opacity:.75;font-style:italic}
+.flash{animation:fl 2s ease}
+@keyframes fl{0%,40%{outline:3px solid var(--focus);outline-offset:4px}100%{outline:0 solid transparent}}
+/* 头像 = 品牌 logo；外圈 = 额度环（与头像之间留约 2.5px 背景色细缝）；彩色/黑白 = 可用/不可用 */
+.av{position:relative;width:52px;height:52px;flex:0 0 52px;cursor:pointer}
+.av svg.ring{position:absolute;inset:0;width:52px;height:52px}
+.av .trk{fill:none;stroke:var(--line);stroke-width:3.5}
+.av .arc{fill:none;stroke:var(--c);stroke-width:3.5;stroke-linecap:round}
+.av.inv .arc{stroke:var(--ink)}
+.av.low .arc{stroke:var(--bad)}
+.av.unk .trk{stroke-dasharray:3 4}
+.av .face{position:absolute;inset:7px;border-radius:50%;background:var(--c);color:var(--fg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;overflow:hidden}
+.av.inv .face{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.av .face svg{width:22px;height:22px;fill:currentColor}
+/* 在线 = 彩色头像；不可用/未探测 = 黑白头像（额度环始终保留，用户拍板 2026-10-23） */
+.av.off .face{filter:grayscale(1);opacity:.72}
+.sm{width:40px;height:40px;flex-basis:40px}.sm svg.ring{width:40px;height:40px}.sm .face{inset:6px;font-size:14px}.sm .face svg{width:17px;height:17px}
+/* 列表 */
+.row{display:flex;gap:12px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line)}
+.row .col{flex:1;min-width:0}
+.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta{color:var(--muted);font-size:16px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.chip{font-size:15px;border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--muted);background:transparent;cursor:pointer;min-height:32px}
+.chip.on{color:var(--ink);background:var(--coral-bg);border-color:var(--coral-ln);font-weight:600}
+.chip.weak{text-decoration:line-through;opacity:.8}
+.low{color:var(--bad)}
+footer.composer{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:15;background:var(--bg);border-top:1px solid var(--line);padding:10px 14px}
+footer .in{max-width:860px;margin:0 auto}
+textarea{width:100%;min-height:76px;max-height:36vh;resize:vertical;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--paper)}
+.crow{display:flex;gap:8px;margin-top:8px}.crow .btn{flex:1}
+#status{color:var(--muted);font-size:16px;min-height:1.3em;margin-top:4px}
+/* 抽屉 / 弹层 */
+.sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(0,0,0,.35)}
+.sheet.on{display:block}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--bg);border-radius:12px 12px 0 0;border-top:1px solid var(--line);padding:18px 18px calc(24px + env(safe-area-inset-bottom));max-width:860px;margin:0 auto}
+@media (min-width:900px){.panel{top:0;bottom:0;left:auto;width:560px;max-height:none;border-radius:0;border-left:1px solid var(--line)}}
+.panel h2{font-size:22px;margin:0 0 4px;font-weight:600;word-break:break-all}
+.panel h3{font-size:16px;color:var(--muted);font-weight:600;letter-spacing:.1em;margin:20px 0 6px;border-top:1px solid var(--line);padding-top:14px}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 10px;font-size:17px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;word-break:break-word}
+.close{float:right}
+.src{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--paper)}
+.keyrow .h{font-size:19px;font-weight:700;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.keyin{width:100%;font-size:19px;min-height:56px;border:2px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--paper);margin-top:8px}
+.keyin:focus{border-color:var(--focus);outline:none}
+.keyrow .bar .btn{min-height:52px;font-size:19px}
+.kmsg{font-size:19px;margin-top:6px;min-height:1.2em}.kmsg.ok{color:var(--ok)}.kmsg.bad{color:var(--bad)}
+.pill.filled::before{background:var(--warn)}.pill.filled{color:var(--warn)}
+h2.grp{font-size:19px;margin:18px 0 4px;color:var(--muted)}
+.src .h{display:flex;gap:8px;align-items:center;font-weight:600}
+.sdot{width:12px;height:12px;border-radius:50%;background:var(--gray);flex:0 0 12px}
+mark{background:transparent;color:inherit;box-shadow:inset 0 -.45em 0 rgba(255,127,80,.35)}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:15px;word-break:break-all;background:var(--soft);padding:2px 6px;border-radius:6px}
+input[type=text],input:not([type]),select.full{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 12px;background:var(--paper);min-height:46px}
+label.f{display:block;margin:10px 0 2px;color:var(--muted);font-size:16px}
+.pick{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.pick input[type=checkbox]{width:24px;height:24px;flex:0 0 24px}
+.pick select{border:1px solid var(--line);background:var(--paper);border-radius:8px;min-height:42px;padding:4px 8px;max-width:8.5em}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* 状态 pill：点 + 文字，颜色不是唯一信息 */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:15px;line-height:1.4;border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--ink);white-space:nowrap}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--gray)}
+.pill.ok::before{background:var(--ok)}.pill.down::before{background:var(--bad)}
+.pill.ok{color:var(--ok)}.pill.down{color:var(--bad)}
+.box{display:inline-block;font-size:13px;line-height:1.5;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted);margin-right:6px;vertical-align:2px}
+.lineup{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.slot{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 10px 4px 4px;min-height:48px;cursor:pointer;background:var(--paper);max-width:100%}
+.slot .t{font-size:16px;line-height:1.35;min-width:0}.slot .t b{font-weight:600}.slot .t span{color:var(--muted);display:block;font-size:14px}
+.score{font-size:30px;font-weight:700;line-height:1.1}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style></head>
+<body>
+<header><div class="hrow">
+  <h1>AI 群聊</h1>
+  <input id="q" type="search" placeholder="搜索全部对话、成员、项目" aria-label="全局搜索" autocomplete="off">
+  <button class="icon" id="themeBtn" type="button" aria-label="切换深浅色">◐</button>
+</div></header>
+
+<main>
+  <section class="view on" id="v-chat">
+    <div class="bar">
+      <select id="roomSel" aria-label="项目" style="flex:1 1 200px;min-width:0"></select>
+      <button class="btn" id="newBtn" type="button">新项目</button>
+    </div>
+    <div id="roomHead"></div>
+    <div id="chat"><p class="empty">点「新项目」写下需求，Hark 会按擅长岗位、剩余额度和在线状态挑 __TERM__。</p></div>
+  </section>
+  <section class="view" id="v-projects"><div id="projList"></div></section>
+  <section class="view" id="v-members">
+    <div class="bar"><button class="btn" id="probeBtn" type="button">立即探测</button><button class="btn" id="addBtn" type="button">添加外部 __TERM__</button><button class="btn" id="keysBtn" type="button">填 API 密钥</button>
+      <select id="sortSel" aria-label="排序"><option value="state">按状态</option><option value="quota">按额度</option><option value="name">按名称</option></select>
+      <label class="sub"><input type="checkbox" id="onlyOk"> 只看可用</label></div>
+    <div class="chips" id="jobFilter"></div>
+    <div id="memList"></div>
+    <p class="sub" id="candLine"></p>
+  </section>
+  <section class="view" id="v-tools"><h2 id="keysH">API 密钥</h2><p class="sub">把每个来源的 Key 粘贴进框里，点「保存并验证」。Key 加密存在你自己的服务器里，页面只显示末 4 位，不会再显示全文。</p><div id="keyList"><p class="sub">读取中…</p></div><h2>工具库</h2><p class="sub">工具不是成员：只能被 __TERM__ 调用，不进群聊。</p><div id="toolList"></div></section>
+  <section class="view" id="v-search"><div id="searchRes"></div></section>
+</main>
+
+<footer class="composer" id="composer"><div class="in">
+  <textarea id="inp" placeholder="写下议题或你的看法…" maxlength="4000"></textarea>
+  <div class="crow"><button id="sendBtn" class="btn primary" type="button">发言</button><button id="againBtn" class="btn" type="button">再来一轮</button></div>
+  <div id="status" aria-live="polite"></div>
+</div></footer>
+
+<nav class="tabs">
+  <button data-v="chat" class="on" type="button">对话</button>
+  <button data-v="projects" type="button">项目</button>
+  <button data-v="members" type="button">__TERM__</button>
+  <button data-v="tools" type="button">工具库</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const TERM='__TERM__';
+let D={members:[],roles:[],modes:{},tools:[],connectors:{},execTags:[]},room=null,roomData=null,busy=false,pollT=null,jobF=new Set();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify=s=>s.replace(/https:\/\/[^\s<>"'）)]+/g,u=>'<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+u+'</a>');
+const fmt=s=>linkify(esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/^#{1,4}\s*/gm,''));
+const tfmt=ts=>ts?new Date(ts).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+async function api(p,opt={}){
+  const r=await fetch(p,{credentials:'same-origin',headers:{'content-type':'application/json'},...opt});
+  let d={};try{d=await r.json()}catch(e){}
+  if(r.status===401){location.reload();throw new Error('未授权')}
+  if(!r.ok)throw new Error(d.error||('出错 '+r.status));
+  return d;
+}
+/* 主题 */
+const theme=localStorage.getItem('agc-theme');if(theme)document.documentElement.dataset.theme=theme;
+$('#themeBtn').onclick=()=>{const dark=isDark();const t=dark?'light':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('agc-theme',t);rerender()};
+function isDark(){const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>rerender());
+/* 颜色：按对比度选黑/白字；近黑色品牌在深色模式反转为描边 */
+function lum(hex){const n=parseInt(hex.slice(1),16);const c=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function fgFor(hex){const L=lum(hex);return (1.05)/(L+.05)>=(L+.05)/(.0185+.05)?'#ffffff':'#111111'}
+const invFor=hex=>isDark()&&lum(hex)<.03;
+const mem=id=>D.members.find(m=>m.id===id);
+function avatar(m,small){
+  if(!m)m={name:'?',color:'#5C5F66',letter:'?',quota:{},state:'unknown'};
+  const q=m.quota||{};const pct=q.pct;const C=2*Math.PI*20;
+  const cls=['av',small?'sm':'',invFor(m.color)?'inv':'',q.low?'low':'',pct==null?'unk':'',m.state==='ok'?'on':'off'].join(' ');
+  const arc=pct==null?'':'<circle class="arc" cx="22" cy="22" r="20" stroke-dasharray="'+(Math.max(0,Math.min(1,pct))*C).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 22 22)"/>';
+  const face=m.logo?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+esc(m.logo)+'"/></svg>':esc(m.letter||'?');
+  const st=m.state==='ok'?'ok':m.state==='down'?'down':'';
+  const tip=(m.name||'')+' · '+(m.state==='ok'?'可用':m.state==='down'?'不可用':'未探测')+(q.text?' · '+q.text:'');
+  return '<span class="'+cls+'" style="--c:'+m.color+';--fg:'+fgFor(m.color)+'" data-mid="'+esc(m.id||'')+'" title="'+esc(tip)+'" role="button" aria-label="'+esc(tip)+'"><svg class="ring" viewBox="0 0 44 44"><circle class="trk" cx="22" cy="22" r="20"/>'+arc+'</svg><span class="face">'+face+'</span></span>';
+}
+const pill=m=>'<span class="pill '+(m.state==='ok'?'ok':m.state==='down'?'down':'')+'">'+(m.state==='ok'?'可用':m.state==='down'?'不可用':'未探测')+'</span>';
+const HARK={id:'hark',name:'Hark',color:'#000000',letter:'H',logo:null,quota:{pct:null},state:'ok'};
+function msgEl(x){
+  const el=document.createElement('div');el.dataset.id=x.id||'';
+  if(x.kind==='user'){el.className='msg user';el.innerHTML='<div class="bubble">'+fmt(x.text)+'</div>';return el}
+  if(x.kind==='note'){el.className='note';el.textContent=x.text;return el}
+  const m=x.kind==='lead'?(mem('hark')||HARK):(mem(x.member)||{id:x.member,name:x.member,color:'#5C5F66',letter:'?',quota:{},state:'unknown'});
+  const role=x.kind==='lead'?'负责人':(x.role||'');
+  el.className='msg'+(x.waiting?' waiting':'');
+  el.innerHTML=avatar(m)+'<div class="col"><div class="who" data-mid="'+esc(m.id)+'" title="'+esc(m.name)+(x.model?' · '+esc(x.model):'')+'"><b>'+esc(m.name)+'</b>（'+esc(role)+'）</div><div class="bubble'+(invFor(m.color)?' inv':'')+'" style="--c:'+m.color+';--fg:'+fgFor(m.color)+'">'+fmt(x.text)+'</div></div>';
+  return el;
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-mid]');if(t&&t.dataset.mid){e.preventDefault();openMember(t.dataset.mid)}});
+/* 视图切换 */
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));$('#composer').style.display=v==='chat'?'':'none';if(v==='projects')renderProjects();if(v==='members')renderMembers();if(v==='tools')renderTools()}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+function rerender(){if(roomData)renderRoom();if($('#v-members').classList.contains('on'))renderMembers()}
+/* 项目 / 房间 */
+let ROOMS=[];
+async function loadRooms(sel){const d=await api('/api/rooms');ROOMS=d.rooms;const s=$('#roomSel');s.innerHTML='<option value="">（选择项目）</option>'+d.rooms.map(r=>'<option value="'+r.id+'">'+esc(r.title||r.id)+' · '+esc(r.status)+'</option>').join('');s.value=sel||''}
+function renderProjects(){$('#projList').innerHTML=ROOMS.length?ROOMS.map(r=>'<div class="row" data-room="'+r.id+'" style="cursor:pointer"><div class="col"><div class="nm">'+esc(r.title||r.id)+'</div><div class="meta">'+esc(r.status)+' · '+esc((D.modes||{})[r.mode]||r.mode||'')+' · 发起 '+tfmt(r.created)+'</div></div></div>').join(''):'<p class="empty">还没有项目。</p>';
+  document.querySelectorAll('#projList [data-room]').forEach(el=>el.onclick=()=>{show('chat');openRoom(el.dataset.room)})}
+async function openRoom(id,focusMsg){
+  room=id||null;$('#roomSel').value=room||'';clearTimeout(pollT);
+  if(!room){roomData=null;$('#roomHead').innerHTML='';$('#chat').innerHTML='<p class="empty">点「新项目」写下需求，Hark 会按擅长岗位、剩余额度和在线状态挑 '+TERM+'。</p>';return}
+  roomData=await api('/api/room/'+room);renderRoom();
+  if(focusMsg){const el=document.querySelector('#chat [data-id="'+focusMsg+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('flash')}}
+  else window.scrollTo(0,document.body.scrollHeight);
+  schedulePoll();
+}
+function renderRoom(){
+  const r=roomData;if(!r)return;
+  $('#roomHead').innerHTML='<div class="title">'+esc(r.title)+'</div><div class="bar"><select id="stSel" aria-label="项目状态">'+['进行中','已完成','失败'].map(s=>'<option'+(s===r.status?' selected':'')+'>'+s+'</option>').join('')+'</select><button class="btn" id="lineupBtn" type="button">成员与角色</button><button class="btn" id="rateBtn" type="button">打分</button><button class="btn" id="reviewBtn" type="button">成员互评</button></div><div class="sub">阵容 · '+r.lineup.length+' 位（点头像看详情）</div><div class="lineup">'+r.lineup.map(x=>{const m=mem(x.id)||{id:x.id,name:x.id,color:'#5C5F66',letter:'?',quota:{},state:'unknown'};return '<div class="slot" data-mid="'+esc(x.id)+'">'+avatar(m,true)+'<div class="t"><b>'+esc(m.name)+'</b><span>'+esc(x.role)+' · '+(m.state==='ok'?'可用':m.state==='down'?'不可用':'未探测')+'</span></div></div>'}).join('')+'</div>';
+  $('#stSel').onchange=async e=>{await api('/api/room/'+room+'/status',{method:'POST',body:JSON.stringify({status:e.target.value})});loadRooms(room)};
+  $('#lineupBtn').onclick=()=>editLineup();$('#rateBtn').onclick=()=>rateSheet();
+  $('#reviewBtn').onclick=async()=>{setBusy(true,'请裁判给各成员打分…');try{await api('/api/room/'+room+'/review',{method:'POST',body:'{}'});await refreshRoom()}catch(e){$('#status').textContent=e.message}setBusy(false)};
+  const c=$('#chat');c.innerHTML='';
+  for(const x of r.messages)c.appendChild(msgEl(x));
+  for(const p of r.pending||[]){const m=mem(p.member);c.appendChild(msgEl({kind:'ai',member:p.member,role:p.role,text:'等待 '+(m?m.name:p.member)+' 回复…（'+tfmt(p.created)+' 发出）',waiting:true}))}
+  if(!r.messages.length)c.innerHTML='<p class="empty">这个项目还没有消息。</p>';
+}
+async function refreshRoom(){if(!room)return;roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);schedulePoll()}
+function schedulePoll(){clearTimeout(pollT);if(roomData&&roomData.pending&&roomData.pending.length)pollT=setTimeout(async()=>{try{const n=roomData.messages.length;roomData=await api('/api/room/'+room);if(roomData.messages.length!==n)renderRoom()}catch(e){}schedulePoll()},6000)}
+function setBusy(b,msg){busy=b;['#sendBtn','#againBtn','#newBtn','#roomSel'].forEach(s=>$(s).disabled=b);$('#status').textContent=msg||''}
+async function runRound(st){
+  for(const x of st.lineup){
+    const cur=(roomData&&roomData.lineup)||st.lineup;const slot=cur.find(y=>y.role===x.role)||x;const m=mem(slot.id);
+    const ph=msgEl({kind:'ai',member:slot.id,role:x.role,text:'思考中…',waiting:true});$('#chat').appendChild(ph);ph.scrollIntoView({block:'end'});
+    $('#status').textContent=(m?m.name:slot.id)+'（'+x.role+'）思考中…';
+    try{await api('/api/turn',{method:'POST',body:JSON.stringify({room,member:slot.id,mode:st.mode})})}catch(e){}
+    roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);
+  }
+  setBusy(false,'');schedulePoll();
+}
+async function send(message,extra){
+  if(busy)return;
+  if(!message&&!room){$('#status').textContent='先写个议题';return}
+  setBusy(true,'发送中…');
+  try{
+    const st=await api('/api/start',{method:'POST',body:JSON.stringify({room,message,mode:(roomData&&roomData.mode)||'debate',...(extra||{})})});
+    $('#inp').value='';
+    if(st.room!==room){room=st.room;await loadRooms(room)}
+    roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);
+    await runRound(st);
+  }catch(e){setBusy(false,'出错：'+e.message)}
+}
+$('#sendBtn').onclick=()=>{const v=$('#inp').value.trim();if(!v){$('#status').textContent='先写点内容';return}if(!room){newProject(v);return}send(v)};
+$('#againBtn').onclick=()=>{if(!room){$('#status').textContent='先选一个项目';return}send('')};
+$('#roomSel').onchange=e=>openRoom(e.target.value).catch(err=>$('#status').textContent=err.message);
+$('#newBtn').onclick=()=>newProject($('#inp').value.trim());
+/* 抽屉 */
+function openSheet(html){$('#panel').innerHTML='<button class="btn close" type="button" id="xBtn">关闭</button>'+html;$('#sheet').classList.add('on');$('#xBtn').onclick=closeSheet;$('#panel').scrollTop=0}
+function closeSheet(){$('#sheet').classList.remove('on')}
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+/* 新项目：勾选成员 + Hark 推荐 */
+let pickState={};
+function memberSort(list,mode){const R={ok:0,unknown:1,down:2};return [...list].sort((a,b)=>mode==='quota'?((b.quota.pct??-1)-(a.quota.pct??-1)):mode==='name'?a.name.localeCompare(b.name):(R[a.state]-R[b.state])||((b.quota.pct??.5)-(a.quota.pct??.5)))}
+function pickRow(m){const p=pickState[m.id]||{};return '<div class="pick">'+'<input type="checkbox" data-pk="'+esc(m.id)+'"'+(p.on?' checked':'')+' aria-label="选 '+esc(m.name)+'">'+avatar(m,true)+'<div class="col" style="flex:1;min-width:0"><div class="nm" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" data-mid="'+esc(m.id)+'">'+esc(m.name)+'</div><div class="meta sub">'+esc((m.jobs||[]).map(j=>j.t).join('、')||'擅长岗位待定')+(p.reason?'<br>'+esc(p.reason):'')+'</div><div class="meta sub '+(m.quota.low?'low':'')+'">'+esc(m.state==='down'?'不可用：'+m.why:(m.quota.text||''))+'</div></div><select data-rl="'+esc(m.id)+'" aria-label="角色">'+D.roles.map(r=>'<option'+(r===(p.role||'审查员')?' selected':'')+'>'+r+'</option>').join('')+'</select></div>'}
+function newProject(topic){
+  pickState={};
+  openSheet('<h2>新项目</h2><label class="f">需求 / 议题</label><textarea id="npTopic" maxlength="4000">'+esc(topic||'')+'</textarea><label class="f">模式</label><select class="full" id="npMode">'+Object.entries(D.modes).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('')+'</select><div class="bar" style="margin-top:12px"><button class="btn" id="npPlan" type="button">让 Hark 推荐</button><label class="sub"><input type="checkbox" id="npAi"> 用强模型复核（耗少量额度）</label></div><div class="sub" id="npNote"></div><h3>勾选参加的 '+TERM+'</h3><div class="bar"><select id="npSort"><option value="state">按状态</option><option value="quota">按额度</option><option value="name">按名称</option></select></div><div id="npList"></div><div class="bar" style="position:sticky;bottom:0;background:var(--bg);padding:8px 0"><button class="btn primary" id="npGo" type="button" style="flex:1">开始</button></div>');
+  const draw=()=>{$('#npList').innerHTML=memberSort(D.members.filter(m=>!m.lead&&!m.retired),$('#npSort').value).map(pickRow).join('');
+    document.querySelectorAll('[data-pk]').forEach(c=>c.onchange=()=>{(pickState[c.dataset.pk]=pickState[c.dataset.pk]||{}).on=c.checked});
+    document.querySelectorAll('[data-rl]').forEach(c=>c.onchange=()=>{(pickState[c.dataset.rl]=pickState[c.dataset.rl]||{}).role=c.value})};
+  $('#npSort').onchange=draw;draw();
+  let planNote='';
+  $('#npPlan').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){$('#npNote').textContent='先写需求';return}$('#npNote').textContent='Hark 正在挑人…';
+    try{const p=await api('/api/plan',{method:'POST',body:JSON.stringify({topic:t,mode:$('#npMode').value,ai:$('#npAi').checked})});pickState={};p.members.forEach(x=>pickState[x.id]={on:true,role:x.role,reason:x.reason});planNote=p.note;$('#npNote').textContent=p.note;draw()}catch(e){$('#npNote').textContent=e.message}};
+  $('#npGo').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){$('#npNote').textContent='先写需求';return}
+    const members=Object.entries(pickState).filter(([,v])=>v.on).map(([id,v])=>({id,role:v.role||'审查员'}));
+    closeSheet();room=null;roomData=null;$('#inp').value='';await send(t,{mode:$('#npMode').value,members:members.length?members:undefined,planNote:members.length?(planNote||'成员由用户手动选择。'):undefined,ai:$('#npAi')&&$('#npAi').checked})};
+}
+function editLineup(){
+  pickState={};roomData.lineup.forEach(x=>pickState[x.id]={on:true,role:x.role});
+  openSheet('<h2>成员与角色</h2><p class="sub">勾选/取消成员，修改本群角色。</p><div id="npList"></div><div class="bar"><button class="btn primary" id="luSave" type="button" style="flex:1">保存</button></div>');
+  $('#npList').innerHTML=memberSort(D.members.filter(m=>!m.lead&&!m.retired),'state').map(pickRow).join('');
+  document.querySelectorAll('[data-pk]').forEach(c=>c.onchange=()=>{(pickState[c.dataset.pk]=pickState[c.dataset.pk]||{}).on=c.checked});
+  document.querySelectorAll('[data-rl]').forEach(c=>c.onchange=()=>{(pickState[c.dataset.rl]=pickState[c.dataset.rl]||{}).role=c.value});
+  $('#luSave').onclick=async()=>{const members=Object.entries(pickState).filter(([,v])=>v.on).map(([id,v])=>({id,role:v.role||'审查员'}));try{await api('/api/room/'+room+'/members',{method:'POST',body:JSON.stringify({members})});closeSheet();refreshRoom()}catch(e){alert(e.message)}};
+}
+function rateSheet(){
+  const jobs=['长文写作','代码','翻译','推理裁判','挑错审查','总结','看图','生图','查网页','注册执行','中文对话'];
+  openSheet('<h2>给成员打分</h2><p class="sub">分数会更新成员的「擅长/不擅长（实测）」标签：同一岗位平均 ≥4 分且 ≥2 次算擅长，≤2 分算不擅长。</p>'+roomData.lineup.map(x=>{const m=mem(x.id)||{name:x.id};return '<div class="pick">'+avatar(m,true)+'<div style="flex:1;min-width:0"><div style="font-weight:600">'+esc(m.name)+'（'+esc(x.role)+'）</div><div class="bar"><select data-job="'+esc(x.id)+'">'+jobs.map(j=>'<option>'+j+'</option>').join('')+'</select><select data-sc="'+esc(x.id)+'"><option value="">不打</option>'+[5,4,3,2,1].map(n=>'<option>'+n+'</option>').join('')+'</select></div></div></div>'}).join('')+'<div class="bar"><button class="btn primary" id="rtGo" type="button" style="flex:1">提交</button></div>');
+  $('#rtGo').onclick=async()=>{for(const x of roomData.lineup){const sc=document.querySelector('[data-sc="'+x.id+'"]').value;if(!sc)continue;await api('/api/room/'+room+'/rate',{method:'POST',body:JSON.stringify({member:x.id,job:document.querySelector('[data-job="'+x.id+'"]').value,score:+sc})})}closeSheet();await loadMembers()}
+}
+/* AI成员 页：统一列表，按岗位/状态/额度筛选排序 */
+async function loadMembers(){D=await api('/api/members')}
+function renderMembers(){
+  const jobs=[...new Set(D.members.flatMap(m=>(m.jobs||[]).map(j=>j.t)))];
+  $('#jobFilter').innerHTML=jobs.map(j=>'<button type="button" class="chip'+(jobF.has(j)?' on':'')+'" data-jf="'+esc(j)+'">'+esc(j)+'</button>').join('');
+  document.querySelectorAll('[data-jf]').forEach(b=>b.onclick=()=>{jobF.has(b.dataset.jf)?jobF.delete(b.dataset.jf):jobF.add(b.dataset.jf);renderMembers()});
+  let list=D.members.filter(m=>(!$('#onlyOk').checked||m.state==='ok')&&(!jobF.size||(m.jobs||[]).some(j=>jobF.has(j.t))));
+  list=memberSort(list,$('#sortSel').value);
+  $('#memList').innerHTML=list.map(m=>'<div class="row">'+avatar(m)+'<div class="col" data-mid="'+esc(m.id)+'" style="cursor:pointer"><div class="nm" style="display:flex;gap:8px;align-items:center"><span style="overflow:hidden;text-overflow:ellipsis">'+esc(m.name)+(m.lead?'（负责人）':'')+'</span>'+pill(m)+'</div><div class="chips">'+(m.jobs||[]).map(j=>'<span class="chip">'+esc(j.t)+'</span>').join('')+(m.weak||[]).map(j=>'<span class="chip weak">'+esc(j.t)+'</span>').join('')+'</div><div class="meta '+(m.quota.low?'low':'')+'">'+esc(m.state==='down'?'不可用：'+m.why:(m.quota.text||''))+(m.quota.source?'（'+esc(m.quota.source)+'）':'')+'</div></div></div>').join('')||'<p class="empty">没有符合条件的成员。</p>';
+  $('#candLine').textContent=(D.candidates&&D.candidates.length?'中转站还发现 '+D.candidates.length+' 个新模型（候选，未入选）：'+D.candidates.slice(0,12).map(c=>c.model+'@'+c.relay).join('、')+(D.candidates.length>12?'…':'')+'。':'')+(D.lastProbe?' 上次探测：'+tfmt(D.lastProbe):'');
+}
+$('#sortSel').onchange=renderMembers;$('#onlyOk').onchange=renderMembers;
+$('#probeBtn').onclick=async()=>{$('#probeBtn').disabled=true;try{await api('/api/probe',{method:'POST',body:'{}'});await loadMembers();renderMembers()}catch(e){alert(e.message)}$('#probeBtn').disabled=false};
+async function openMember(id){
+  let m;try{m=await api('/api/member/'+encodeURIComponent(id))}catch(e){return}
+  const q=m.quota||{};const L=m.limits||{};
+  const lim=[['上下文',L.context],['单次输出',L.max_output],['速率',[L.rpm,L.rpd,L.tpm,L.tpd].filter(Boolean).join(' · ')],['看图',L.vision==null?'':(L.vision?'支持':'不支持')],['工具调用',L.tools==null?'':(L.tools?'支持':'不支持')],['文件',L.files]].filter(x=>x[1]);
+  const tagLine=t=>'<li><span class="box">'+esc(/实测/.test(t.from||'')?'实测':/互评/.test(t.from||'')?'互评':/你|用户/.test(t.from||'')?'你打分':'社区评价')+'</span>'+esc(t.t)+' <span class="sub">— '+esc(t.from||'社区评价')+(t.src?'：'+(t.src.startsWith('https://')?'<a href="'+esc(t.src)+'" target="_blank" rel="noopener noreferrer">来源</a>':esc(t.src)):'')+(t.date?' · '+esc(t.date):'')+'</span></li>';
+  openSheet('<div style="display:flex;gap:14px;align-items:center">'+avatar(m)+'<div style="min-width:0"><h2>'+esc(m.name)+'</h2><div class="sub">'+esc(m.brandName)+' · '+pill(m)+'</div>'+((m.ratingsList||[]).length?'<div class="sub">打分 '+m.ratingsList.length+' 次：你 '+m.ratingsList.filter(r=>!/互评|review|peer|judge|裁判/i.test(r.src||'')).length+' · 互评 '+m.ratingsList.filter(r=>/互评|review|peer|judge|裁判/i.test(r.src||'')).length+'</div>':'')+'</div></div>'
+   +'<p>'+esc(m.intro)+'</p>'
+   +'<h3>擅长岗位</h3>'+((m.jobs||[]).length?'<ul>'+m.jobs.map(tagLine).join('')+'</ul>':'<p class="sub">'+esc(m.jobs_note||'待定')+'</p>')
+   +((m.weak||[]).length?'<h3>不擅长</h3><ul>'+m.weak.map(tagLine).join('')+'</ul>':'')
+   +'<h3>社区评价标签</h3>'+((m.tags||[]).length?'<ul>'+m.tags.map(tagLine).join('')+'</ul>':'<p class="sub">'+esc(m.tags_note||'暂无社区评价')+'</p>')
+   +'<h3>额度</h3><div class="'+(q.low?'low':'')+'">'+esc(q.text||'—')+'</div><dl class="kv"><dt>来源</dt><dd>'+esc(q.source||'—')+(q.src_url?' · <a href="'+esc(q.src_url)+'" target="_blank" rel="noopener noreferrer">官方说明</a>':'')+'</dd>'+(q.reset?'<dt>何时恢复</dt><dd>'+esc(q.reset)+'</dd>':'')+(q.deadline?'<dt>免费截止</dt><dd>'+esc(q.deadline)+'</dd>':'')+'<dt>更多额度</dt><dd>'+esc((q.more&&q.more.length)?q.more.join('；'):'未核实')+'</dd><dt>今日本群</dt><dd>'+esc(q.used_today||0)+' 次</dd></dl>'
+   +'<h3>来源与连接方式（自动挑可用的）</h3>'+(m.sources||[]).map(s=>'<div class="src"><div class="h"><span class="sdot" style="background:'+(s.state==='ok'?'var(--ok)':s.state==='down'?'var(--bad)':'var(--gray)')+'"></span>'+esc(s.via)+(s.i===m.active?' <span class="sub">· 当前优先</span>':'')+'</div><dl class="kv"><dt>连接方式</dt><dd>'+esc(s.kindLabel)+'</dd>'+(s.model?'<dt>模型名</dt><dd class="code">'+esc(s.model)+'</dd>':'')+'<dt>状态</dt><dd>'+esc(s.why)+(s.checked?'（'+tfmt(s.checked)+' 探测）':'')+'</dd><dt>额度</dt><dd>'+esc(s.quota.text)+(s.quota.source?'（'+esc(s.quota.source)+'）':'')+'</dd>'+(s.need&&s.need.length?'<dt>缺什么</dt><dd class="low">'+esc(s.need.join('、'))+'</dd>':'')+'<dt>调用方式</dt><dd class="sub">'+esc(s.how)+'</dd></dl></div>').join('')
+   +'<h3>执行能力</h3>'+((m.exec&&m.exec.tags&&m.exec.tags.length)?'<div class="chips">'+m.exec.tags.map(t=>'<span class="chip">'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="sub">'+esc((m.exec&&m.exec.note)||'')+'</p>'+((m.exec&&m.exec.items&&m.exec.items.length)?'<dl class="kv">'+m.exec.items.map(i=>'<dt>'+esc(i[0])+'</dt><dd>'+esc(i[1])+'</dd>').join('')+'</dl>':'')+(m.exec&&m.exec.how?'<p class="sub">'+esc(m.exec.how)+'</p>':'')
+   +'<h3>可调用工具</h3>'+((m.tools||[]).length?m.tools.map(t=>'<span class="chip">'+esc(t.name)+' · '+esc(t.kind)+'</span>').join(' '):'<p class="sub">无</p>')
+   +(lim.length?'<h3>数据限制</h3><dl class="kv">'+lim.map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl>':'')
+   +'<h3>隐私 / 条款</h3><p>'+esc(m.privacy||'—')+'</p>'
+   +'<h3>参与历史</h3>'+((m.history||[]).length?m.history.map(h=>'<div class="row" data-room="'+esc(h.room)+'" style="cursor:pointer"><div class="col"><div class="nm">'+esc(h.title||h.room)+'</div><div class="meta">'+tfmt(h.joined)+' 加入 · '+esc(h.role)+' · '+esc(h.status)+'</div></div></div>').join(''):'<p class="sub">还没参加过项目。</p>')
+   +((m.ratingsList||[]).length?'<h3>打分记录</h3>'+m.ratingsList.map(r=>'<div class="meta sub">'+tfmt(r.ts)+' · '+esc(r.src)+' · '+esc(r.job)+' '+r.score+' 分'+(r.note?' · '+esc(r.note):'')+'</div>').join(''):'')
+   +(m.callbackToken?'<h3>回调 / 小桥令牌</h3><p class="sub">外部智能体写回回复：POST '+esc(location.origin)+'/hook/reply，Authorization: Bearer 下面的令牌，JSON {"task":"…","text":"…"}；小桥拉任务：GET /bridge/pull?member='+esc(m.id)+'。</p><div class="code" id="cbTok">'+esc(m.callbackToken)+'</div>':'')
+   +(m.custom?'<div class="bar"><button class="btn" id="delAg" type="button">删除这个外部成员</button></div>':''));
+  document.querySelectorAll('#panel [data-room]').forEach(el=>el.onclick=()=>{closeSheet();show('chat');openRoom(el.dataset.room)});
+  if(m.custom)$('#delAg').onclick=async()=>{if(!confirm('删除 '+m.name+'？'))return;await api('/api/agents/'+m.id,{method:'DELETE'});closeSheet();await loadMembers();renderMembers()};
+}
+/* 添加外部 AI成员（连接器模板） */
+$('#addBtn').onclick=()=>{
+  openSheet('<h2>添加外部 '+TERM+'</h2><label class="f">连接方式</label><select class="full" id="agConn">'+Object.entries(D.connectors).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('')+'</select><p class="sub" id="agHow"></p>'
+   +'<label class="f">ID（x- 开头）</label><input id="agId" placeholder="x-my-agent"><label class="f">名字（产品原名）</label><input id="agName" placeholder="例如 OpenCode / Muse"><label class="f">品牌（可选）</label><input id="agBrand" placeholder="poke / muse / anthropic / openai …">'
+   +'<label class="f">地址（https，Webhook/Tunnel/Tailscale Funnel/OpenAI 兼容）</label><input id="agUrl" placeholder="https://…"><label class="f">心跳地址（可选）</label><input id="agHealth" placeholder="https://…/health">'
+   +'<label class="f">密钥环境变量名（AGENT_ 开头，值放 secrets 文件）</label><input id="agSecret" placeholder="AGENT_MY_TOKEN"><label class="f">模型名（OpenAI 兼容）</label><input id="agModel"><label class="f">Telegram chat_id</label><input id="agChat">'
+   +'<label class="f">擅长岗位（逗号分隔，先写网友评价/你的判断）</label><input id="agJobs"><label class="f">执行能力（从这些里选：'+esc((D.execTags||[]).join('、'))+'）</label><input id="agExec"><label class="f">简介</label><input id="agIntro">'
+   +'<div class="bar"><button class="btn primary" id="agSave" type="button" style="flex:1">保存</button></div><div class="sub" id="agMsg"></div>');
+  const how=()=>{$('#agHow').textContent=(D.connectors[$('#agConn').value]||{}).how||''};$('#agConn').onchange=how;how();
+  $('#agSave').onclick=async()=>{const b={conn:$('#agConn').value,id:$('#agId').value.trim(),name:$('#agName').value.trim(),brand:$('#agBrand').value.trim(),url:$('#agUrl').value.trim(),health:$('#agHealth').value.trim(),secret:$('#agSecret').value.trim(),model:$('#agModel').value.trim(),chat:$('#agChat').value.trim(),jobs:$('#agJobs').value,exec:$('#agExec').value,intro:$('#agIntro').value};
+    try{await api('/api/agents',{method:'POST',body:JSON.stringify(b)});closeSheet();await loadMembers();renderMembers();openMember(b.id.toLowerCase())}catch(e){$('#agMsg').textContent=e.message}};
+};
+let KEYS=[];
+const kcls=k=>k.state==='ok'||k.state==='env'?'ok':k.state==='bad'?'down':k.state==='filled'?'filled':'';
+function keyRow(k){
+  const cur=k.keyless?'不需要 Key':k.state==='env'?'部署时已绑定（优先使用）':k.last4?('已保存，末 4 位 …'+esc(k.last4)+(k.saved?'（'+tfmt(k.saved)+' 保存）':'')):'还没填';
+  return '<div class="src keyrow" data-env="'+esc(k.env)+'"><div class="h">'+esc(k.name)+' <span class="pill '+kcls(k)+'" data-kstate="'+esc(k.state)+'">'+esc(k.label)+'</span>'+(k.paid?' <span class="pill down">付费</span>':'')+'</div>'
+   +'<dl class="kv"><dt>免费额度</dt><dd>'+esc(k.free)+(k.free_src?' <a href="'+esc(k.free_src)+'" target="_blank" rel="noopener">官方页</a>':'')+'</dd>'
+   +(k.can?'<dt>能做什么</dt><dd>'+esc(k.can)+'</dd>':'')
+   +(k.console?'<dt>去哪复制</dt><dd><a href="'+esc(k.console)+'" target="_blank" rel="noopener">'+esc(k.console.replace(/^https:\/\//,''))+'</a>'+(k.console_note?'<br><span class="sub">'+esc(k.console_note)+'</span>':'')+'</dd>':'')
+   +(k.usedBy&&k.usedBy.length?'<dt>谁会用</dt><dd>'+esc(k.usedBy.join('、'))+'</dd>':'')
+   +'<dt>当前</dt><dd data-kcur>'+cur+(k.vmsg?'<br><span class="'+(k.state==='bad'?'low':'sub')+'">'+esc(k.vmsg)+(k.vat?'（'+tfmt(k.vat)+'）':'')+'</span>':'')+'</dd></dl>'
+   +(k.keyless?'':'<input class="keyin" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="4096" placeholder="在这里粘贴 '+esc(k.name)+' 的 Key" aria-label="粘贴 '+esc(k.name)+' 的 Key">'
+   +'<div class="bar"><button class="btn primary" data-ksave type="button" style="flex:1">保存并验证</button>'+(k.last4||k.state==='env'?'<button class="btn" data-kver type="button">重新验证</button>':'')+(k.last4?'<button class="btn" data-kdel type="button">删除</button>':'')+'</div>')
+   +'<div class="kmsg" aria-live="polite"></div></div>'}
+async function renderKeys(){
+  try{KEYS=(await api('/api/keys')).keys}catch(e){$('#keyList').innerHTML='<p class="low">读取失败：'+esc(e.message)+'</p>';return}
+  const groups=[...new Set(KEYS.map(k=>k.group))];
+  $('#keyList').innerHTML=groups.map(g=>'<h2 class="grp">'+esc(g)+'</h2>'+KEYS.filter(k=>k.group===g).map(keyRow).join('')).join('');
+  document.querySelectorAll('#keyList .keyrow').forEach(row=>{
+    const env=row.dataset.env,msg=row.querySelector('.kmsg'),inp=row.querySelector('.keyin');
+    const say=(t,c)=>{msg.textContent=t;msg.className='kmsg '+(c||'')};
+    const b=row.querySelector('[data-ksave]');if(b)b.onclick=async()=>{const v=inp.value.trim();if(!v){say('先把 Key 粘贴进框里','bad');inp.focus();return}
+      b.disabled=true;say('保存中，正在验证…');try{const d=await api('/api/keys',{method:'POST',body:JSON.stringify({name:env,value:v})});inp.value='';
+        await renderKeys();const m2=document.querySelector('#keyList [data-env="'+env+'"] .kmsg');if(m2){m2.textContent='已保存（末 4 位 …'+d.last4+'）。'+d.verify.msg+(d.note?'。'+d.note:'');m2.className='kmsg '+(d.verify.state==='ok'?'ok':d.verify.state==='filled'?'':'bad')}
+        loadMembers().catch(()=>{})}catch(e){say('没保存：'+e.message,'bad');b.disabled=false}};
+    const vb=row.querySelector('[data-kver]');if(vb)vb.onclick=async()=>{vb.disabled=true;say('验证中…');try{const d=await api('/api/keys/'+env+'/verify',{method:'POST',body:'{}'});await renderKeys();const m2=document.querySelector('#keyList [data-env="'+env+'"] .kmsg');if(m2){m2.textContent=d.verify.msg;m2.className='kmsg '+(d.verify.state==='ok'?'ok':d.verify.state==='filled'?'':'bad')}}catch(e){say(e.message,'bad');vb.disabled=false}};
+    const db=row.querySelector('[data-kdel]');if(db)db.onclick=async()=>{if(!confirm('删除 '+env+' 这个 Key？'))return;try{await api('/api/keys/'+env,{method:'DELETE'});await renderKeys();loadMembers().catch(()=>{})}catch(e){say(e.message,'bad')}};
+  })}
+$('#keysBtn')&&($('#keysBtn').onclick=()=>{show('tools');setTimeout(()=>{const h=$('#keysH');if(h)h.scrollIntoView()},50)});
+function renderTools(){renderKeys();$('#toolList').innerHTML=(D.tools||[]).map(t=>'<div class="src"><div class="h">'+esc(t.name)+' <span class="sub">· '+esc(t.kind)+'</span></div><dl class="kv"><dt>配置</dt><dd>'+esc(t.config)+'</dd><dt>谁能用</dt><dd>'+(t.who||[]).map(id=>'<span class="chip" data-mid="'+esc(id)+'">'+esc((mem(id)||{name:id}).name)+'</span>').join(' ')+'</dd><dt>权限</dt><dd>'+esc(t.perms)+'</dd><dt>额度</dt><dd>'+esc(t.quota)+(t.quota_src?' <a href="'+esc(t.quota_src)+'" target="_blank" rel="noopener">官方页</a>':'')+'</dd>'+(t.key?'<dt>密钥</dt><dd>在上面「API 密钥」填 '+esc(t.name)+'</dd>':'')+'</dl></div>').join('')}
+/* 全局搜索 */
+let sT=null;
+$('#q').addEventListener('input',()=>{clearTimeout(sT);sT=setTimeout(doSearch,300)});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){clearTimeout(sT);doSearch()}});
+function hl(text,q){const t=esc(text);if(!q)return t;const e=esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return t.replace(new RegExp(e,'gi'),m=>'<mark>'+m+'</mark>')}
+async function doSearch(){
+  const q=$('#q').value.trim();if(!q){show('chat');return}
+  let r;try{r=await api('/api/search?q='+encodeURIComponent(q))}catch(e){return}
+  show('search');
+  $('#searchRes').innerHTML='<p class="sub">「'+esc(q)+'」：'+r.projects.length+' 个项目，'+r.messages.length+' 条消息</p>'
+   +r.projects.map(p=>'<div class="row" data-room="'+esc(p.room)+'" style="cursor:pointer"><div class="col"><div class="nm">项目 · '+hl(p.title,q)+'</div><div class="meta">'+esc(p.status)+' · '+tfmt(p.ts)+'</div></div></div>').join('')
+   +r.messages.map(x=>'<div class="row" data-room="'+esc(x.room)+'" data-msg="'+x.msg+'" style="cursor:pointer"><div class="col"><div class="meta">'+esc(x.title)+' · <b>'+esc(x.name)+'</b>'+(x.role?'（'+esc(x.role)+'）':'')+' · '+tfmt(x.ts)+'</div><div>'+hl(x.snippet,q)+'</div></div></div>').join('');
+  document.querySelectorAll('#searchRes [data-room]').forEach(el=>el.onclick=()=>{show('chat');openRoom(el.dataset.room,el.dataset.msg)});
+}
+(async()=>{try{await loadMembers();await loadRooms('');const ok=D.members.filter(m=>m.state==='ok').length;$('#status').textContent=TERM+' '+D.members.length+' 位，可用 '+ok+' 位'}catch(e){$('#status').textContent=e.message}})();
+</script>
+</body></html>

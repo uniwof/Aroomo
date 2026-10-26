@@ -1,0 +1,26 @@
+TASTESKILL · INSPECT   mockups/03-roster.html
+
+MEASURED (first viewport listed)
+  hero headline   "AI成员"  1 words · 1 line(s) · 24px (1.7vw) · Geist 700 · tracking 0em · leading 1.25
+  @768px          1 line(s) · 24px
+  @390px          1 line(s) · 24px
+  typefaces       Geist 100%
+  sizes in use    13 / 14 / 15 / 16 / 17 / 24 px
+  colour          page #f6f6f4 · sections #ffffff · button #ffffff
+  page            1.2 screens · 153 words · 0 images · hero media none
+  headings        0 · longest 0 line(s) · median - words
+
+WARN — fix, or be able to defend
+  [font-fallback] @1440px (+768, 390)  Typeface(s) declared but not loaded, so a fallback is rendering: Geist
+      → Fix the font URL / family name, or the screenshots you are judging are not the design.
+
+LOOK AT THE RENDER — open these with your image viewer / Read tool before saying anything about quality:
+  desktop 1440px  .taste-skill/inspect/desktop-fold.jpg
+                  .taste-skill/inspect/desktop-page-01.jpg
+  tablet 768px    .taste-skill/inspect/tablet-fold.jpg
+                  .taste-skill/inspect/tablet-page-01.jpg
+  mobile 390px    .taste-skill/inspect/mobile-fold.jpg
+                  .taste-skill/inspect/mobile-page-01.jpg
+
+report: .taste-skill/inspect/report.json
+RESULT: 0 FAIL, 1 WARN — measurements pass. Passing the meter is the floor, not the grade: score the screenshots with references/critique.md.

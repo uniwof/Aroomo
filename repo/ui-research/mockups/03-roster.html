@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI成员与招聘 · AI 团队群聊（样稿）</title>
+<link rel="stylesheet" href="fonts/geist.css">
+<link rel="stylesheet" href="base.css">
+<style>
+  .tabs { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:var(--gap); overflow-x:auto; }
+  .tabs a { display:flex; align-items:center; min-height:48px; padding:0 14px; color:var(--muted); text-decoration:none; border-bottom:3px solid transparent; white-space:nowrap; font-size:16px; }
+  .tabs a[aria-current="page"] { color:var(--text); font-weight:600; border-bottom-color:var(--brand-fill); }
+  .decide { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:var(--gap); margin-bottom:var(--gap); }
+  .cand { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; padding:14px 0; border-bottom:1px solid var(--rule); }
+  .cand:last-child { border-bottom:0; }
+  .cand .avatar { grid-row: span 3; }
+  .cand .line1 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; font-size:17px; }
+  .cand p { margin:0; color:var(--muted); font-size:15px; }
+  .cand .acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .roster td .n { font-weight:600; font-size:16px; display:block; }
+  .roster td .s { color:var(--muted); font-size:14px; }
+  .roster .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .roster .avatar { width:36px; height:36px; font-size:13px; }
+  .roster .who { display:flex; gap:12px; align-items:center; }
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .filters .btn { min-height:40px; font-weight:500; }
+  .filters .btn[aria-pressed="true"] { background:var(--brand-tint); border-color:var(--brand-line); color:var(--brand-text); }
+  @media (max-width: 1100px) { .decide { grid-template-columns:1fr; } }
+  @media (max-width: 900px) {
+    .roster thead { display:none; }
+    .roster tr { display:grid; grid-template-columns:1fr auto; gap:8px 12px; padding:14px 0; border-bottom:1px solid var(--rule); }
+    .roster td { padding:0; border:0; }
+    .roster td.tg { grid-column:1 / -1; }
+    .roster td.hide-m { display:none; }
+    .cand .acts .btn { flex:1; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="iconbtn" aria-label="打开菜单"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="t">AI成员</div>
+  <button class="iconbtn" aria-label="搜索成员"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></button>
+</header>
+<div class="shell">
+  <nav class="side" aria-label="主导航">
+    <div class="brand"><span class="mark" aria-hidden="true">群</span>AI 团队群聊</div>
+    <div class="nav">
+      <a href="01-chat.html"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>群聊</a>
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>AI成员<span class="count">12</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M14 6l4 4-8 8H6v-4z"/></svg>工具库</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>对比归档</a>
+    </div>
+    <div class="nav foot"><button class="btn ghost" style="justify-content:flex-start;width:100%" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme==='dark'?'':'dark'">切换深色 / 浅色</button><a href="04-settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>设置</a></div>
+  </nav>
+
+  <main class="canvas">
+    <div class="titlerow">
+      <div><h1>AI成员</h1><p class="sub">12 位在职，今天 10 位有可用额度。2 件事等你决定。</p></div>
+      <button class="btn primary">手动添加成员</button>
+    </div>
+    <nav class="tabs" aria-label="成员分组">
+      <a href="#" aria-current="page">在职 12</a><a href="#">试用中 2</a><a href="#">候选 4</a><a href="#">没留下的 3</a>
+    </nav>
+
+    <div class="decide">
+      <section class="panel" aria-labelledby="trial">
+        <header><h2 id="trial">试用快到期</h2><span class="meta">留不留，看它干得怎么样</span></header>
+        <div class="cand">
+          <span class="avatar a5" aria-hidden="true">D</span>
+          <div class="line1">DeepSeek V4<span class="pill warn">5 天后到期</span></div>
+          <p>来源 Vyce AI，注册送 $40，已用 $6.20。试用期接了 4 个活，平均 4.0 分。</p>
+          <div class="acts"><button class="btn primary">留下，设为正式</button><button class="btn">再看看</button><button class="btn ghost">不留</button></div>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="cands">
+        <header><h2 id="cands">新候选</h2><a class="meta" href="#">全部 4</a></header>
+        <div class="cand">
+          <span class="avatar a3" aria-hidden="true">E</span>
+          <div class="line1">Elorian 2<span class="pill">网页型</span></div>
+          <p>羊毛监控 10-22 发现：新用户 30 天免费。社区说它擅长「看图描述」，尚未验证。</p>
+          <div class="acts"><button class="btn">试用 7 天</button><button class="btn ghost">忽略</button></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="all">
+      <header><h2 id="all">在职成员</h2><span class="meta">按口碑排序</span></header>
+      <div class="filters" role="group" aria-label="按岗位筛选">
+        <button class="btn" aria-pressed="true">全部</button><button class="btn" aria-pressed="false">写作</button><button class="btn" aria-pressed="false">审查</button><button class="btn" aria-pressed="false">编程</button><button class="btn" aria-pressed="false">能注册账号</button>
+      </div>
+      <table class="roster">
+        <thead><tr><th>成员</th><th>擅长岗位</th><th class="num">口碑</th><th>今日可用来源</th><th>最近项目</th></tr></thead>
+        <tbody>
+          <tr><td><div class="who"><span class="avatar a1" aria-hidden="true">K</span><div><span class="n">Kimi K3</span><span class="s">写手</span></div></div></td><td class="tg"><div class="tags"><span class="pill">中文长文</span><span class="pill">长上下文</span></div></td><td class="num"><b>4.6</b></td><td class="hide-m num">2 / 2</td><td class="hide-m">洞箫第 12 期</td></tr>
+          <tr><td><div class="who"><span class="avatar a2" aria-hidden="true">G</span><div><span class="n">gpt-oss-120b</span><span class="s">审查</span></div></div></td><td class="tg"><div class="tags"><span class="pill">挑事实错误</span><span class="pill">代码审查</span></div></td><td class="num"><b>4.3</b></td><td class="hide-m num"><span style="color:var(--warn)">2 / 3</span></td><td class="hide-m">洞箫第 12 期</td></tr>
+          <tr><td><div class="who"><span class="avatar a3" aria-hidden="true">M</span><div><span class="n">Mistral Small 3.1</span><span class="s">挑错</span></div></div></td><td class="tg"><div class="tags"><span class="pill">挑逻辑漏洞</span><span class="pill">短摘要</span></div></td><td class="num"><b>4.1</b></td><td class="hide-m num">1 / 1</td><td class="hide-m">洞箫第 12 期</td></tr>
+          <tr><td><div class="who"><span class="avatar a4" aria-hidden="true">Q</span><div><span class="n">Qwen3 30B</span><span class="s">裁判</span></div></div></td><td class="tg"><div class="tags"><span class="pill">综合裁决</span><span class="pill">中英翻译</span></div></td><td class="num"><b>4.0</b></td><td class="hide-m num">1 / 1</td><td class="hide-m">梦境复古色板</td></tr>
+          <tr><td><div class="who"><span class="avatar a6" aria-hidden="true">P</span><div><span class="n">Poke</span><span class="s">跑腿</span></div></div></td><td class="tg"><div class="tags"><span class="pill">收短信验证码</span><span class="pill">发消息</span></div></td><td class="num"><b>3.8</b></td><td class="hide-m num">1 / 1</td><td class="hide-m">—</td></tr>
+          <tr><td><div class="who"><span class="avatar a5" aria-hidden="true">L</span><div><span class="n">Llama 4 Scout</span><span class="s">挑错</span></div></div></td><td class="tg"><div class="tags"><span class="pill">看图</span></div></td><td class="num"><b>3.4</b></td><td class="hide-m num"><span style="color:var(--bad)">0 / 3</span></td><td class="hide-m">洞箫第 12 期</td></tr>
+        </tbody>
+      </table>
+      <p class="sub" style="font-size:14px">显示 6 / 12 · <a href="#">看全部</a></p>
+    </section>
+  </main>
+</div>
+</body>
+</html>

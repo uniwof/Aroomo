@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>信息架构图：每个需求放在哪 · AI 团队群聊 Phase 3</title>
+<link rel="stylesheet" href="fonts/geist.css">
+<link rel="stylesheet" href="base.css">
+<style>
+  body { padding:32px; }
+  .page { margin:0; }
+  .lead { color:var(--muted); font-size:16px; margin:6px 0 24px; max-width:80ch; }
+  .global { border:2px solid var(--text); border-radius:10px; padding:14px 18px; margin-bottom:16px; background:var(--surface); }
+  .global h2 { font-size:16px; margin-bottom:8px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 18px; }
+  .item { font-size:15px; display:flex; gap:6px; align-items:baseline; }
+  .rid { font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; min-width:28px; height:22px; padding:0 6px; border-radius:4px; background:var(--raised); display:inline-grid; place-items:center; flex:none; }
+  .rid.hot { background:var(--brand-fill); color:var(--on-brand); }
+  .comp { color:var(--muted); font-size:14px; }
+  .map { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:16px; align-items:start; }
+  .zone { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .zone.main { grid-column: span 2; border:2px solid var(--brand-line); }
+  .zone h2 { font-size:17px; display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .zone h2 small { font-weight:400; color:var(--muted); font-size:14px; }
+  .area { border-top:1px solid var(--rule); padding-top:10px; }
+  .area h3 { font-size:14px; color:var(--muted); font-weight:500; margin-bottom:6px; }
+  .area ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+  .flows { margin-top:16px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:16px; }
+  .flow { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-size:15px; }
+  .flow h3 { margin-bottom:6px; }
+  .flow ol { margin:0; padding-left:20px; }
+  @media (max-width:1100px){ .map{grid-template-columns:repeat(2,minmax(0,1fr));} .flows{grid-template-columns:1fr;} }
+  @media (max-width:700px){ body{padding:16px;} .map{grid-template-columns:1fr;} .zone.main{grid-column:auto;} }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>信息架构图：20 个需求点放在哪</h1>
+  <p class="lead">编号 = 报告里的需求号。珊瑚色编号是「需要你当场决定」的点，只在这些地方用品牌色。一级导航 5 项：群聊、AI成员、工具库、对比归档、设置；项目是群聊里的上下文，不单独占一级。</p>
+
+  <section class="global" aria-labelledby="g">
+    <h2 id="g">全局层（任何页面都在）</h2>
+    <div class="row">
+      <span class="item"><span class="rid hot">R17</span>按住说话发任务<span class="comp">· 底部大话筒 56px</span></span>
+      <span class="item"><span class="rid">R17</span>朗读结论<span class="comp">· 完成条上的按钮 + 设置里自动朗读</span></span>
+      <span class="item"><span class="rid">R16</span>完成推送<span class="comp">· Telegram / Bark，推送里带一句结论</span></span>
+      <span class="item"><span class="rid hot">R20</span>「待你决定 N」<span class="comp">· 导航计数，只数要你动手的</span></span>
+      <span class="item"><span class="rid">R7</span>额度告警<span class="comp">· 50/75/100% 三档，进推送不弹窗</span></span>
+    </div>
+  </section>
+
+  <div class="map">
+    <section class="zone main" aria-labelledby="z1">
+      <h2 id="z1">群聊（某个项目里）<small>用户 80% 时间在这</small></h2>
+      <div class="area"><h3>消息流（中栏）</h3><ul>
+        <li class="item"><span class="rid hot">R20</span>派工卡<span class="comp">· 谁做什么 + 理由（标签+来源）+「就这样 / 换人」</span></li>
+        <li class="item"><span class="rid">R9</span>接班 / 换来源系统行<span class="comp">· 灰底一行，说清换了谁、为什么、何时恢复</span></li>
+        <li class="item"><span class="rid">R3</span>每条消息署名后「经 Groq」<span class="comp">· 来源小字</span></li>
+        <li class="item"><span class="rid hot">R6</span>完成条：打分入口<span class="comp">· 赞踩 → 喂口碑分</span></li>
+        <li class="item"><span class="rid">R13</span>「已隐藏 1 段密钥」占位<span class="comp">· 拦截在消息里看得见</span></li>
+      </ul></div>
+      <div class="area"><h3>右栏（桌面）/ 成员按钮弹出层（手机）</h3><ul>
+        <li class="item"><span class="rid">R8</span>本项目预算条<span class="comp">· 真实比例，两端标注</span></li>
+        <li class="item"><span class="rid">R2</span>成员行：头像 + 岗位 + 状态文字<span class="comp">· 状态不只用颜色</span></li>
+        <li class="item"><span class="rid">R7</span>每人当前来源额度条<span class="comp">· 低于 20% 变红</span></li>
+      </ul></div>
+      <div class="area"><h3>标题栏</h3><ul>
+        <li class="item"><span class="rid">R18</span>「并排对比这一轮」<span class="comp">· 进对比视图</span></li>
+        <li class="item"><span class="rid">R15</span>「项目记忆 14 条」<span class="comp">· 侧滑面板，可删可钉住</span></li>
+      </ul></div>
+    </section>
+
+    <section class="zone" aria-labelledby="z2">
+      <h2 id="z2">AI成员</h2>
+      <div class="area"><h3>名册（表格）</h3><ul>
+        <li class="item"><span class="rid">R2</span>一个模型一行</li>
+        <li class="item"><span class="rid">R5</span>擅长岗位筛选按钮</li>
+        <li class="item"><span class="rid">R19</span>按执行能力筛选<span class="comp">· 能注册 / 收验证码…</span></li>
+      </ul></div>
+      <div class="area"><h3>招聘（同页 tab）</h3><ul>
+        <li class="item"><span class="rid">R10</span>候选：羊毛监控发现</li>
+        <li class="item"><span class="rid hot">R11</span>试用到期：留 / 不留</li>
+      </ul></div>
+      <div class="area"><h3>资料卡</h3><ul>
+        <li class="item"><span class="rid">R5</span>擅长 / 不擅长 + 标签来源</li>
+        <li class="item"><span class="rid">R6</span>口碑分 + 构成</li>
+        <li class="item"><span class="rid">R3</span>来源表 + 接班顺序</li>
+        <li class="item"><span class="rid">R4</span>能用的工具（链到工具库）</li>
+      </ul></div>
+    </section>
+
+    <section class="zone" aria-labelledby="z3">
+      <h2 id="z3">工具库 · 对比归档</h2>
+      <div class="area"><h3>工具库（独立一级）</h3><ul>
+        <li class="item"><span class="rid">R4</span>工具卡：谁能用、权限、额度/费用</li>
+        <li class="item"><span class="rid">R7</span>工具额度进同一本账</li>
+      </ul></div>
+      <div class="area"><h3>对比归档</h3><ul>
+        <li class="item"><span class="rid">R18</span>同题 2–4 列并排，手机左右滑</li>
+        <li class="item"><span class="rid">R6</span>选最好的 → 计入口碑</li>
+        <li class="item"><span class="rid">R18</span>归档列表按题目搜</li>
+      </ul></div>
+    </section>
+
+    <section class="zone" aria-labelledby="z4" style="grid-column: span 2">
+      <h2 id="z4">项目（群聊标题点开）</h2>
+      <div class="area"><h3>概览</h3><ul>
+        <li class="item"><span class="rid">R8</span>预算：已花 / 已承诺 / 上限 一条 plan bar</li>
+        <li class="item"><span class="rid">R2</span>阵容：岗位槽位（写手、审查、裁判…）拖成员进去</li>
+        <li class="item"><span class="rid">R15</span>共享记忆：条目 + 谁写的 + 何时，可删可钉住</li>
+      </ul></div>
+    </section>
+
+    <section class="zone" aria-labelledby="z5" style="grid-column: span 2">
+      <h2 id="z5">设置（一类一屏）</h2>
+      <div class="area"><h3>分类</h3><ul>
+        <li class="item"><span class="rid">R1</span>接入资源：模型 API / 中转站 / 智能体 / 网页型 / 沙盒 / 算力 / 电话<span class="comp">· 测试连接按钮</span></li>
+        <li class="item"><span class="rid">R12</span><span class="rid">R13</span><span class="rid">R14</span>权限与安全：动作分级表 · 敏感规则 + 预览 · 审计日志</li>
+        <li class="item"><span class="rid">R7</span>额度与预算：全局账本（按来源、按项目）</li>
+        <li class="item"><span class="rid">R16</span><span class="rid">R17</span>通知与语音：渠道、推送预览、朗读声音、自动朗读</li>
+        <li class="item">字号与显示：大字模式、深色、高对比</li>
+      </ul></div>
+    </section>
+  </div>
+
+  <div class="flows">
+    <div class="flow"><h3>流程 1：发任务</h3><ol><li>按住话筒说话</li><li>Hark 出派工卡（R20）</li><li>点「就这样」→ 成员开干</li><li>完成推送 + 朗读（R16 R17）</li></ol></div>
+    <div class="flow"><h3>流程 2：额度用完</h3><ol><li>来源 A 用完 → 自动换来源 B（同一成员）</li><li>全部来源用完 → 同岗位口碑最高者接班（R9）</li><li>群里一行说明，可「改派别人」</li></ol></div>
+    <div class="flow"><h3>流程 3：招人</h3><ol><li>羊毛监控发现 → 候选（R10）</li><li>按社区评价给初始标签（R5）</li><li>试用 → 到期提醒（R11）→ 留/不留</li></ol></div>
+  </div>
+</div>
+</body>
+</html>

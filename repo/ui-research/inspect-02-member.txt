@@ -1,0 +1,28 @@
+TASTESKILL · INSPECT   mockups/02-member.html
+
+MEASURED (first viewport listed)
+  hero headline   "gpt-oss-120b"  1 words · 1 line(s) · 24px (1.7vw) · Geist 700 · tracking 0em · leading 1.25
+  @768px          1 line(s) · 24px
+  @390px          1 line(s) · 24px
+  typefaces       Geist 95%, ui-monospace 5%
+  sizes in use    13 / 14 / 15 / 16 / 17 / 24 / 36 px
+  colour          page #f6f6f4 · button #e9e9e6
+  page            1.4 screens · 193 words · 0 images · hero media none
+  headings        1 · longest 1 line(s) · median - words
+
+WARN — fix, or be able to defend
+  [font-fallback] @1440px (+768, 390)  Typeface(s) declared but not loaded, so a fallback is rendering: Geist
+      → Fix the font URL / family name, or the screenshots you are judging are not the design.
+  [ragged-row] @1440px  1 pair(s) of cards in one row end at different heights (by 73px).
+      → Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time.
+
+LOOK AT THE RENDER — open these with your image viewer / Read tool before saying anything about quality:
+  desktop 1440px  .taste-skill/inspect/desktop-fold.jpg
+                  .taste-skill/inspect/desktop-page-01.jpg
+  tablet 768px    .taste-skill/inspect/tablet-fold.jpg
+                  .taste-skill/inspect/tablet-page-01.jpg
+  mobile 390px    .taste-skill/inspect/mobile-fold.jpg
+                  .taste-skill/inspect/mobile-page-01.jpg
+
+report: .taste-skill/inspect/report.json
+RESULT: 0 FAIL, 2 WARN — measurements pass. Passing the meter is the floor, not the grade: score the screenshots with references/critique.md.
