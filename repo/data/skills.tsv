@@ -1,0 +1,131 @@
+# name	group	purpose	src
+hub-coding-agent	总纲	编程/Agent 任务开工清单：要加载的技能、条款、工具命令、质检	
+hub-pages-diagrams	总纲	网页/仪表盘/图表任务开工清单与质检	
+hub-video	总纲	视频制作开工清单（分镜、配音、代码动画、生视频）	
+hub-illustration	总纲	插画出图开工清单（画风、色板、美术指导）	
+hub-graphic-design	总纲	小红书图文/封面/海报开工清单	
+hub-research-absorb	总纲	吸收帖子/仓库：先判断服务哪个项目再决定装不装	
+ai-video-production-standard	视频	AI 视频制作规范：流程、固定分镜表、验收清单	https://x.com/AdrianPunk115
+adrian-punk-editing-sound-subtitles	视频	剪辑、声音、字幕与导出检查清单	https://x.com/AdrianPunk115
+ai-video-cinematography	视频	景别、机位、运镜、连续性写法	https://x.com/AdrianPunk115
+animate-procedural	视频	单文件 canvas 程序化动画 + 配乐出 MP4（7 种风格）	https://github.com/cth9191/animate
+earshot-audio-ears	视频	给 agent 的“耳朵”：挑音效、找干净片段、响度检查	https://github.com/Leonxlnx/earshot
+eian-riso-broll	视频	孔版双色 Riso 口播信息动画（个人非商用）	https://github.com/YIAN6557/eian-riso-broll
+fight-scene-director	视频	打戏/追逐戏的 AI 视频提示词	https://github.com/ZzzAloong/fight-scene-director
+huashu-art-motion	视频	艺术风/解说风代码动画（36 种风格）	https://github.com/alchaincyf/huashu-art-motion
+huashu-motion	视频	代码直出产品宣传片，自带作曲配音效	https://github.com/alchaincyf/huashu-motion
+hyperframes-video	视频	HTML+GSAP 渲染视频（CLI 已装）	https://github.com/heygen-com/hyperframes
+hypit-video-clone	视频	参考视频拆成 workflow 再批量出变体	https://github.com/hypit-ai/hypit
+kinetic-reel	视频	动态文字/作品集 reel，节拍同步	https://github.com/tuzhechen2005/opus-video-skills
+landing-flyover-video	视频	落地页一镜到底 3D 飞越宣传片	https://x.com/twoclipping
+landscape-explainer-video	视频	梵高式横版讲解动画（仅私人参考）	https://github.com/xianxie6/landscape-explainer-video
+lemo-opuscar	视频	纯代码短片 59 种风格 + 自建风格流程	https://x.com/lemomo_ai
+mg-styles-15	视频	15 种 MG 动态设计风格，每种 10 秒样片+提示词	https://github.com/Vincentwei1021/mg-styles-15
+oneshotted-launch-film	视频	给网址做 15–20 秒产品发布片，带自动质检	https://github.com/Codesaz-Company/oneshotted-skill
+openshorts	视频	长视频切竖屏短片+字幕（自托管）	https://github.com/mutonby/openshorts
+painted-animation	视频	p5.brush 水彩手绘动画	https://github.com/tuzhechen2005/opus-video-skills
+particle-science-animation	视频	科普粒子动画网页（可导出视频）	https://youmind.com/skills/particle-science-animation-krj6Q4F92euyg2
+rachel-digital-human	视频	数字人口播流程（付费 API，先问）	https://github.com/Jingyi-Wu-Richael/rachel-digital-human-production
+reelbench-video-analysis	视频	拉片：切点、镜头表、单页拉片报告	https://github.com/eternityspring/reelbench-skills
+remotion-official-skills	视频	Remotion 官方最佳实践	https://github.com/remotion-dev/skills
+seedance-skill-os	视频	Seedance/Wan/Kling 生视频提示词导演流程	https://github.com/Emily2040/seedance-2.0
+short-drama-skills	视频	AI 短剧/漫剧剧本、分镜、提示词索引	https://github.com/UnderleveledBuilder/awesome-short-drama-skills
+stickman-video-director	视频	火柴人视频导演提案+提示词	https://github.com/kaomei/stickman-video-director
+stylized-video-pipelines	视频	风格化动画视频流水线索引	
+sweety-handdraw-video	视频	手绘口播讲解视频（逐笔描线）	https://github.com/threerocks/sweety-handdraw-video
+talking-head-video-workflows	视频	剪口播、数字人视频流程索引	
+video-illustrator	视频	科普片/宣传片：事实表→素材→换风格重渲	https://github.com/axtonliu/video-illustrator
+video-prompt-reverse	视频	视频反推逐镜头提示词	https://github.com/LunarXuan
+video-shotcraft	视频	124 张镜头配方卡 + 宣传片模板	https://github.com/Vincentwei1021/video-shotcraft
+video-sound-effects	视频	找免费音效（Openverse/Mixkit/BigSoundBank）	
+viral-knowledge-short	视频	纯代码 1 分钟知识短片方法	https://x.com/AI_DVD6
+xilo-opus-video	视频	用代码做视频：先给 3 个方案预览再成片	https://github.com/Kianzzz/xilo-opus-video
+motion-prompt	视频	120 个动效/运镜标准名称和规格	https://showheyohtaki.github.io/motion-prompt/
+map-motion	视频	地图路线/飞线动效视频	https://github.com/SpaceZephyr/map-motion
+adult-calendar-art	插画	成人版日历插画出图规则与验收	
+aesthetic-reference-sources	插画	找审美参考的来源清单	
+aesthetic-reference-sources-2026-10	插画	Reference 库 + 10 个基础设计资源	https://meetreference.com/
+bead-pattern-maker	插画	拼豆图纸：真实色卡、色号图、用量表	
+dream-idea-collider	插画	梦境碰撞点子 + 用户马克笔画风	
+get-prompt-from-image	插画	参考图反推高还原提示词	
+image-prompt-reverse	插画	图片反推中英提示词（GPL-3.0）	https://github.com/LunarXuan
+handraw-style	插画	331 种手绘画风提示词库	https://github.com/yang0/handraw-style
+handraw-style-more-sources	插画	手绘画风补充来源	https://github.com/threerocks
+laser-cut-drawings	插画	图片→激光切割 3D 图纸→Etsy 包	
+sweety-image-art-direction	插画	生图美术指导（每张图必过）	https://github.com/threerocks/sweety-image-art-direction
+gpt-image-2-prompt-library	插画	GPT-Image-2 提示词案例库 775 条	https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts
+nano-banana-prompt-library	插画	现成生图提示词参考库	https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts
+moss-image-json-layout	插画	MOSS-Image JSON 布局精确放字	https://github.com/OpenMOSS
+visual-style-cookbook	插画	固定画风 style.json（172 种风格）	https://github.com/VigoZhao
+visual-rules-md	插画	个人视觉规则单一来源	https://x.com/morry4ai/status/2113152793418854660
+cover-studio-styles	图文	31 种封面风格 + 小红书强钩子封面	https://github.com/lonely-dance-lab/cover-studio
+graphic-design-skills	图文	海报/封面/小红书/信息图出图合集	
+html-poster	图文	HTML 做海报再截图，文字不乱码	https://x.com/jinchenma_ai/status/2112884389021704211
+ian-xhs-carousel	图文	小红书 3:4 图文 20 个母版	https://github.com/helloianneo/ian-xhs-carousel
+photo-to-art-poster	图文	照片改艺术海报/拼贴/邮票	
+style-poster-recipes	图文	设计风格海报配方库	
+logo-design-and-motion	图文	Logo 设计与 Logo 动画	
+content-skills-library	图文	内容创作技能库索引（去 AI 味、配图、PPT）	
+dbskill	图文	35 个中文商业/内容技能（非商用）	https://github.com/dontbesilent2025/dbskill
+answer-me-with-html	页面	一页 HTML 图解回答	
+better-design	页面	32 套产品设计系统 token	https://github.com/marvkr/better-design
+design-dna-extract	页面	从参考站提取设计 DNA/令牌	
+design-gate-loop	页面	交付前门禁→修→重跑	https://github.com/plugin87/ux-ui-agent-skills
+design-taste	页面	反 AI 味 UI 规则 + 流派包	https://github.com/madebymustafa/design-taste
+diagram-design	页面	45 种图表单文件 HTML/SVG	https://github.com/cathrynlavery/diagram-design
+emil-design-skills	页面	动效/交互打磨（Emil Kowalski）	https://github.com/emilkowalski/skills
+frontend-design	页面	Anthropic 官方前端设计观点	https://github.com/anthropics/skills
+impeccable-design	页面	设计语言 + 免 Key AI 味检测器	https://github.com/pbakaus/impeccable
+taste-skill	页面	反 AI 味前端艺术指导 + 三屏检查	https://github.com/Leonxlnx/taste-skill
+ui-ux-pro-max	页面	配色/字体/设计系统检索	https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+taste-accessibility	页面	无障碍检查清单	https://github.com/madebymustafa/design-taste
+taste-color	页面	配色与对比度	https://github.com/madebymustafa/design-taste
+taste-typography	页面	字体排版	https://github.com/madebymustafa/design-taste
+taste-motion	页面	网页动效	https://github.com/madebymustafa/design-taste
+taste-ux-copy	页面	界面文案	https://github.com/madebymustafa/design-taste
+taste-design-review	页面	三屏截图设计评审	https://github.com/madebymustafa/design-taste
+taste-code-review	页面	前端代码评审	https://github.com/madebymustafa/design-taste
+web-effects-libraries	页面	Paper Shaders / Canvas UI 特效背景	
+web-effects-3d-components	页面	ThreeUI、Dioramas、React Bits	https://github.com/MengTo/threeui
+aetherviz-master	页面	一句主题→3D 交互教学网页	https://github.com/andyhuo520/aetherviz-master
+machine-3d-sim	页面	交互 3D 机器模拟	https://github.com/AirsupHQ/machine-skill
+img2threejs	页面	参考图→程序化 Three.js 模型	
+scroll-video-web-animation	页面	滚动驱动视频网页动画	
+replica-app-clone	页面	净室复刻 App 11 步	https://github.com/Jakeschincariol/replica-skill
+superdesign	页面	Superdesign 画布出 UI（需账号，先问）	https://github.com/superdesigndev/superdesign-skill
+addy-agent-skills	编程	24 个工程技能（规格、TDD、上线）	https://github.com/addyosmani/agent-skills
+claude-code-guide	编程	Claude Code 三级实操指南	https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know
+claude-mem	编程	Claude Code 持久记忆插件	https://github.com/thedotmack/claude-mem
+cloudflare-security-audit	编程	6 阶段代码安全审计	https://github.com/cloudflare/security-audit-skill
+code-review	编程	标准 + 规格两轴代码审查	https://github.com/mattpocock/skills
+codebase-design	编程	深模块设计词汇	https://github.com/mattpocock/skills
+diagnosing-bugs	编程	复现→假设→最小实验的诊断循环	https://github.com/mattpocock/skills
+grilling	编程	把方案问透	https://github.com/mattpocock/skills
+tdd	编程	红-绿-重构	https://github.com/mattpocock/skills
+to-spec	编程	对话→规格	https://github.com/mattpocock/skills
+to-tickets	编程	规格→带阻塞边的任务	https://github.com/mattpocock/skills
+implement-spec	编程	按规格和任务实现	https://github.com/mattpocock/skills
+wayfinder	编程	大工程决策地图	https://github.com/mattpocock/skills
+handoff	编程	写交接文档	https://github.com/mattpocock/skills
+writing-for-agents	编程	给 agent 写说明/技能	https://github.com/mattpocock/skills
+rtk-token-killer	编程	压缩命令输出省 token	https://github.com/rtk-ai/rtk
+serena-code-nav	编程	按符号导航代码的 MCP	https://github.com/oraios/serena
+xerj-code-search	编程	参考式检索已解决实现	https://github.com/xerj-org/xerj
+github-cli	编程	GitHub 仓库/PR/搜索	
+cf-global-edge-node	基础设施	Cloudflare 边缘节点 + 订阅二维码	https://github.com/free-dam-man/cf-global-edge-node-skill
+freestyle-browser	基础设施	控制用户的 Freestyle 云 Chrome	
+agent-reach	研究	免 API 费读 B站/YouTube/V2EX/RSS	https://github.com/Panniantong/Agent-Reach
+imozuru-deep-research	研究	顺藤摸瓜深挖陌生领域	https://github.com/MaryCache/imozuru
+social-media-research-skills	研究	社媒爆款/评论挖掘（需付费 Key）	https://github.com/ScrapeCreators/social-media-research-skills
+distill-to-skill	研究	把人或书蒸馏成专长	
+seo-and-ads-audit	研究	SEO 与广告账户审计	https://github.com/AgriciDaniel/claude-seo
+marketingskills	研究	40+ 营销技能	https://github.com/coreyhaines31/marketingskills
+shrimpreel-site-template	研究	热词视频站 Cloudflare 模板	https://github.com/qianshuixia/shrimpreel
+twenty-crm	研究	开源 CRM Twenty 的 Agent Skills	https://github.com/twentyhq/twenty
+privacy-first-signup	规矩	注册网站时的隐私规矩	
+accessibility-signup-help	规矩	帮视障朋友注册的规矩	
+poke-bridge	基础设施	和 Poke 双向收发任务	
+cn-bazi	其他	八字排盘（脚本排盘）	https://github.com/jinchenma94/bazi-skill
+cn-qimen-ziwei	其他	奇门遁甲/紫微排盘（仅私用）	https://github.com/FANzR-arch/Numerologist_skills
+cn-tarot	其他	塔罗占卜	https://github.com/daman-ovo-0404/tarot-skill
+ziwei-doushu-engine	其他	紫微排盘引擎 + 数据集	https://github.com/Renhuai123/ziwei-doushu

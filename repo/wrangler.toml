@@ -1,0 +1,26 @@
+# 本机开发用（npx wrangler dev --local）。不含账号 ID、不含任何密钥；不要用它部署（部署由 Hark 负责）。
+# ACCESS_TOKEN 放在 .dev.vars（已被 .gitignore 排除），例如：ACCESS_TOKEN=<≥32 位随机串>
+name = "aroomo-local-dev"
+main = "build/worker.js"
+compatibility_date = "2025-06-01"
+workers_dev = false
+
+[build]
+command = "python3 deploy.py build"   # 离线打包 members.json / page.html 等为模块，写到 ./build/
+watch_dir = ["worker.js", "caps.js", "p1.js", "page.html", "members.json", "toolgw.js", "pwa.js", "logos.json", "resources.json", "skills"]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = false
+
+[[durable_objects.bindings]]
+name = "DB"
+class_name = "ChatStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ChatStore"]
+
+[vars]
+PUBLIC_ORIGIN = "http://127.0.0.1:8787"

@@ -1,0 +1,2483 @@
+{
+ "version": 1,
+ "built": "2026-10-23",
+ "note": "资源库静态数据：技能 + 学习与网站资源。免费额度/期限只在官方页出现原文时标「已核实」。",
+ "skills": [
+  {
+   "id": "s-hub-coding-agent",
+   "name": "hub-coding-agent",
+   "group": "总纲",
+   "purpose": "编程/Agent 任务开工清单：要加载的技能、条款、工具命令、质检",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-hub-pages-diagrams",
+   "name": "hub-pages-diagrams",
+   "group": "总纲",
+   "purpose": "网页/仪表盘/图表任务开工清单与质检",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-hub-video",
+   "name": "hub-video",
+   "group": "总纲",
+   "purpose": "视频制作开工清单（分镜、配音、代码动画、生视频）",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-hub-illustration",
+   "name": "hub-illustration",
+   "group": "总纲",
+   "purpose": "插画出图开工清单（画风、色板、美术指导）",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-hub-graphic-design",
+   "name": "hub-graphic-design",
+   "group": "总纲",
+   "purpose": "小红书图文/封面/海报开工清单",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-hub-research-absorb",
+   "name": "hub-research-absorb",
+   "group": "总纲",
+   "purpose": "吸收帖子/仓库：先判断服务哪个项目再决定装不装",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-ai-video-production-standard",
+   "name": "ai-video-production-standard",
+   "group": "视频",
+   "purpose": "AI 视频制作规范：流程、固定分镜表、验收清单",
+   "src": "https://x.com/AdrianPunk115",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-adrian-punk-editing-sound-subtitles",
+   "name": "adrian-punk-editing-sound-subtitles",
+   "group": "视频",
+   "purpose": "剪辑、声音、字幕与导出检查清单",
+   "src": "https://x.com/AdrianPunk115",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-ai-video-cinematography",
+   "name": "ai-video-cinematography",
+   "group": "视频",
+   "purpose": "景别、机位、运镜、连续性写法",
+   "src": "https://x.com/AdrianPunk115",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-animate-procedural",
+   "name": "animate-procedural",
+   "group": "视频",
+   "purpose": "单文件 canvas 程序化动画 + 配乐出 MP4（7 种风格）",
+   "src": "https://github.com/cth9191/animate",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-earshot-audio-ears",
+   "name": "earshot-audio-ears",
+   "group": "视频",
+   "purpose": "给 agent 的“耳朵”：挑音效、找干净片段、响度检查",
+   "src": "https://github.com/Leonxlnx/earshot",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-eian-riso-broll",
+   "name": "eian-riso-broll",
+   "group": "视频",
+   "purpose": "孔版双色 Riso 口播信息动画（个人非商用）",
+   "src": "https://github.com/YIAN6557/eian-riso-broll",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-fight-scene-director",
+   "name": "fight-scene-director",
+   "group": "视频",
+   "purpose": "打戏/追逐戏的 AI 视频提示词",
+   "src": "https://github.com/ZzzAloong/fight-scene-director",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-huashu-art-motion",
+   "name": "huashu-art-motion",
+   "group": "视频",
+   "purpose": "艺术风/解说风代码动画（36 种风格）",
+   "src": "https://github.com/alchaincyf/huashu-art-motion",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-huashu-motion",
+   "name": "huashu-motion",
+   "group": "视频",
+   "purpose": "代码直出产品宣传片，自带作曲配音效",
+   "src": "https://github.com/alchaincyf/huashu-motion",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-hyperframes-video",
+   "name": "hyperframes-video",
+   "group": "视频",
+   "purpose": "HTML+GSAP 渲染视频（CLI 已装）",
+   "src": "https://github.com/heygen-com/hyperframes",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-hypit-video-clone",
+   "name": "hypit-video-clone",
+   "group": "视频",
+   "purpose": "参考视频拆成 workflow 再批量出变体",
+   "src": "https://github.com/hypit-ai/hypit",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-kinetic-reel",
+   "name": "kinetic-reel",
+   "group": "视频",
+   "purpose": "动态文字/作品集 reel，节拍同步",
+   "src": "https://github.com/tuzhechen2005/opus-video-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-landing-flyover-video",
+   "name": "landing-flyover-video",
+   "group": "视频",
+   "purpose": "落地页一镜到底 3D 飞越宣传片",
+   "src": "https://x.com/twoclipping",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-landscape-explainer-video",
+   "name": "landscape-explainer-video",
+   "group": "视频",
+   "purpose": "梵高式横版讲解动画（仅私人参考）",
+   "src": "https://github.com/xianxie6/landscape-explainer-video",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-lemo-opuscar",
+   "name": "lemo-opuscar",
+   "group": "视频",
+   "purpose": "纯代码短片 59 种风格 + 自建风格流程",
+   "src": "https://x.com/lemomo_ai",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-mg-styles-15",
+   "name": "mg-styles-15",
+   "group": "视频",
+   "purpose": "15 种 MG 动态设计风格，每种 10 秒样片+提示词",
+   "src": "https://github.com/Vincentwei1021/mg-styles-15",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-oneshotted-launch-film",
+   "name": "oneshotted-launch-film",
+   "group": "视频",
+   "purpose": "给网址做 15–20 秒产品发布片，带自动质检",
+   "src": "https://github.com/Codesaz-Company/oneshotted-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-openshorts",
+   "name": "openshorts",
+   "group": "视频",
+   "purpose": "长视频切竖屏短片+字幕（自托管）",
+   "src": "https://github.com/mutonby/openshorts",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-painted-animation",
+   "name": "painted-animation",
+   "group": "视频",
+   "purpose": "p5.brush 水彩手绘动画",
+   "src": "https://github.com/tuzhechen2005/opus-video-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-particle-science-animation",
+   "name": "particle-science-animation",
+   "group": "视频",
+   "purpose": "科普粒子动画网页（可导出视频）",
+   "src": "https://youmind.com/skills/particle-science-animation-krj6Q4F92euyg2",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-rachel-digital-human",
+   "name": "rachel-digital-human",
+   "group": "视频",
+   "purpose": "数字人口播流程（付费 API，先问）",
+   "src": "https://github.com/Jingyi-Wu-Richael/rachel-digital-human-production",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-reelbench-video-analysis",
+   "name": "reelbench-video-analysis",
+   "group": "视频",
+   "purpose": "拉片：切点、镜头表、单页拉片报告",
+   "src": "https://github.com/eternityspring/reelbench-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-remotion-official-skills",
+   "name": "remotion-official-skills",
+   "group": "视频",
+   "purpose": "Remotion 官方最佳实践",
+   "src": "https://github.com/remotion-dev/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-seedance-skill-os",
+   "name": "seedance-skill-os",
+   "group": "视频",
+   "purpose": "Seedance/Wan/Kling 生视频提示词导演流程",
+   "src": "https://github.com/Emily2040/seedance-2.0",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-short-drama-skills",
+   "name": "short-drama-skills",
+   "group": "视频",
+   "purpose": "AI 短剧/漫剧剧本、分镜、提示词索引",
+   "src": "https://github.com/UnderleveledBuilder/awesome-short-drama-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-stickman-video-director",
+   "name": "stickman-video-director",
+   "group": "视频",
+   "purpose": "火柴人视频导演提案+提示词",
+   "src": "https://github.com/kaomei/stickman-video-director",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-stylized-video-pipelines",
+   "name": "stylized-video-pipelines",
+   "group": "视频",
+   "purpose": "风格化动画视频流水线索引",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-sweety-handdraw-video",
+   "name": "sweety-handdraw-video",
+   "group": "视频",
+   "purpose": "手绘口播讲解视频（逐笔描线）",
+   "src": "https://github.com/threerocks/sweety-handdraw-video",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-talking-head-video-workflows",
+   "name": "talking-head-video-workflows",
+   "group": "视频",
+   "purpose": "剪口播、数字人视频流程索引",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-video-illustrator",
+   "name": "video-illustrator",
+   "group": "视频",
+   "purpose": "科普片/宣传片：事实表→素材→换风格重渲",
+   "src": "https://github.com/axtonliu/video-illustrator",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-video-prompt-reverse",
+   "name": "video-prompt-reverse",
+   "group": "视频",
+   "purpose": "视频反推逐镜头提示词",
+   "src": "https://github.com/LunarXuan",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-video-shotcraft",
+   "name": "video-shotcraft",
+   "group": "视频",
+   "purpose": "124 张镜头配方卡 + 宣传片模板",
+   "src": "https://github.com/Vincentwei1021/video-shotcraft",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-video-sound-effects",
+   "name": "video-sound-effects",
+   "group": "视频",
+   "purpose": "找免费音效（Openverse/Mixkit/BigSoundBank）",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-viral-knowledge-short",
+   "name": "viral-knowledge-short",
+   "group": "视频",
+   "purpose": "纯代码 1 分钟知识短片方法",
+   "src": "https://x.com/AI_DVD6",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-xilo-opus-video",
+   "name": "xilo-opus-video",
+   "group": "视频",
+   "purpose": "用代码做视频：先给 3 个方案预览再成片",
+   "src": "https://github.com/Kianzzz/xilo-opus-video",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-motion-prompt",
+   "name": "motion-prompt",
+   "group": "视频",
+   "purpose": "120 个动效/运镜标准名称和规格",
+   "src": "https://showheyohtaki.github.io/motion-prompt/",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-map-motion",
+   "name": "map-motion",
+   "group": "视频",
+   "purpose": "地图路线/飞线动效视频",
+   "src": "https://github.com/SpaceZephyr/map-motion",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-adult-calendar-art",
+   "name": "adult-calendar-art",
+   "group": "插画",
+   "purpose": "成人版日历插画出图规则与验收",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-aesthetic-reference-sources",
+   "name": "aesthetic-reference-sources",
+   "group": "插画",
+   "purpose": "找审美参考的来源清单",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-aesthetic-reference-sources-2026-10",
+   "name": "aesthetic-reference-sources-2026-10",
+   "group": "插画",
+   "purpose": "Reference 库 + 10 个基础设计资源",
+   "src": "https://meetreference.com/",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-bead-pattern-maker",
+   "name": "bead-pattern-maker",
+   "group": "插画",
+   "purpose": "拼豆图纸：真实色卡、色号图、用量表",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-dream-idea-collider",
+   "name": "dream-idea-collider",
+   "group": "插画",
+   "purpose": "梦境碰撞点子 + 用户马克笔画风",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-get-prompt-from-image",
+   "name": "get-prompt-from-image",
+   "group": "插画",
+   "purpose": "参考图反推高还原提示词",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-image-prompt-reverse",
+   "name": "image-prompt-reverse",
+   "group": "插画",
+   "purpose": "图片反推中英提示词（GPL-3.0）",
+   "src": "https://github.com/LunarXuan",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-handraw-style",
+   "name": "handraw-style",
+   "group": "插画",
+   "purpose": "331 种手绘画风提示词库",
+   "src": "https://github.com/yang0/handraw-style",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-handraw-style-more-sources",
+   "name": "handraw-style-more-sources",
+   "group": "插画",
+   "purpose": "手绘画风补充来源",
+   "src": "https://github.com/threerocks",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-laser-cut-drawings",
+   "name": "laser-cut-drawings",
+   "group": "插画",
+   "purpose": "图片→激光切割 3D 图纸→Etsy 包",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-sweety-image-art-direction",
+   "name": "sweety-image-art-direction",
+   "group": "插画",
+   "purpose": "生图美术指导（每张图必过）",
+   "src": "https://github.com/threerocks/sweety-image-art-direction",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-gpt-image-2-prompt-library",
+   "name": "gpt-image-2-prompt-library",
+   "group": "插画",
+   "purpose": "GPT-Image-2 提示词案例库 775 条",
+   "src": "https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-nano-banana-prompt-library",
+   "name": "nano-banana-prompt-library",
+   "group": "插画",
+   "purpose": "现成生图提示词参考库",
+   "src": "https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-moss-image-json-layout",
+   "name": "moss-image-json-layout",
+   "group": "插画",
+   "purpose": "MOSS-Image JSON 布局精确放字",
+   "src": "https://github.com/OpenMOSS",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-visual-style-cookbook",
+   "name": "visual-style-cookbook",
+   "group": "插画",
+   "purpose": "固定画风 style.json（172 种风格）",
+   "src": "https://github.com/VigoZhao",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-visual-rules-md",
+   "name": "visual-rules-md",
+   "group": "插画",
+   "purpose": "个人视觉规则单一来源",
+   "src": "https://x.com/morry4ai/status/2113152793418854660",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-cover-studio-styles",
+   "name": "cover-studio-styles",
+   "group": "图文",
+   "purpose": "31 种封面风格 + 小红书强钩子封面",
+   "src": "https://github.com/lonely-dance-lab/cover-studio",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-graphic-design-skills",
+   "name": "graphic-design-skills",
+   "group": "图文",
+   "purpose": "海报/封面/小红书/信息图出图合集",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-html-poster",
+   "name": "html-poster",
+   "group": "图文",
+   "purpose": "HTML 做海报再截图，文字不乱码",
+   "src": "https://x.com/jinchenma_ai/status/2112884389021704211",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-ian-xhs-carousel",
+   "name": "ian-xhs-carousel",
+   "group": "图文",
+   "purpose": "小红书 3:4 图文 20 个母版",
+   "src": "https://github.com/helloianneo/ian-xhs-carousel",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-photo-to-art-poster",
+   "name": "photo-to-art-poster",
+   "group": "图文",
+   "purpose": "照片改艺术海报/拼贴/邮票",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-style-poster-recipes",
+   "name": "style-poster-recipes",
+   "group": "图文",
+   "purpose": "设计风格海报配方库",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-logo-design-and-motion",
+   "name": "logo-design-and-motion",
+   "group": "图文",
+   "purpose": "Logo 设计与 Logo 动画",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-content-skills-library",
+   "name": "content-skills-library",
+   "group": "图文",
+   "purpose": "内容创作技能库索引（去 AI 味、配图、PPT）",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-dbskill",
+   "name": "dbskill",
+   "group": "图文",
+   "purpose": "35 个中文商业/内容技能（非商用）",
+   "src": "https://github.com/dontbesilent2025/dbskill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-answer-me-with-html",
+   "name": "answer-me-with-html",
+   "group": "页面",
+   "purpose": "一页 HTML 图解回答",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-better-design",
+   "name": "better-design",
+   "group": "页面",
+   "purpose": "32 套产品设计系统 token",
+   "src": "https://github.com/marvkr/better-design",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-design-dna-extract",
+   "name": "design-dna-extract",
+   "group": "页面",
+   "purpose": "从参考站提取设计 DNA/令牌",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-design-gate-loop",
+   "name": "design-gate-loop",
+   "group": "页面",
+   "purpose": "交付前门禁→修→重跑",
+   "src": "https://github.com/plugin87/ux-ui-agent-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-design-taste",
+   "name": "design-taste",
+   "group": "页面",
+   "purpose": "反 AI 味 UI 规则 + 流派包",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-diagram-design",
+   "name": "diagram-design",
+   "group": "页面",
+   "purpose": "45 种图表单文件 HTML/SVG",
+   "src": "https://github.com/cathrynlavery/diagram-design",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-emil-design-skills",
+   "name": "emil-design-skills",
+   "group": "页面",
+   "purpose": "动效/交互打磨（Emil Kowalski）",
+   "src": "https://github.com/emilkowalski/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-frontend-design",
+   "name": "frontend-design",
+   "group": "页面",
+   "purpose": "Anthropic 官方前端设计观点",
+   "src": "https://github.com/anthropics/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-impeccable-design",
+   "name": "impeccable-design",
+   "group": "页面",
+   "purpose": "设计语言 + 免 Key AI 味检测器",
+   "src": "https://github.com/pbakaus/impeccable",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-skill",
+   "name": "taste-skill",
+   "group": "页面",
+   "purpose": "反 AI 味前端艺术指导 + 三屏检查",
+   "src": "https://github.com/Leonxlnx/taste-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-ui-ux-pro-max",
+   "name": "ui-ux-pro-max",
+   "group": "页面",
+   "purpose": "配色/字体/设计系统检索",
+   "src": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-accessibility",
+   "name": "taste-accessibility",
+   "group": "页面",
+   "purpose": "无障碍检查清单",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-color",
+   "name": "taste-color",
+   "group": "页面",
+   "purpose": "配色与对比度",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-typography",
+   "name": "taste-typography",
+   "group": "页面",
+   "purpose": "字体排版",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-motion",
+   "name": "taste-motion",
+   "group": "页面",
+   "purpose": "网页动效",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-ux-copy",
+   "name": "taste-ux-copy",
+   "group": "页面",
+   "purpose": "界面文案",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-design-review",
+   "name": "taste-design-review",
+   "group": "页面",
+   "purpose": "三屏截图设计评审",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-taste-code-review",
+   "name": "taste-code-review",
+   "group": "页面",
+   "purpose": "前端代码评审",
+   "src": "https://github.com/madebymustafa/design-taste",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-web-effects-libraries",
+   "name": "web-effects-libraries",
+   "group": "页面",
+   "purpose": "Paper Shaders / Canvas UI 特效背景",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-web-effects-3d-components",
+   "name": "web-effects-3d-components",
+   "group": "页面",
+   "purpose": "ThreeUI、Dioramas、React Bits",
+   "src": "https://github.com/MengTo/threeui",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-aetherviz-master",
+   "name": "aetherviz-master",
+   "group": "页面",
+   "purpose": "一句主题→3D 交互教学网页",
+   "src": "https://github.com/andyhuo520/aetherviz-master",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-machine-3d-sim",
+   "name": "machine-3d-sim",
+   "group": "页面",
+   "purpose": "交互 3D 机器模拟",
+   "src": "https://github.com/AirsupHQ/machine-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-img2threejs",
+   "name": "img2threejs",
+   "group": "页面",
+   "purpose": "参考图→程序化 Three.js 模型",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-scroll-video-web-animation",
+   "name": "scroll-video-web-animation",
+   "group": "页面",
+   "purpose": "滚动驱动视频网页动画",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-replica-app-clone",
+   "name": "replica-app-clone",
+   "group": "页面",
+   "purpose": "净室复刻 App 11 步",
+   "src": "https://github.com/Jakeschincariol/replica-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-superdesign",
+   "name": "superdesign",
+   "group": "页面",
+   "purpose": "Superdesign 画布出 UI（需账号，先问）",
+   "src": "https://github.com/superdesigndev/superdesign-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-addy-agent-skills",
+   "name": "addy-agent-skills",
+   "group": "编程",
+   "purpose": "24 个工程技能（规格、TDD、上线）",
+   "src": "https://github.com/addyosmani/agent-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-claude-code-guide",
+   "name": "claude-code-guide",
+   "group": "编程",
+   "purpose": "Claude Code 三级实操指南",
+   "src": "https://github.com/wesammustafa/Claude-Code-Everything-You-Need-to-Know",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-claude-mem",
+   "name": "claude-mem",
+   "group": "编程",
+   "purpose": "Claude Code 持久记忆插件",
+   "src": "https://github.com/thedotmack/claude-mem",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-cloudflare-security-audit",
+   "name": "cloudflare-security-audit",
+   "group": "编程",
+   "purpose": "6 阶段代码安全审计",
+   "src": "https://github.com/cloudflare/security-audit-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-code-review",
+   "name": "code-review",
+   "group": "编程",
+   "purpose": "标准 + 规格两轴代码审查",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-codebase-design",
+   "name": "codebase-design",
+   "group": "编程",
+   "purpose": "深模块设计词汇",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-diagnosing-bugs",
+   "name": "diagnosing-bugs",
+   "group": "编程",
+   "purpose": "复现→假设→最小实验的诊断循环",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-grilling",
+   "name": "grilling",
+   "group": "编程",
+   "purpose": "把方案问透",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-tdd",
+   "name": "tdd",
+   "group": "编程",
+   "purpose": "红-绿-重构",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-to-spec",
+   "name": "to-spec",
+   "group": "编程",
+   "purpose": "对话→规格",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-to-tickets",
+   "name": "to-tickets",
+   "group": "编程",
+   "purpose": "规格→带阻塞边的任务",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-implement-spec",
+   "name": "implement-spec",
+   "group": "编程",
+   "purpose": "按规格和任务实现",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-wayfinder",
+   "name": "wayfinder",
+   "group": "编程",
+   "purpose": "大工程决策地图",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-handoff",
+   "name": "handoff",
+   "group": "编程",
+   "purpose": "写交接文档",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-writing-for-agents",
+   "name": "writing-for-agents",
+   "group": "编程",
+   "purpose": "给 agent 写说明/技能",
+   "src": "https://github.com/mattpocock/skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-rtk-token-killer",
+   "name": "rtk-token-killer",
+   "group": "编程",
+   "purpose": "压缩命令输出省 token",
+   "src": "https://github.com/rtk-ai/rtk",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-serena-code-nav",
+   "name": "serena-code-nav",
+   "group": "编程",
+   "purpose": "按符号导航代码的 MCP",
+   "src": "https://github.com/oraios/serena",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-xerj-code-search",
+   "name": "xerj-code-search",
+   "group": "编程",
+   "purpose": "参考式检索已解决实现",
+   "src": "https://github.com/xerj-org/xerj",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-github-cli",
+   "name": "github-cli",
+   "group": "编程",
+   "purpose": "GitHub 仓库/PR/搜索",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-cf-global-edge-node",
+   "name": "cf-global-edge-node",
+   "group": "基础设施",
+   "purpose": "Cloudflare 边缘节点 + 订阅二维码",
+   "src": "https://github.com/free-dam-man/cf-global-edge-node-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-freestyle-browser",
+   "name": "freestyle-browser",
+   "group": "基础设施",
+   "purpose": "控制用户的 Freestyle 云 Chrome",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-agent-reach",
+   "name": "agent-reach",
+   "group": "研究",
+   "purpose": "免 API 费读 B站/YouTube/V2EX/RSS",
+   "src": "https://github.com/Panniantong/Agent-Reach",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-imozuru-deep-research",
+   "name": "imozuru-deep-research",
+   "group": "研究",
+   "purpose": "顺藤摸瓜深挖陌生领域",
+   "src": "https://github.com/MaryCache/imozuru",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-social-media-research-skills",
+   "name": "social-media-research-skills",
+   "group": "研究",
+   "purpose": "社媒爆款/评论挖掘（需付费 Key）",
+   "src": "https://github.com/ScrapeCreators/social-media-research-skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-distill-to-skill",
+   "name": "distill-to-skill",
+   "group": "研究",
+   "purpose": "把人或书蒸馏成专长",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-seo-and-ads-audit",
+   "name": "seo-and-ads-audit",
+   "group": "研究",
+   "purpose": "SEO 与广告账户审计",
+   "src": "https://github.com/AgriciDaniel/claude-seo",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-marketingskills",
+   "name": "marketingskills",
+   "group": "研究",
+   "purpose": "40+ 营销技能",
+   "src": "https://github.com/coreyhaines31/marketingskills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-shrimpreel-site-template",
+   "name": "shrimpreel-site-template",
+   "group": "研究",
+   "purpose": "热词视频站 Cloudflare 模板",
+   "src": "https://github.com/qianshuixia/shrimpreel",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-twenty-crm",
+   "name": "twenty-crm",
+   "group": "研究",
+   "purpose": "开源 CRM Twenty 的 Agent Skills",
+   "src": "https://github.com/twentyhq/twenty",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-privacy-first-signup",
+   "name": "privacy-first-signup",
+   "group": "规矩",
+   "purpose": "注册网站时的隐私规矩",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-accessibility-signup-help",
+   "name": "accessibility-signup-help",
+   "group": "规矩",
+   "purpose": "帮视障朋友注册的规矩",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-poke-bridge",
+   "name": "poke-bridge",
+   "group": "基础设施",
+   "purpose": "和 Poke 双向收发任务",
+   "src": "",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md"
+  },
+  {
+   "id": "s-cn-bazi",
+   "name": "cn-bazi",
+   "group": "其他",
+   "purpose": "八字排盘（脚本排盘）",
+   "src": "https://github.com/jinchenma94/bazi-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-cn-qimen-ziwei",
+   "name": "cn-qimen-ziwei",
+   "group": "其他",
+   "purpose": "奇门遁甲/紫微排盘（仅私用）",
+   "src": "https://github.com/FANzR-arch/Numerologist_skills",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-cn-tarot",
+   "name": "cn-tarot",
+   "group": "其他",
+   "purpose": "塔罗占卜",
+   "src": "https://github.com/daman-ovo-0404/tarot-skill",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "s-ziwei-doushu-engine",
+   "name": "ziwei-doushu-engine",
+   "group": "其他",
+   "purpose": "紫微排盘引擎 + 数据集",
+   "src": "https://github.com/Renhuai123/ziwei-doushu",
+   "status": "已安装",
+   "who": [
+    "hark"
+   ],
+   "who_note": "Hark 已装为专长；其他成员可读来源仓库里的 SKILL.md",
+   "src_code": 200
+  },
+  {
+   "id": "r-openmontage",
+   "name": "OpenMontage",
+   "group": "视频",
+   "purpose": "AI 视频剪辑 agent",
+   "src": "https://github.com/calesthio/OpenMontage",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：AGPL、体量大，和已装工具重叠",
+   "src_code": 200
+  },
+  {
+   "id": "r-claude-code-video-toolkit",
+   "name": "claude-code-video-toolkit",
+   "group": "视频",
+   "purpose": "开源视频模型部署到 Modal 的工具箱",
+   "src": "https://github.com/digitalsamba/claude-code-video-toolkit",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：已克隆，未部署（需 Modal 算力）",
+   "src_code": 200
+  },
+  {
+   "id": "r-klingai-tech-skills",
+   "name": "klingai-tech/skills",
+   "group": "视频",
+   "purpose": "可灵官方 CLI/MCP skill",
+   "src": "https://github.com/klingai-tech/skills",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：需用户可灵账号授权",
+   "src_code": 200
+  },
+  {
+   "id": "r-pyvideotrans",
+   "name": "pyvideotrans",
+   "group": "视频",
+   "purpose": "转录/翻译/配音",
+   "src": "https://github.com/jianchang512/pyvideotrans",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：体量大，CPU 慢",
+   "src_code": 200
+  },
+  {
+   "id": "r-voicestudio",
+   "name": "VoiceStudio",
+   "group": "配音",
+   "purpose": "本地开源声音克隆/配音",
+   "src": "https://github.com/debpalash/VoiceStudio",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：需本地 GPU，AGPL",
+   "src_code": 200
+  },
+  {
+   "id": "r-open-llm-vtuber",
+   "name": "Open-LLM-VTuber",
+   "group": "配音",
+   "purpose": "本地 Live2D 语音伴侣",
+   "src": "https://github.com/Open-LLM-VTuber/Open-LLM-VTuber",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：沙盒跑不了，装用户电脑需同意",
+   "src_code": 200
+  },
+  {
+   "id": "r-stemdeck",
+   "name": "StemDeck",
+   "group": "音频",
+   "purpose": "把歌拆成 6 轨",
+   "src": "https://github.com/stemdeckapp/stemdeck",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：桌面 App，装用户电脑需同意",
+   "src_code": 200
+  },
+  {
+   "id": "r-promptdirector",
+   "name": "PromptDirector",
+   "group": "提示词",
+   "purpose": "提示词案例本地管理 Chrome 插件",
+   "src": "https://github.com/wchao6891/PromptDirector",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：插件装浏览器需同意",
+   "src_code": 200
+  },
+  {
+   "id": "r-openui",
+   "name": "OpenUI",
+   "group": "页面",
+   "purpose": "生成式 UI 标准（省 token）",
+   "src": "https://github.com/thesysdev/openui",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：只作参考",
+   "src_code": 200
+  },
+  {
+   "id": "r-onlook",
+   "name": "onlook",
+   "group": "页面",
+   "purpose": "可视化编辑 React 应用",
+   "src": "https://github.com/onlook-dev/onlook",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：只记录",
+   "src_code": 200
+  },
+  {
+   "id": "r-figma-context-mcp",
+   "name": "Figma-Context-MCP",
+   "group": "页面",
+   "purpose": "Figma 设计读给 agent",
+   "src": "https://github.com/GLips/Figma-Context-MCP",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：需 Figma token",
+   "src_code": 200
+  },
+  {
+   "id": "r-shepherd",
+   "name": "Shepherd",
+   "group": "编程",
+   "purpose": "Agent 执行过程版本控制",
+   "src": "",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：Alpha，需 Anthropic Key",
+   "src_dropped": "https://github.com/Manorgw/shepherd",
+   "src_code": 404
+  },
+  {
+   "id": "r-harness2",
+   "name": "harness2",
+   "group": "编程",
+   "purpose": "让 agent 优化自己的外壳",
+   "src": "https://github.com/google-research/harness2",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：需 Vertex AI",
+   "src_code": 200
+  },
+  {
+   "id": "r-bot-team-playbook",
+   "name": "bot-team-playbook",
+   "group": "编程",
+   "purpose": "多 bot 主管+专员团队手册",
+   "src": "https://github.com/doublesq97-ui/bot-team-playbook",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：已借鉴派活/回报格式",
+   "src_code": 200
+  },
+  {
+   "id": "r-opengcua",
+   "name": "OpenGCUA",
+   "group": "编程",
+   "purpose": "电脑操作 agent 开源栈",
+   "src": "https://github.com/Tongyi-MAI/OpenGCUA",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：只记录",
+   "src_code": 200
+  },
+  {
+   "id": "r-wshobson-agents",
+   "name": "wshobson/agents",
+   "group": "编程",
+   "purpose": "多 harness 插件市场",
+   "src": "https://github.com/wshobson/agents",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：与已装大量重叠",
+   "src_code": 200
+  },
+  {
+   "id": "r-ai-live-avatar",
+   "name": "ai-live-avatar",
+   "group": "视频",
+   "purpose": "AI 实时数字人直播场控层",
+   "src": "https://github.com/garycaogan/ai-live-avatar",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：需付费 Vidu API",
+   "src_code": 200
+  },
+  {
+   "id": "r-agency-agents",
+   "name": "agency-agents",
+   "group": "编程",
+   "purpose": "300+ 专家角色提示词",
+   "src": "https://github.com/msitarzewski/agency-agents",
+   "status": "只记录",
+   "who": [],
+   "who_note": "未安装：已克隆，未注册专长",
+   "src_code": 200
+  }
+ ],
+ "sites": [
+  {
+   "id": "fish-s21-free",
+   "name": "Fish Audio S2.1 Pro Free",
+   "group": "免费配音/TTS",
+   "purpose": "高质量 TTS（83 种语言、可克隆），API 用模型名 s2.1-pro-free",
+   "free": "免费，公平使用无硬上限；无 SLA，请求可能用于改进模型",
+   "expires": "2026-11-30",
+   "url": "https://docs.fish.audio/developer-guide/getting-started/changelog",
+   "note": "网页版免费档另有每月 8,000 credits（约 7 分钟，非商用）",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "opencode-zen-free",
+   "name": "OpenCode Console 限时免费模型",
+   "group": "免费试用模型",
+   "purpose": "GLM-5.3-Flash Free、DeepSeek V4.1 Flash Free、Big Pickle、Nemotron 3.x Free、MiMo、Exo、LongCat 等 12 个免费模型",
+   "free": "限时免费，官方未写截止日；Big Pickle/Exo/MiMo 等免费期数据可能用于训练",
+   "expires": null,
+   "url": "https://opencode.ai/docs/zen",
+   "note": "Beam Free 不对中国（含港澳）开放；Gemini 4 Argon 是收费（5 折到 2026-11-30），不是免费",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "agnes-free",
+   "name": "Agnes AI 免费 API",
+   "group": "免费试用模型",
+   "purpose": "文本 agnes-2.5/3.0-flash、生图 agnes-image-2.0/2.1/2.5-flash 现价 $0",
+   "free": "图片所有分辨率现价 $0；文本 flash 现价 $0（“目前免费”，官方未写截止日）",
+   "expires": null,
+   "url": "https://wiki.agnes-ai.com/en/docs/pricing",
+   "note": "agnes-2.5-pro 收费",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "groq-free",
+   "name": "Groq 免费档",
+   "group": "免费试用模型",
+   "purpose": "gpt-oss-120b/20b、qwen3.8-27b、Whisper 转写",
+   "free": "每模型每天 1K 次 / 20 万 token（gpt-oss-120b），Whisper 每天 2K 次",
+   "expires": null,
+   "url": "https://console.groq.com/docs/rate-limits",
+   "note": "长期免费档",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "workers-ai-free",
+   "name": "Cloudflare Workers AI 免费额度",
+   "group": "免费试用模型",
+   "purpose": "gpt-oss、Llama、Qwen、FLUX 生图、Whisper、MeloTTS",
+   "free": "每天 10,000 Neurons，00:00 UTC 重置",
+   "expires": null,
+   "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+   "note": "GLM-5.x、Kimi K2.6+、DeepSeek V4 需付费账户",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "gemini-free",
+   "name": "Gemini API 免费档",
+   "group": "免费试用模型",
+   "purpose": "Gemini 3.8/3.6 Flash、2.5 Flash/Pro、Flash TTS、Gemma 4",
+   "free": "Free Tier 免费（数据会用于改进产品）；Gemini 4 Argon 无免费档",
+   "expires": null,
+   "url": "https://ai.google.dev/gemini-api/docs/pricing",
+   "note": "敏感内容不要走免费档",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "nvidia-nim",
+   "name": "NVIDIA API Catalog",
+   "group": "免费试用模型",
+   "purpose": "Kimi K3、DeepSeek V4.1 Flash 等托管模型原型调用",
+   "free": "开发者计划成员免费用于原型/测试（不得用于生产）",
+   "expires": null,
+   "url": "https://docs.api.nvidia.com/nim/docs/product",
+   "note": "",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "arena-gpt-image",
+   "name": "Arena Direct：GPT-image-2.5",
+   "group": "免费试用模型",
+   "purpose": "网页里直接用 GPT-image-2.5 出图",
+   "free": "用户告知限时免费",
+   "expires": "2026-11-02",
+   "url": "https://arena.ai/image/direct?model_a=gpt-image-2.5-sunburst",
+   "note": "页面是 JS 渲染，官方截止日没能核实；隐私图片不要上传",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "pollinations",
+   "name": "Pollinations",
+   "group": "免费试用模型",
+   "purpose": "免 Key 文本/生图接口（群聊里 gpt-oss-20b 的兜底来源）",
+   "free": "匿名可用，常被限速",
+   "expires": null,
+   "url": "https://pollinations.ai/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "vyce",
+   "name": "Vyce AI",
+   "group": "免费试用模型",
+   "purpose": "OpenAI 兼容中转：gpt-6-luna、claude-sonnet-4-6、deepseek-v4 等",
+   "free": "注册送 $40 额度（价格需登录才能看）",
+   "expires": null,
+   "url": "https://vyceai.com/",
+   "note": "赠送额度会被扣，不是无限免费",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "vercel-fish-free",
+   "name": "Vercel AI Gateway：Fish Audio 模型免费 30 天",
+   "group": "免费配音/TTS",
+   "purpose": "经 Vercel AI Gateway 调 Fish Audio TTS/转写",
+   "free": "活动期内免费，到期后按 $15/百万字符计费",
+   "expires": "2026-09-18",
+   "url": "https://vercel.com/changelog/fish-audio-models-now-available-on-ai-gateway-for-free",
+   "note": "已过期，直接用 Fish 官方 s2.1-pro-free",
+   "http": 200,
+   "verify_state": "已过期",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "ming-tts",
+   "name": "Ming-3.0-TTS（蚂蚁灵波）",
+   "group": "免费配音/TTS",
+   "purpose": "开源 TTS：造音色、导演式重音、带叹气笑声标签",
+   "free": "MIT 开源；HF Space 匿名额度常用完，需自己的 HF token",
+   "expires": null,
+   "url": "https://github.com/inclusionAI/Ming",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "melotts",
+   "name": "Workers AI MeloTTS",
+   "group": "免费配音/TTS",
+   "purpose": "中文备用 TTS",
+   "free": "计入 Workers AI 每天 10,000 Neurons（约 18.6 Neurons/分钟）",
+   "expires": null,
+   "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+   "note": "",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "gemini-tts",
+   "name": "Gemini Flash TTS",
+   "group": "免费配音/TTS",
+   "purpose": "Gemini 3.8 Flash TTS、2.5 Flash TTS",
+   "free": "Free Tier 免费",
+   "expires": null,
+   "url": "https://ai.google.dev/gemini-api/docs/pricing",
+   "note": "",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "openverse",
+   "name": "Openverse",
+   "group": "音效",
+   "purpose": "约 520 万条免费音频，可按 CC0 过滤；有免 Key API",
+   "free": "免费；授权逐条不同（CC BY 要署名）",
+   "expires": null,
+   "url": "https://openverse.org/",
+   "note": "",
+   "http": 403,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": false
+  },
+  {
+   "id": "mixkit",
+   "name": "Mixkit 免费音效",
+   "group": "音效",
+   "purpose": "转场、环境声、游戏、提示音，无需注册下载",
+   "free": "免费",
+   "expires": null,
+   "url": "https://mixkit.co/free-sound-effects/",
+   "note": "",
+   "http": 200,
+   "verify_state": "已核实",
+   "verified": "2026-10-23",
+   "evidence_hit": true,
+   "reachable": true
+  },
+  {
+   "id": "bigsoundbank",
+   "name": "BigSoundBank",
+   "group": "音效",
+   "purpose": "实地录音；“消失的声音博物馆”（拨号上网、软盘、老电话）",
+   "free": "免费",
+   "expires": null,
+   "url": "https://bigsoundbank.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "pixabay-music",
+   "name": "Pixabay 音乐",
+   "group": "音效",
+   "purpose": "免版税配乐",
+   "free": "免费",
+   "expires": null,
+   "url": "https://pixabay.com/music/",
+   "note": "",
+   "http": 403,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": false
+  },
+  {
+   "id": "shadcn",
+   "name": "shadcn/ui",
+   "group": "UI 组件",
+   "purpose": "可复制的 React 组件与 blocks",
+   "free": "开源免费",
+   "expires": null,
+   "url": "https://ui.shadcn.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "aceternity",
+   "name": "Aceternity UI",
+   "group": "UI 组件",
+   "purpose": "带动效的落地页组件",
+   "free": "基础组件免费，Pro 收费",
+   "expires": null,
+   "url": "https://ui.aceternity.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "magicui",
+   "name": "Magic UI",
+   "group": "UI 组件",
+   "purpose": "动画组件库",
+   "free": "开源免费，Pro 收费",
+   "expires": null,
+   "url": "https://magicui.design/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "reactbits",
+   "name": "React Bits",
+   "group": "UI 组件",
+   "purpose": "文字动画、悬停、背景特效组件",
+   "free": "开源免费",
+   "expires": null,
+   "url": "https://reactbits.dev/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "21st",
+   "name": "21st.dev",
+   "group": "UI 组件",
+   "purpose": "组件市场，附 AI 接入提示词",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://21st.dev/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "hyperui",
+   "name": "HyperUI",
+   "group": "UI 组件",
+   "purpose": "Tailwind 免费组件",
+   "free": "免费",
+   "expires": null,
+   "url": "https://www.hyperui.dev/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "mobbin",
+   "name": "Mobbin",
+   "group": "UI 参考",
+   "purpose": "真实 App 界面和流程截图库",
+   "free": "免费档可看部分，完整需订阅",
+   "expires": null,
+   "url": "https://mobbin.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "godly",
+   "name": "Recent（原 Godly）",
+   "group": "UI 参考",
+   "purpose": "整站网页灵感",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://godly.website/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "landbook",
+   "name": "Land-book",
+   "group": "UI 参考",
+   "purpose": "落地页灵感",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://land-book.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "awwwards",
+   "name": "Awwwards",
+   "group": "UI 参考",
+   "purpose": "获奖网站，拆创意/交互/排版",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://www.awwwards.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "reference",
+   "name": "Reference",
+   "group": "UI 参考",
+   "purpose": "1,153 个视觉参考，535 个附完整 Prompt",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://meetreference.com/",
+   "note": "先筛 Full prompt only",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "shapeofai",
+   "name": "Shape of AI",
+   "group": "UI 参考",
+   "purpose": "AI 产品交互模式库",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://www.shapeof.ai/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "motion-prompt",
+   "name": "Motion Prompt 名称库",
+   "group": "UI 参考",
+   "purpose": "120 个动效/运镜/UI 动效的标准名称和规格",
+   "free": "MIT 开源",
+   "expires": null,
+   "url": "https://showheyohtaki.github.io/motion-prompt/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "blume",
+   "name": "BLUME CAFE",
+   "group": "UI 参考",
+   "purpose": "可交互 3D、WebGPU/Shader 实验合集",
+   "free": "浏览免费",
+   "expires": null,
+   "url": "https://www.blume.cafe/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "oneshotted",
+   "name": "Oneshotted",
+   "group": "UI 参考",
+   "purpose": "代码动效作品库，区分原 Prompt 与重建 Prompt",
+   "free": "免费档需注册",
+   "expires": null,
+   "url": "https://oneshotted.io/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "coolors",
+   "name": "Coolors",
+   "group": "配色字体图标",
+   "purpose": "配色生成",
+   "free": "基础免费",
+   "expires": null,
+   "url": "https://coolors.co/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "realtimecolors",
+   "name": "Realtime Colors",
+   "group": "配色字体图标",
+   "purpose": "在真实页面上试配色",
+   "free": "免费",
+   "expires": null,
+   "url": "https://www.realtimecolors.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "fontshare",
+   "name": "Fontshare",
+   "group": "配色字体图标",
+   "purpose": "免费商用字体",
+   "free": "免费",
+   "expires": null,
+   "url": "https://www.fontshare.com/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "lucide",
+   "name": "Lucide",
+   "group": "配色字体图标",
+   "purpose": "开源线性图标",
+   "free": "开源免费",
+   "expires": null,
+   "url": "https://lucide.dev/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "unsplash",
+   "name": "Unsplash",
+   "group": "配色字体图标",
+   "purpose": "免费图片",
+   "free": "免费",
+   "expires": null,
+   "url": "https://unsplash.com/",
+   "note": "",
+   "http": 401,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": false
+  },
+  {
+   "id": "awesome-seedance",
+   "name": "awesome-seedance",
+   "group": "提示词与学习",
+   "purpose": "Seedance 2.0 分类提示词（含简中）",
+   "free": "MIT 开源",
+   "expires": null,
+   "url": "https://github.com/ZeroLu/awesome-seedance",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "remotion-docs",
+   "name": "Remotion 文档",
+   "group": "提示词与学习",
+   "purpose": "React 代码做视频",
+   "free": "个人/小团队免费，公司规模大需授权",
+   "expires": null,
+   "url": "https://www.remotion.dev/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "agentusecases",
+   "name": "Agent Use Cases",
+   "group": "提示词与学习",
+   "purpose": "1,523 个真实 AI Agent 用例，含原始出处与 prompt",
+   "free": "免费",
+   "expires": null,
+   "url": "https://agentusecases.ai/",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "pg-taste",
+   "name": "Paul Graham《Taste for Makers》",
+   "group": "提示词与学习",
+   "purpose": "评审设计的提问清单",
+   "free": "免费",
+   "expires": null,
+   "url": "https://paulgraham.com/taste.html",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "mcp-registry",
+   "name": "MCP 官方 Registry",
+   "group": "提示词与学习",
+   "purpose": "提交 MCP 服务换收录/外链；也能查现成 MCP",
+   "free": "免费",
+   "expires": null,
+   "url": "https://registry.modelcontextprotocol.io/",
+   "note": "帖子说的 DR 值未核实",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  },
+  {
+   "id": "gumroad-discover",
+   "name": "Gumroad Discover 销量榜",
+   "group": "提示词与学习",
+   "purpose": "找出海需求：按分类看 Best Sellers",
+   "free": "免费",
+   "expires": null,
+   "url": "https://gumroad.com/discover",
+   "note": "",
+   "http": 200,
+   "verify_state": "未核实",
+   "verified": null,
+   "reachable": true
+  }
+ ]
+}

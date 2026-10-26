@@ -1,0 +1,3895 @@
+{
+ "_说明": "Aroomo 成员配置（唯一权威来源，改这里再跑 python3 deploy.py upload）。每个可调用资源 = 一个「AI成员」（界面统一称呼，改 term 即可）；类型只是内部连接方式（invoke.kind），界面不分组。密钥只写环境变量名（secret），值优先取 Worker secret；没有就取用户在页面「工具库 → API 密钥」里粘贴、加密存进 Durable Object 的值（keys 列表定义每个来源怎么验证）。tags 每条带来源链接和日期；没查到可靠评价写 tags_note。quota.source 取值：live=实查，official=官方免费额度，est=估算，unverified=未核实。",
+ "version": "2026-10-23",
+ "roles": [
+  "负责人",
+  "提议者",
+  "挑错者",
+  "审查员",
+  "裁判",
+  "写手",
+  "程序员",
+  "翻译",
+  "总结者",
+  "看图员",
+  "执行者",
+  "成员"
+ ],
+ "relays": [
+  {
+   "id": "relay-happycoding",
+   "base": "https://happycoding.xyz/v1",
+   "secret": "HAPPYCODING_API_KEY",
+   "panel": "newapi",
+   "discover": true,
+   "note": "New API 面板；2026-10-22 实测 5 个模型可用（Hark 记录）",
+   "name": "HappyCoding 公益站"
+  },
+  {
+   "id": "relay-vyce",
+   "base": "https://vyceai.com/v1",
+   "secret": "VYCE_API_KEY",
+   "panel": "newapi",
+   "discover": true,
+   "note": "注册赠送 $40 额度（Hark 2026-10-19 记录）",
+   "name": "Vyce AI"
+  },
+  {
+   "id": "relay-pm",
+   "name": "PM 公益站",
+   "base": "https://pmcat.top/v1",
+   "secret": "PM_API_KEY",
+   "panel": "newapi",
+   "discover": true,
+   "note": "sync-muse-apis 2026-10-23 实测 glm-4.5-flash 可对话；Key 在保险库「公益站 PM公益站 muse key」"
+  },
+  {
+   "id": "relay-qingyu",
+   "name": "清羽公益站",
+   "base": "https://qui.cc.cd/v1",
+   "secret": "QINGYU_API_KEY",
+   "discover": true,
+   "panel": "newapi",
+   "note": "上次问题：503（sync-muse-apis 2026-10-23）；填 Key 后由验证/探测重新判断"
+  },
+  {
+   "id": "relay-huan",
+   "name": "Huan 公益站",
+   "base": "https://ai.huan666.de/v1",
+   "secret": "HUAN_API_KEY",
+   "discover": true,
+   "panel": "newapi",
+   "note": "上次问题：不可用（sync-muse-apis 2026-10-23）；填 Key 后由验证/探测重新判断"
+  },
+  {
+   "id": "relay-42api",
+   "name": "42api",
+   "base": "https://api.42x.shop/v1",
+   "secret": "API42_API_KEY",
+   "discover": true,
+   "panel": "newapi",
+   "note": "上次问题：401（sync-muse-apis 2026-10-23）；填 Key 后由验证/探测重新判断"
+  }
+ ],
+ "members": [
+  {
+   "id": "hark",
+   "name": "Hark",
+   "brand": "hark",
+   "type": "lead",
+   "intro": "本群负责人：维护成员能力表，根据话题、能力标签、剩余免费额度和在线状态推荐成员并分配角色；成员掉线或额度用完时自动换人。派人规则本身不耗额度；需要时用强模型（gpt-oss-120b）复核分工，失败就用规则结果。",
+   "tags": [
+    {
+     "t": "派人/主持",
+     "src": "内置",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "只在本 Worker 内运行，不外发。",
+   "exec": {
+    "tags": [
+     "自带沙盒",
+     "浏览器",
+     "远程控制浏览器",
+     "代理IP",
+     "住宅节点",
+     "收邮件验证码",
+     "收短信验证码",
+     "注册账号",
+     "查网页",
+     "写文件",
+     "生图"
+    ],
+    "items": [
+     [
+      "沙盒电脑",
+      "Hark 自己的 Linux（aarch64）沙盒，/workspace 持久存储；另有 E2B、Modal、Kaggle 沙盒"
+     ],
+     [
+      "浏览器",
+      "Hark 浏览器代理（托管浏览器，可用已保存的登录）；沙盒内 Chromium（Xvfb + CDP）"
+     ],
+     [
+      "远程控制浏览器",
+      "沙盒 Chromium 经 noVNC/KasmVNC 远程桌面（vnc.pcmanai.com / kasm.pcmanai.com），用户可接管"
+     ],
+     [
+      "代理IP",
+      "沙盒 mihomo：公开订阅约 600 节点自动测速，可按节点切换（switch.sh）；SOCKS5/VLESS 出口 = 沙盒直连 AWS us-west-2"
+     ],
+     [
+      "住宅节点",
+      "qianlink 英国（家庭）等家宽节点——按用户规则只在用户明确要求时用"
+     ],
+     [
+      "收邮件验证码",
+      "临时邮箱（mail.tm 等）+ mail.com 邮箱 james.carter8742"
+     ],
+     [
+      "收短信验证码",
+      "Saperly 美国免费号 +1 833（可收短信）；手机号验证按约定找用户的 Poke"
+     ],
+     [
+      "注册账号",
+      "按与用户的注册约定执行（同站每 7 天最多 3 个、不造假身份）"
+     ],
+     [
+      "查网页",
+      "web_search / 网页抓取 / 浏览器"
+     ],
+     [
+      "写文件",
+      "沙盒文件 + 网盘（bacloud / files.pcmanai.com）"
+     ],
+     [
+      "生图",
+      "Hark 自带生图 + Workers AI FLUX + arena 浏览器代发"
+     ]
+    ],
+    "how": "执行类任务以「拉取任务」方式交给 Hark：Hark 被唤醒（用户说一声或 Poke 转达）时拉取并处理，不是实时；收件箱定时巡检已按用户要求暂停。",
+    "note": "执行能力来自工具库（沙盒/浏览器/代理/邮箱/号码）"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "负责人（主持）",
+     "invoke": {
+      "kind": "lead",
+      "engine": [
+       "cf:@cf/openai/gpt-oss-120b",
+       "groq:openai/gpt-oss-120b",
+       "heuristic"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "派人规则不耗额度；AI 复核用 Workers AI 共享额度"
+     },
+     "limits": {}
+    },
+    {
+     "via": "Hark 拉取任务（Hark 被唤醒时用 bridge 拉取，非实时）",
+     "invoke": {
+      "kind": "bridge"
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "取决于 Hark 运行额度"
+     }
+    }
+   ],
+   "jobs": [
+    {
+     "t": "负责人/派工",
+     "from": "内置",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [
+    "tool-hark-sandbox",
+    "tool-browser",
+    "tool-remote-desktop",
+    "tool-proxy",
+    "tool-mail",
+    "tool-phone",
+    "tool-poke-phone"
+   ],
+   "caps": {
+    "kind": "builtin",
+    "capability_status": "n/a",
+    "source": "内置角色（Hark=兜底规则，资源管家=管资源），不参与能力判定、不进负责人下拉"
+   }
+  },
+  {
+   "id": "steward",
+   "name": "资源管家",
+   "brand": "steward",
+   "type": "steward",
+   "intro": "专职维护资源库的 AI成员：你在置顶私聊里丢链接/帖子，它抓正文、分类（API / 工具与算力 / 技能 / 学习与网站资源）、到厂商官方页核对免费额度和到期日后入库；每天检查一次到期，快到期/过期在私聊里提醒；「搜集羊毛」只在你点按钮时去 Hacker News、linux.do 抓候选。只有它写资源库，其他成员只读。坚持免费优先，付费的只标「需你确认」。两档调用：粗活（分类/抽取）用便宜小模型；「到官方页核实」用当天可用的最强免费成员，失败降到小档，最后规则兜底。每周一生成一份汇总发在私聊里，并通知主负责人抽查。",
+   "tags": [],
+   "tags_note": "新岗位，暂无社区评价；按实际整理效果打分迭代",
+   "jobs": [
+    {
+     "t": "资源整理",
+     "from": "岗位设定",
+     "src": "用户 2026-10-23 需求",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "核实免费额度",
+     "from": "岗位设定",
+     "src": "用户 2026-10-23 需求",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "群聊讨论",
+     "from": "岗位设定",
+     "src": "只在私聊工作，不进项目群",
+     "date": "2026-10-23"
+    }
+   ],
+   "jobs_note": "",
+   "exec": {
+    "tags": [
+     "查网页"
+    ],
+    "note": "Worker 里抓公网 https 页面（每跳重定向都校验，不碰内网）"
+   },
+   "tools": [],
+   "limits": {
+    "rpd": "两档各自限额：小档（分类/抽取）每天最多 60 次，强档（到官方页核实免费额度/到期日）每天最多 20 次；用完降级到小档或规则，不花钱"
+   },
+   "privacy": "你丢来的链接会被抓取；页面正文会发给整理用的免费模型：小档（分类/抽取）依次用 Groq gpt-oss-20b、PM 公益站 glm-4.5-flash、Workers AI；强档（官方页核实）用当天可用的最强免费成员（可能是中转站/公益站来源）。不要丢含个人信息的私密链接。",
+   "sources": [
+    {
+     "via": "Worker 内置（规则 + 免费模型整理）",
+     "invoke": {
+      "kind": "steward"
+     },
+     "quota": {
+      "kind": "steward",
+      "source": "est"
+     }
+    }
+   ],
+   "caps": {
+    "kind": "builtin",
+    "capability_status": "n/a",
+    "source": "内置角色（Hark=兜底规则，资源管家=管资源），不参与能力判定、不进负责人下拉"
+   }
+  },
+  {
+   "id": "gpt-oss-120b",
+   "name": "gpt-oss-120b",
+   "brand": "openai",
+   "type": "model",
+   "intro": "OpenAI 开源权重推理模型（117B 总参数 / 5.1B 激活，MoE）。",
+   "tags": [
+    {
+     "t": "代码",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1mlomlb/my_thoughts_on_gptoss120b",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "数学推理",
+     "src": "https://openai.com/index/introducing-gpt-oss/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "工具调用",
+     "src": "https://openai.com/index/introducing-gpt-oss/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "审查",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1n3u7qf/hows_your_experience_with_the_gpt_oss_models",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "中文偏弱",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "创意写作一般",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1n3u7qf/hows_your_experience_with_the_gpt_oss_models",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "Cloudflare 官方：Workers AI 不用客户数据训练（data-usage 页）。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "context": "128K tokens（模型卡）",
+    "max_output": "本群设 1200 tokens",
+    "rpm": "Workers AI 文本生成默认 300 次/分（未逐模型核实）",
+    "vision": false,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/openai/gpt-oss-120b"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid（$5/月起，超出部分 $0.011/千 neurons）——官方定价页已核实"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      31818,
+      68182
+     ],
+     "limits": {
+      "context": "128K tokens（模型卡）",
+      "max_output": "本群设 1200 tokens",
+      "rpm": "Workers AI 文本生成默认 300 次/分（未逐模型核实）",
+      "vision": false,
+      "tools": true
+     }
+    },
+    {
+     "via": "Groq 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://api.groq.com/openai/v1",
+      "model": "openai/gpt-oss-120b",
+      "secret": "GROQ_API_KEY",
+      "rate_headers": true
+     },
+     "quota": {
+      "kind": "groq-rpd",
+      "limit": 1000,
+      "unit": "次/天（另 200K tokens/天）",
+      "source": "official",
+      "reset": "滚动窗口，按响应头 x-ratelimit-reset-requests",
+      "more": [
+       "升级 Groq Developer 计划（官方 rate-limits 页）"
+      ],
+      "src": "https://console.groq.com/docs/rate-limits"
+     },
+     "limits": {
+      "rpm": "30 RPM",
+      "rpd": "1K RPD",
+      "tpm": "8K TPM",
+      "tpd": "200K TPD",
+      "context": "128K（模型卡）",
+      "tools": true,
+      "vision": false
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "推理裁判",
+     "from": "社区评价",
+     "src": "https://openai.com/index/introducing-gpt-oss/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "挑错审查",
+     "from": "社区评价",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1n3u7qf/hows_your_experience_with_the_gpt_oss_models",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "代码",
+     "from": "社区评价",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1mlomlb/my_thoughts_on_gptoss120b",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "工具调用",
+     "from": "社区评价",
+     "src": "https://openai.com/index/introducing-gpt-oss/",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "中文写作",
+     "from": "社区评价",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "长文创作",
+     "from": "社区评价",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "reason"
+    ],
+    "context_window": 128000,
+    "tool_call": true,
+    "capability_status": "verified",
+    "source": "models.dev cloudflare-workers-ai/@cf/openai/gpt-oss-120b（2026-10-24 读取，MIT 数据）；与 模型卡 128K + 工具调用（openai.com/index/introducing-gpt-oss） 一致"
+   }
+  },
+  {
+   "id": "gpt-oss-20b",
+   "name": "gpt-oss-20b",
+   "brand": "openai",
+   "type": "model",
+   "intro": "OpenAI 小号开源权重推理模型（21B）。",
+   "tags": [
+    {
+     "t": "快但浅",
+     "src": "https://www.datarobot.com/blog/testing-gpt-oss-models/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "代码",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "中文偏弱",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "context": "128K tokens（模型卡）",
+    "max_output": "本群设 1200 tokens",
+    "vision": false,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/openai/gpt-oss-20b"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      18182,
+      27273
+     ],
+     "limits": {
+      "context": "128K tokens（模型卡）",
+      "max_output": "本群设 1200 tokens",
+      "vision": false,
+      "tools": true
+     }
+    },
+    {
+     "via": "Groq 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://api.groq.com/openai/v1",
+      "model": "openai/gpt-oss-20b",
+      "secret": "GROQ_API_KEY",
+      "rate_headers": true
+     },
+     "quota": {
+      "kind": "groq-rpd",
+      "limit": 1000,
+      "unit": "次/天（另 200K tokens/天）",
+      "source": "official",
+      "reset": "滚动窗口，按响应头",
+      "more": [
+       "升级 Groq Developer 计划"
+      ],
+      "src": "https://console.groq.com/docs/rate-limits"
+     },
+     "limits": {
+      "rpm": "30 RPM",
+      "rpd": "1K RPD",
+      "tpm": "8K TPM",
+      "tpd": "200K TPD"
+     }
+    },
+    {
+     "via": "Pollinations 免 Key 端点（匿名档）",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://text.pollinations.ai/openai",
+      "model": "openai-fast",
+      "health": "https://text.pollinations.ai/models"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "匿名档免 Key，按 IP 限速每 30 秒 1 次；从 Cloudflare 共享出口调用时常被别人占满（2026-10-23 实测两次都 402），只作兜底来源",
+      "src": "https://text.pollinations.ai/models"
+     },
+     "limits": {}
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "快速问答",
+     "from": "社区评价",
+     "src": "https://www.datarobot.com/blog/testing-gpt-oss-models/",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "中文写作",
+     "from": "社区评价",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "深度推理",
+     "from": "社区评价",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "jobs_basis": "依据：DataRobot 评测（快、便宜、准确，适合大多数非科学任务）",
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "reason"
+    ],
+    "context_window": 128000,
+    "tool_call": true,
+    "capability_status": "verified",
+    "source": "models.dev cloudflare-workers-ai/@cf/openai/gpt-oss-20b（2026-10-24 读取，MIT 数据）；与 模型卡 128K + 工具调用（openai.com/index/introducing-gpt-oss） 一致"
+   }
+  },
+  {
+   "id": "llama-4-scout-17b",
+   "name": "llama-4-scout-17b",
+   "brand": "meta",
+   "type": "model",
+   "intro": "Meta Llama 4 Scout（17B 激活 / 16 专家），原生多模态。",
+   "tags": [
+    {
+     "t": "总结",
+     "src": "https://x.com/TheZvi/status/1909960198615150935",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "工具调用",
+     "src": "https://x.com/TheZvi/status/1909960198615150935",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "长文检索",
+     "src": "https://www.reddit.com/r/AIToolsPerformance/comments/1r5b9sx/llama_4_scout_review_the_new_king_of_highcontext",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "复杂推理弱",
+     "src": "https://tokenmix.ai/blog/llama-4-scout-10m-context-reality-check-2026",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "多语言",
+     "src": "https://x.com/TheZvi/status/1909960198615150935",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "context": "Workers AI 上限以模型页为准（未核实）",
+    "max_output": "本群设 500 tokens",
+    "vision": true,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      24545,
+      77273
+     ],
+     "limits": {
+      "context": "Workers AI 上限以模型页为准（未核实）",
+      "max_output": "本群设 500 tokens",
+      "vision": true,
+      "tools": true
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "总结",
+     "from": "社区评价",
+     "src": "https://x.com/TheZvi/status/1909960198615150935",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "长文检索",
+     "from": "社区评价",
+     "src": "https://www.reddit.com/r/AIToolsPerformance/comments/1r5b9sx/llama_4_scout_review_the_new_king_of_highcontext",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "工具调用",
+     "from": "社区评价",
+     "src": "https://x.com/TheZvi/status/1909960198615150935",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "复杂推理",
+     "from": "社区评价",
+     "src": "https://tokenmix.ai/blog/llama-4-scout-10m-context-reality-check-2026",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "代码",
+     "from": "社区评价",
+     "src": "https://tokenmix.ai/blog/llama-4-scout-10m-context-reality-check-2026",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "vision"
+    ],
+    "context_window": 131000,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/meta/llama-4-scout-17b-16e-instruct（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "llama-3.3-70b",
+   "name": "llama-3.3-70b-instruct-fp8-fast",
+   "brand": "meta",
+   "type": "model",
+   "intro": "Meta Llama 3.3 70B（fp8 加速版）。neurons 单价较高。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "max_output": "本群设 500 tokens",
+    "vision": false,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      26668,
+      204805
+     ],
+     "limits": {
+      "max_output": "本群设 500 tokens",
+      "vision": false,
+      "tools": true
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": 24000,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/meta/llama-3.3-70b-instruct-fp8-fast（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "mistral-small-3.1-24b",
+   "name": "mistral-small-3.1-24b",
+   "brand": "mistral",
+   "type": "model",
+   "intro": "Mistral Small 3.1（24B），支持看图，128K 上下文。",
+   "tags": [
+    {
+     "t": "看图",
+     "src": "https://mistral.ai/news/mistral-small-3-1/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "快",
+     "src": "https://mistral.ai/news/mistral-small-3-1/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "工具调用",
+     "src": "https://futureagi.com/blog/mistral-small-3-1-2025/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "多语言",
+     "src": "https://futureagi.com/blog/mistral-small-3-1-2025/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "写作",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1n3u7qf/hows_your_experience_with_the_gpt_oss_models",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "context": "128K tokens（官方博客）",
+    "max_output": "本群设 500 tokens",
+    "vision": true,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      31876,
+      50488
+     ],
+     "limits": {
+      "context": "128K tokens（官方博客）",
+      "max_output": "本群设 500 tokens",
+      "vision": true,
+      "tools": true
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "看图",
+     "from": "社区评价",
+     "src": "https://mistral.ai/news/mistral-small-3-1/",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "长文写作",
+     "from": "社区评价",
+     "src": "https://www.reddit.com/r/LocalLLaMA/comments/1n3u7qf/hows_your_experience_with_the_gpt_oss_models",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "翻译",
+     "from": "社区评价",
+     "src": "https://futureagi.com/blog/mistral-small-3-1-2025/",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "深度推理",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "vision"
+    ],
+    "context_window": 128000,
+    "tool_call": true,
+    "capability_status": "verified",
+    "source": "models.dev cloudflare-workers-ai/@cf/mistralai/mistral-small-3.1-24b-instruct（2026-10-24 读取，MIT 数据）；与 官方博客 128K + 工具调用（mistral.ai/news/mistral-small-3-1） 一致"
+   }
+  },
+  {
+   "id": "qwen3-30b-a3b",
+   "name": "qwen3-30b-a3b",
+   "brand": "qwen",
+   "type": "model",
+   "intro": "阿里 Qwen3 30B-A3B（MoE，3B 激活），带思考模式；本群关掉思考省额度。neurons 单价很低。",
+   "tags": [
+    {
+     "t": "推理",
+     "src": "https://llm-stats.com/models/compare/mistral-small-3.1-24b-instruct-2503-vs-qwen3-30b-a3b",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "中文",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "代码",
+     "src": "https://swcatalog.intel.com/models?tags=qwen",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "context": "约 32K tokens（Artificial Analysis 页）",
+    "max_output": "本群设 1500 tokens",
+    "vision": false,
+    "tools": true
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/qwen/qwen3-30b-a3b-fp8"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      4625,
+      30475
+     ],
+     "limits": {
+      "context": "约 32K tokens（Artificial Analysis 页）",
+      "max_output": "本群设 1500 tokens",
+      "vision": false,
+      "tools": true
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "中文对话",
+     "from": "社区评价",
+     "src": "https://arxiv.org/pdf/2508.12461",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "推理裁判",
+     "from": "社区评价",
+     "src": "https://llm-stats.com/models/compare/mistral-small-3.1-24b-instruct-2503-vs-qwen3-30b-a3b",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "reason"
+    ],
+    "context_window": 32768,
+    "tool_call": true,
+    "capability_status": "verified",
+    "source": "models.dev cloudflare-workers-ai/@cf/qwen/qwen3-30b-a3b-fp8（2026-10-24 读取，MIT 数据）；与 Artificial Analysis 约 32K + 工具调用 一致"
+   }
+  },
+  {
+   "id": "granite-4.0-h-micro",
+   "name": "granite-4.0-h-micro",
+   "brand": "ibm",
+   "type": "model",
+   "intro": "IBM Granite 4.0 Micro（小模型）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "max_output": "本群设 500 tokens"
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/ibm-granite/granite-4.0-h-micro"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      1542,
+      10158
+     ],
+     "limits": {
+      "max_output": "本群设 500 tokens"
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [
+    {
+     "t": "长文写作",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "复杂推理",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，等项目结束后的用户打分、成员互评和实测记录来定",
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": 131000,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/ibm-granite/granite-4.0-h-micro（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "qwen3.8-27b",
+   "name": "qwen3.8-27b",
+   "brand": "qwen",
+   "type": "model",
+   "intro": "Qwen3.8 27B。输出 neurons 单价高（290,909/M），一次长回复就要几百 neurons。未在本群实测。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "max_output": "本群设 600 tokens"
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/qwen/qwen3.8-27b"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      40909,
+      290909
+     ],
+     "untested": true,
+     "limits": {
+      "max_output": "本群设 600 tokens"
+     }
+    },
+    {
+     "via": "Groq 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://api.groq.com/openai/v1",
+      "model": "qwen/qwen3.8-27b",
+      "secret": "GROQ_API_KEY",
+      "rate_headers": true
+     },
+     "quota": {
+      "kind": "groq-rpd",
+      "limit": 1000,
+      "unit": "次/天（另 200K tokens/天）",
+      "source": "official",
+      "reset": "滚动窗口，按响应头",
+      "more": [
+       "升级 Groq Developer 计划"
+      ],
+      "src": "https://console.groq.com/docs/rate-limits"
+     },
+     "limits": {
+      "rpm": "30 RPM",
+      "rpd": "1K RPD",
+      "tpm": "8K TPM",
+      "tpd": "200K TPD"
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "vision",
+     "reason"
+    ],
+    "context_window": 262144,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/qwen/qwen3.8-27b（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "nemotron-3-120b",
+   "name": "nemotron-3-120b-a12b",
+   "brand": "nvidia",
+   "type": "model",
+   "intro": "NVIDIA Nemotron 3（120B 总 / 12B 激活）。未在本群实测。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "max_output": "本群设 600 tokens"
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/nvidia/nemotron-3-120b-a12b"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      45455,
+      136364
+     ],
+     "untested": true,
+     "limits": {
+      "max_output": "本群设 600 tokens"
+     }
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "reason"
+    ],
+    "context_window": 256000,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/nvidia/nemotron-3-120b-a12b（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "kimi-k2.5",
+   "name": "kimi-k2.5",
+   "brand": "moonshot",
+   "type": "model",
+   "intro": "Moonshot Kimi K2.5（免费档可用；K2.6 起需付费）。未在本群实测。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "max_output": "本群设 600 tokens"
+   },
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/moonshotai/kimi-k2.5"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "more": [
+       "升级 Workers Paid"
+      ],
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      54545,
+      272727
+     ],
+     "untested": true,
+     "limits": {
+      "max_output": "本群设 600 tokens"
+     }
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "glm-4.7-flash",
+   "name": "glm-4.7-flash",
+   "brand": "zhipu",
+   "type": "model",
+   "intro": "智谱 GLM-4.7 Flash。2026-10-23 实测 messages 形状返回空，暂不派。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/zai-org/glm-4.7-flash"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      5500,
+      36400
+     ],
+     "known_issue": "messages 形状返回空（2026-10-23 实测）",
+     "limits": {}
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "reason"
+    ],
+    "context_window": 131072,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/zai-org/glm-4.7-flash（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "gemma-4-26b",
+   "name": "gemma-4-26b-a4b-it",
+   "brand": "google",
+   "type": "model",
+   "intro": "Google Gemma 4 26B-A4B。2026-10-23 实测 messages 形状返回空，暂不派。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/google/gemma-4-26b-a4b-it"
+     },
+     "quota": {
+      "kind": "cf-neurons",
+      "limit": 10000,
+      "unit": "neurons/天（整个主账号共用）",
+      "source": "est",
+      "reset": "每天 00:00 UTC（英国 01:00）",
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "neurons": [
+      9091,
+      27273
+     ],
+     "known_issue": "messages 形状返回空（2026-10-23 实测）",
+     "limits": {}
+    },
+    {
+     "via": "自建 GPU 端点（Modal / Daytona GPU / Lightning；Kaggle 只能批处理）——待部署",
+     "invoke": {
+      "kind": "selfhost",
+      "platforms": [
+       "modal",
+       "daytona",
+       "lightning",
+       "kaggle"
+      ]
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "用对应平台的免费算力（Modal 每月 $30、Kaggle 每周约 30 GPU 小时等），需先部署 vLLM 等推理端点"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat",
+     "vision",
+     "reason"
+    ],
+    "context_window": 256000,
+    "tool_call": true,
+    "capability_status": "pending",
+    "source": "models.dev cloudflare-workers-ai/@cf/google/gemma-4-26b-a4b-it（2026-10-24 读取，MIT 数据）"
+   }
+  },
+  {
+   "id": "gemma-3-12b",
+   "name": "gemma-3-12b-it",
+   "brand": "google",
+   "type": "model",
+   "intro": "已下架（2026-10-23 调用返回 5018）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "retired": true,
+   "privacy": "同 Workers AI。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI 直连",
+     "invoke": {
+      "kind": "workers-ai",
+      "model": "@cf/google/gemma-3-12b-it"
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "已下架"
+     },
+     "retired": true,
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "cf-paid-only",
+   "name": "kimi-k2.6 / glm-5.3 / deepseek-v4 等",
+   "brand": "cloudflare",
+   "type": "model",
+   "intro": "Workers AI 上这些模型要求付费计划或 AI Gateway 预付额度：kimi-k2.6、kimi-k2.7-code、glm-5.2、glm-5.3、glm-5.3-flash、deepseek-v4-flash、deepseek-v4.1-flash、deepseek-v4-pro。主账号是免费版，不可用。",
+   "tags_note": "—",
+   "retired": true,
+   "privacy": "—",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Cloudflare Workers AI（需付费计划）",
+     "invoke": {
+      "kind": "none"
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "需 Workers Paid 或 AI Gateway 预付",
+      "src": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+     },
+     "retired": true,
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "kimi-k3",
+   "name": "kimi-k3",
+   "brand": "moonshot",
+   "type": "model",
+   "intro": "Moonshot Kimi K3。NVIDIA 渠道已于 2026-10-15 下线；目前经 HappyCoding 公益站中转。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "数据经 NVIDIA 托管（条款未核实）。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "rpm": "未核实"
+   },
+   "sources": [
+    {
+     "via": "NVIDIA NIM 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://integrate.api.nvidia.com/v1",
+      "model": "moonshotai/kimi-k3",
+      "secret": "NVIDIA_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "NVIDIA 免费额度规则未核实",
+      "more": [
+       "build.nvidia.com 账户页查看（未核实）"
+      ]
+     },
+     "limits": {
+      "rpm": "未核实"
+     },
+     "retired": true,
+     "known_issue": "NVIDIA 已下线（410：2026-10-15 end of life，Hark 2026-10-23 调用实测）"
+    },
+    {
+     "via": "中转站 HappyCoding（New API）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-happycoding",
+      "model": "kimi-k3"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "deepseek-v4.1-flash",
+   "name": "deepseek-v4.1-flash",
+   "brand": "deepseek",
+   "type": "model",
+   "intro": "DeepSeek V4.1 Flash（NVIDIA 托管，Hark 2026-10-14 实测可调用）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "数据经 NVIDIA 托管（条款未核实）。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "NVIDIA NIM 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://integrate.api.nvidia.com/v1",
+      "model": "deepseek-ai/deepseek-v4.1-flash",
+      "secret": "NVIDIA_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "NVIDIA 免费额度规则未核实"
+     },
+     "limits": {}
+    },
+    {
+     "via": "中转站 HappyCoding（New API）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-happycoding",
+      "model": "deepseek-v4.1-flash"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "gemini-2.5-flash",
+   "name": "gemini-2.5-flash",
+   "brand": "gemini",
+   "type": "model",
+   "intro": "Google Gemini 2.5 Flash。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "Gemini API 免费档的数据可能被用于改进产品（Google 条款，未逐条核实）。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {
+    "vision": true
+   },
+   "sources": [
+    {
+     "via": "Google Gemini 直连 API",
+     "invoke": {
+      "kind": "gemini",
+      "model": "gemini-2.5-flash",
+      "secret": "GEMINI_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "免费档 RPD 未核实（Google 会调整）",
+      "more": [
+       "Google AI Studio 查看配额（未核实）"
+      ]
+     },
+     "limits": {
+      "vision": true
+     }
+    }
+   ],
+   "jobs": [
+    {
+     "t": "看图",
+     "from": "社区评价",
+     "src": "岗位依据：Gemini 原生多模态（官方）",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "jobs_basis": "岗位依据：Gemini 原生多模态（官方）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "agnes-3.0-flash",
+   "name": "agnes-3.0-flash",
+   "brand": "agnes",
+   "type": "model",
+   "intro": "Agnes 3.0 Flash（用户此前在 CCCC 里当开发用）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "条款未核实。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Agnes AI 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://apihub.agnes-ai.com/v1",
+      "model": "agnes-3.0-flash",
+      "secret": "AGNES_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "额度规则未核实"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "代码",
+     "from": "用户安排",
+     "src": "岗位依据：用户此前在 CCCC 里让它当开发（用户安排，非评测）",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "jobs_basis": "岗位依据：用户此前在 CCCC 里让它当开发（用户安排，非评测）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "agnes-2.5-pro",
+   "name": "agnes-2.5-pro",
+   "brand": "agnes",
+   "type": "model",
+   "intro": "Agnes 2.5 Pro（用户此前在 CCCC 里当审查员用）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "条款未核实。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Agnes AI 直连 API",
+     "invoke": {
+      "kind": "openai",
+      "base": "https://apihub.agnes-ai.com/v1",
+      "model": "agnes-2.5-pro",
+      "secret": "AGNES_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "次（本地记录）",
+      "source": "unverified",
+      "text": "额度规则未核实"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "挑错审查",
+     "from": "用户安排",
+     "src": "岗位依据：用户此前在 CCCC 里让它当审查员（用户安排，非评测）",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "jobs_basis": "岗位依据：用户此前在 CCCC 里让它当审查员（用户安排，非评测）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "agnes-image-2.5",
+   "name": "agnes-image-2.5",
+   "brand": "agnes",
+   "type": "image",
+   "intro": "Agnes 生图模型。官方写「目前免费」（限时优惠，Hark 2026-10-22 核实）；10-22 当天 503 队列满。在群里被点名时生成图片并贴链接。",
+   "tags": [
+    {
+     "t": "生图",
+     "src": "官方页（Hark 2026-10-22 核实）",
+     "date": "2026-10-22"
+    }
+   ],
+   "privacy": "图片和提示词会发给 Agnes。",
+   "exec": {
+    "tags": [
+     "生图"
+    ],
+    "items": []
+   },
+   "limits": {
+    "files": "参考图走 extra_body.image"
+   },
+   "sources": [
+    {
+     "via": "Agnes AI 直连 API（生图）",
+     "invoke": {
+      "kind": "image-openai",
+      "base": "https://apihub.agnes-ai.com/v1",
+      "model": "agnes-image-2.5",
+      "secret": "AGNES_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "张（本地记录）",
+      "source": "official",
+      "text": "官方写「目前免费」（限时，截止日未公布）"
+     },
+     "limits": {
+      "files": "参考图走 extra_body.image"
+     }
+    }
+   ],
+   "jobs": [
+    {
+     "t": "生图",
+     "from": "社区评价",
+     "src": "官方页（Hark 2026-10-22 核实）",
+     "date": "2026-10-22"
+    }
+   ],
+   "weak": [
+    {
+     "t": "文字对话",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "image"
+    ],
+    "context_window": null,
+    "tool_call": false,
+    "capability_status": "verified",
+    "source": "官方页（Hark 2026-10-22 核实）：生图接口，只能当执行成员"
+   }
+  },
+  {
+   "id": "agnes-image-2.1-flash",
+   "name": "agnes-image-2.1-flash",
+   "brand": "agnes",
+   "type": "image",
+   "intro": "Agnes 生图快速版，官方写「目前免费」（Hark 2026-10-22 核实）。",
+   "tags": [
+    {
+     "t": "生图",
+     "src": "官方页（Hark 2026-10-22 核实）",
+     "date": "2026-10-22"
+    }
+   ],
+   "privacy": "图片和提示词会发给 Agnes。",
+   "exec": {
+    "tags": [
+     "生图"
+    ],
+    "items": []
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Agnes AI 直连 API（生图）",
+     "invoke": {
+      "kind": "image-openai",
+      "base": "https://apihub.agnes-ai.com/v1",
+      "model": "agnes-image-2.1-flash",
+      "secret": "AGNES_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "张（本地记录）",
+      "source": "official",
+      "text": "官方写「目前免费」（限时）"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "生图",
+     "from": "社区评价",
+     "src": "官方页（Hark 2026-10-22 核实）",
+     "date": "2026-10-22"
+    }
+   ],
+   "weak": [
+    {
+     "t": "文字对话",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "image"
+    ],
+    "context_window": null,
+    "tool_call": false,
+    "capability_status": "verified",
+    "source": "官方页（Hark 2026-10-22 核实）：生图接口，只能当执行成员"
+   }
+  },
+  {
+   "id": "minimax-m3",
+   "name": "minimax-m3",
+   "brand": "minimax",
+   "type": "relay-model",
+   "intro": "经 HappyCoding 公益站中转（2026-10-22 实测可用）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "公益站运营者能看到全部请求内容，不要发隐私。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 HappyCoding（New API）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-happycoding",
+      "model": "minimax-m3"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额",
+      "more": [
+       "公益站一般靠签到领额度（本站规则未核实）"
+      ]
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "glm-5.3",
+   "name": "glm-5.3",
+   "brand": "zhipu",
+   "type": "relay-model",
+   "intro": "经 HappyCoding 公益站中转。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "公益站运营者能看到全部请求内容。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 HappyCoding（New API）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-happycoding",
+      "model": "glm-5.3"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "glm-5.3-flash",
+   "name": "glm-5.3-flash",
+   "brand": "zhipu",
+   "type": "relay-model",
+   "intro": "经 HappyCoding 公益站中转。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "公益站运营者能看到全部请求内容。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 HappyCoding（New API）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-happycoding",
+      "model": "glm-5.3-flash"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额"
+     },
+     "limits": {}
+    },
+    {
+     "via": "中转站 Vyce AI",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-vyce",
+      "model": "glm-5.3-flash"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "美元余额"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "tools": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，等项目结束后的用户打分、成员互评和实测记录来定",
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "deepseek-v4-flash",
+   "name": "deepseek-v4-flash",
+   "brand": "deepseek",
+   "type": "relay-model",
+   "intro": "经 Vyce AI 中转（2026-10-19 实测可用），扣注册赠送额度。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "中转站能看到请求内容。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 Vyce AI",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-vyce",
+      "model": "deepseek-v4-flash"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "美元余额",
+      "more": [
+       "注册送 $40（Hark 2026-10-19 记录）；价格要登录后才能看"
+      ]
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "claude-sonnet-4-6",
+   "name": "claude-sonnet-4-6",
+   "brand": "anthropic",
+   "type": "relay-model",
+   "intro": "经 Vyce AI 中转（模型列表里有，本群未实测；扣赠送额度，单价较高）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "中转站能看到请求内容。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 Vyce AI",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-vyce",
+      "model": "claude-sonnet-4-6"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "美元余额"
+     },
+     "untested": true,
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "代码",
+     "from": "社区评价",
+     "src": "岗位依据：Anthropic Sonnet 系列以代码/写作见长（Hark 常识，未针对 4.6 检索）",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "长文写作",
+     "from": "社区评价",
+     "src": "岗位依据：Anthropic Sonnet 系列以代码/写作见长（Hark 常识，未针对 4.6 检索）",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "jobs_basis": "岗位依据：Anthropic Sonnet 系列以代码/写作见长（Hark 常识，未针对 4.6 检索）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "gpt-6-luna",
+   "name": "gpt-6-luna",
+   "brand": "openai",
+   "type": "relay-model",
+   "intro": "经 Vyce AI 中转（模型列表里有，本群未实测）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "中转站能看到请求内容。",
+   "exec": {
+    "tags": [],
+    "note": "纯文本对话，没有电脑/浏览器/联网执行能力"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "中转站 Vyce AI",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-vyce",
+      "model": "gpt-6-luna"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "美元余额"
+     },
+     "untested": true,
+     "limits": {}
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，Hark 暂不主动派活（可手动拉进群）",
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  },
+  {
+   "id": "zen-free",
+   "name": "OpenCode Zen 免费模型",
+   "brand": "opencode",
+   "type": "agent",
+   "intro": "OpenCode Zen 的限时免费模型只能从 OpenCode 客户端调用，直接 HTTP 会被拒（Hark 2026-10-14 实测）。要进群：在装了 OpenCode 的机器上跑 bridge.py（拉取模式），由它调用 opencode run 再把回复写回。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "OpenCode 条款：Beam Free 不对中国（含港澳）开放。",
+   "exec": {
+    "tags": [
+     "写文件"
+    ],
+    "items": [
+     [
+      "电脑",
+      "装 OpenCode 的那台机器（Hark 沙盒已装 OpenCode CLI）"
+     ]
+    ]
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "仅限 OpenCode 客户端（经小桥）",
+     "invoke": {
+      "kind": "bridge"
+     },
+     "quota": {
+      "kind": "deadline",
+      "source": "official",
+      "text": "限时免费（opencode.ai/docs/zen，2026-10-17 核实），截止日未公布"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "代码",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "agent",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "外部智能体连接器：负责人资格来自配对/接入，不按模型能力判断"
+   }
+  },
+  {
+   "id": "poke",
+   "name": "Poke",
+   "brand": "poke",
+   "type": "agent",
+   "intro": "用户手机上的 Poke 助手。本群把议题和回调地址发给 Poke（POST https://poke.com/api/v1/inbound/api-message，V2 Key），Poke 处理后把回复 POST 到回调地址写回房间；Poke 没有公开的回复拉取接口，所以是异步的。",
+   "tags": [
+    {
+     "t": "邮件/日历/提醒",
+     "src": "https://poke.com/docs",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "执行者",
+     "src": "https://poke.com/docs/api",
+     "date": "2026-10-23"
+    }
+   ],
+   "privacy": "Poke 能访问你的邮件、日历等集成，消息会进入你的 Poke 对话。",
+   "exec": {
+    "tags": [
+     "收邮件验证码",
+     "收短信验证码",
+     "查网页"
+    ],
+    "items": [
+     [
+      "邮件/日历",
+      "Poke 接入了用户的邮箱、日历、提醒等集成（官方文档）"
+     ],
+     [
+      "收短信验证码",
+      "用户约定：注册需要的手机号和短信验证码由 Poke 提供（家庭成员号码，按约定使用）"
+     ],
+     [
+      "查网页",
+      "Poke 官方文档写可以搜索网页"
+     ],
+     [
+      "沙盒/浏览器",
+      "无（官方文档未提供）"
+     ]
+    ]
+   },
+   "limits": {
+    "rpm": "未公布"
+   },
+   "sources": [
+    {
+     "via": "Poke API（即时唤醒，异步回调）",
+     "invoke": {
+      "kind": "poke",
+      "secret": "POKE_API_KEY"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "条（本地记录）",
+      "source": "unverified",
+      "text": "Poke API 限额未公布"
+     },
+     "limits": {
+      "rpm": "未公布"
+     }
+    }
+   ],
+   "jobs": [
+    {
+     "t": "注册执行",
+     "from": "社区评价",
+     "src": "https://poke.com/docs/api",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "邮件日历",
+     "from": "社区评价",
+     "src": "https://poke.com/docs",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "收验证码",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [
+    {
+     "t": "长文写作",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [
+    "tool-poke-phone"
+   ],
+   "caps": {
+    "kind": "agent",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "外部智能体连接器：负责人资格来自配对/接入，不按模型能力判断"
+   }
+  },
+  {
+   "id": "muse",
+   "name": "Muse",
+   "brand": "muse",
+   "type": "agent",
+   "intro": "Muse 可写自定义连接器访问公网 HTTPS API；进群方式：给 Muse 一个能收指令的 HTTPS 端点（填进 AGENT_MUSE_URL），或用 Telegram 连接器。回复走回调。均未实测。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "指令和记录会发给 Muse。",
+   "exec": {
+    "tags": [
+     "浏览器",
+     "查网页",
+     "注册账号",
+     "写文件"
+    ],
+    "items": [
+     [
+      "浏览器/VM",
+      "Muse 有云端浏览器和 VM（在 Meta 云上；用户提供，Hark 未验证）"
+     ],
+     [
+      "注册账号",
+      "用户已把签到/注册类杂活迁给 Muse（2026-10-23）"
+     ],
+     [
+      "写文件",
+      "Muse 维护网盘里的密码文件等（用户安排）"
+     ]
+    ],
+    "how": "能力为用户描述/交接安排，Hark 未实测。"
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "通用 Webhook / Telegram（待配置）",
+     "invoke": {
+      "kind": "webhook",
+      "secret": "AGENT_MUSE_TOKEN",
+      "url_secret": "AGENT_MUSE_URL"
+     },
+     "quota": {
+      "kind": "calls",
+      "unit": "条（本地记录）",
+      "source": "unverified",
+      "text": "未知"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "注册执行",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "签到巡检",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    },
+    {
+     "t": "查网页",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "agent",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "外部智能体连接器：负责人资格来自配对/接入，不按模型能力判断"
+   }
+  },
+  {
+   "id": "cccc",
+   "name": "CCCC",
+   "brand": "cccc",
+   "type": "lan",
+   "intro": "用户电脑上的 CCCC 群（G:\\CCCC，Web UI 127.0.0.1:8848）。在电脑上跑 bridge.py：它定时从本群拉任务（出站 HTTPS，不用开端口），转给本机 CCCC/OpenCode，再把回复写回。也可以用 Tailscale Funnel 暴露端点改成推送。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "任务内容会到你自己电脑。",
+   "exec": {
+    "tags": [
+     "自带沙盒",
+     "写文件"
+    ],
+    "items": [
+     [
+      "电脑",
+      "用户 Windows 电脑（nw-os），CCCC 在 G:\\CCCC"
+     ],
+     [
+      "写文件",
+      "CCCC 里的编程智能体可读写本机项目"
+     ]
+    ]
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Tailscale / 本机小桥（拉取模式）",
+     "invoke": {
+      "kind": "bridge"
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "取决于 CCCC 里配置的模型"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "代码",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "agent",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "外部智能体连接器：负责人资格来自配对/接入，不按模型能力判断"
+   }
+  },
+  {
+   "id": "claude-code",
+   "name": "Claude Code",
+   "brand": "anthropic",
+   "type": "lan",
+   "intro": "本机 Claude Code，经 bridge.py 调 `claude -p` 接入（模板，未连接）。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "privacy": "任务内容会到你自己电脑。",
+   "exec": {
+    "tags": [
+     "自带沙盒",
+     "写文件"
+    ],
+    "items": [
+     [
+      "电脑",
+      "用户本机"
+     ],
+     [
+      "写文件",
+      "Claude Code 可读写本机项目（需用户授权）"
+     ]
+    ]
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "Tailscale / 本机小桥（拉取模式）",
+     "invoke": {
+      "kind": "bridge"
+     },
+     "quota": {
+      "kind": "none",
+      "source": "official",
+      "text": "取决于你的 Claude 订阅"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "代码",
+     "from": "用户安排/文档",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "weak": [],
+   "tools": [],
+   "caps": {
+    "kind": "agent",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "外部智能体连接器：负责人资格来自配对/接入，不按模型能力判断"
+   }
+  },
+  {
+   "id": "gpt-image-2.5",
+   "name": "gpt-image-2.5",
+   "brand": "openai",
+   "type": "webtool",
+   "intro": "arena.ai Direct 模式里的 GPT image 2.5。任务进代发队列，由代发员（Hark 远程浏览器或用户电脑上的桌面桥接）打开 arena.ai Direct 出图，把图片链接回传房间并标「经代发」。",
+   "tags": [
+    {
+     "t": "生图",
+     "src": "https://arena.ai/image/direct?model_a=gpt-image-2.5-sunburst",
+     "date": "2026-10-21"
+    }
+   ],
+   "privacy": "Arena 的输入会被第三方处理并可能公开用于评测，隐私图片别发。",
+   "exec": {
+    "tags": [
+     "生图"
+    ],
+    "items": [
+     [
+      "浏览器",
+      "Hark 浏览器打开 arena.ai Direct 出图（网页工具）"
+     ]
+    ]
+   },
+   "limits": {},
+   "sources": [
+    {
+     "via": "网页工具 · arena.ai Direct（经代发：代发员用浏览器发送）",
+     "invoke": {
+      "kind": "web",
+      "site": "https://arena.ai/image/direct?model_a=gpt-image-2.5-sunburst"
+     },
+     "quota": {
+      "kind": "deadline",
+      "deadline": "2026-11-02",
+      "source": "unverified",
+      "text": "用户说限时免费到 2026-11-02（官网是 JS 页面，未能静态核实）"
+     },
+     "limits": {}
+    }
+   ],
+   "jobs": [
+    {
+     "t": "生图",
+     "from": "社区评价",
+     "src": "https://arena.ai/image/direct?model_a=gpt-image-2.5-sunburst",
+     "date": "2026-10-21"
+    }
+   ],
+   "weak": [
+    {
+     "t": "文字对话",
+     "from": "社区评价",
+     "src": "members.json 初始",
+     "date": "2026-10-23"
+    }
+   ],
+   "tools": [],
+   "caps": {
+    "kind": "model",
+    "web": true,
+    "tags": [
+     "image"
+    ],
+    "context_window": null,
+    "tool_call": false,
+    "capability_status": "verified",
+    "source": "网页成员（小桥驱动网页生图），只能当执行成员"
+   }
+  },
+  {
+   "id": "glm-4.5-flash",
+   "name": "glm-4.5-flash",
+   "brand": "zhipu",
+   "type": "relay-model",
+   "intro": "智谱 GLM-4.5 Flash（小而快）。来源：PM 公益站（pmcat.top），sync-muse-apis 2026-10-23 实测可对话。",
+   "tags_note": "暂无社区评价（本版未检索）",
+   "limits": {},
+   "privacy": "公益站运营者能看到全部请求内容。",
+   "sources": [
+    {
+     "via": "中转站 PM 公益站（pmcat.top）",
+     "invoke": {
+      "kind": "openai",
+      "relay": "relay-pm",
+      "model": "glm-4.5-flash"
+     },
+     "quota": {
+      "kind": "relay-balance",
+      "source": "live",
+      "unit": "站点余额"
+     }
+    }
+   ],
+   "jobs": [],
+   "weak": [],
+   "tools": [],
+   "jobs_note": "擅长岗位待定：暂无可靠评测/实测，等项目结束后的用户打分、成员互评和实测记录来定",
+   "caps": {
+    "kind": "model",
+    "tags": [
+     "chat"
+    ],
+    "context_window": null,
+    "tool_call": "unknown",
+    "capability_status": "pending",
+    "source": "中转/官方接口，上下文与工具调用随来源不同，待资源管家或用户核实"
+   }
+  }
+ ],
+ "term": "AI成员",
+ "exec_tags": [
+  "自带沙盒",
+  "浏览器",
+  "远程控制浏览器",
+  "代理IP",
+  "住宅节点",
+  "收邮件验证码",
+  "收短信验证码",
+  "注册账号",
+  "查网页",
+  "写文件",
+  "生图"
+ ],
+ "tools": [
+  {
+   "id": "tool-fetch",
+   "name": "查网页（读取网页正文）",
+   "kind": "网络",
+   "config": "Worker 直接读公网 https 页面（每跳重定向都过 SSRF 校验，≤4 跳、10 秒、600KB）",
+   "who": [
+    "*"
+   ],
+   "perms": "只读公网 https；不带任何登录信息",
+   "quota": "免费，本群每天上限 100 次（所有工具合计）",
+   "key": "",
+   "group": "网络",
+   "gw": {
+    "status": "ok",
+    "keyless": true,
+    "actions": [
+     {
+      "name": "fetch_url",
+      "label": "读网页",
+      "risk": "free"
+     }
+    ],
+    "cap": 50,
+    "card": {
+     "mode": "随用随调",
+     "cold": "—",
+     "free_total": "免费（Cloudflare Worker 出站请求）",
+     "period": "—",
+     "remain_api": false,
+     "usage_url": "",
+     "expires": "—",
+     "limits": "本群每天 50 次",
+     "billing_auto": false,
+     "billing": "不收费",
+     "src": "https://developers.cloudflare.com/workers/platform/pricing/",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-hark-sandbox",
+   "name": "Hark Linux 沙盒",
+   "kind": "沙盒",
+   "config": "aarch64，/workspace 持久；另有 E2B（暂停保留）、Modal、Kaggle",
+   "who": [
+    "hark"
+   ],
+   "perms": "Hark 自用；用户电脑上的高风险操作先问",
+   "quota": "E2B $100 一次性额度（2026-10-11 记录）；其他按平台",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "Hark 沙盒在 Hark 自己的环境里，Worker 连不进去"
+   }
+  },
+  {
+   "id": "tool-browser",
+   "name": "Hark 浏览器",
+   "kind": "浏览器",
+   "config": "Hark 托管浏览器代理（可用已保存登录）+ 沙盒 Chromium（Xvfb/CDP）",
+   "who": [
+    "hark"
+   ],
+   "perms": "付款/发消息/注册按审批规则",
+   "quota": "—",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "Hark 托管浏览器只有 Hark 能驱动"
+   }
+  },
+  {
+   "id": "tool-remote-desktop",
+   "name": "远程桌面浏览器",
+   "kind": "远程控制浏览器",
+   "config": "vnc.pcmanai.com / kasm.pcmanai.com（noVNC/KasmVNC，1920×1080）",
+   "who": [
+    "hark"
+   ],
+   "perms": "用户可接管（验证码/输卡）",
+   "quota": "—",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "远程桌面供人或 Hark 操作，没有给成员的 API"
+   }
+  },
+  {
+   "id": "tool-proxy",
+   "name": "代理节点池",
+   "kind": "代理IP",
+   "config": "沙盒 mihomo：公开订阅约 600 节点 url-test，可切换；出口直连 = AWS us-west-2",
+   "who": [
+    "hark"
+   ],
+   "perms": "家宽节点（qianlink 英国家庭等）只在用户明确要求时用",
+   "quota": "qianlink 邀请体验 1G/账号",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "代理节点池跑在 Hark 沙盒（mihomo），Worker 用不了"
+   }
+  },
+  {
+   "id": "tool-mail",
+   "name": "临时邮箱",
+   "kind": "邮箱",
+   "config": "mail.tm 等临时邮箱 + 一个 mail.com 自用邮箱（地址不在页面显示）",
+   "who": [
+    "hark"
+   ],
+   "perms": "注册按约定（注册前问是否用临时邮箱）",
+   "quota": "免费",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "临时邮箱账号在 Hark 沙盒里"
+   }
+  },
+  {
+   "id": "tool-phone",
+   "name": "Saperly 号码",
+   "kind": "电话号码",
+   "config": "美国免费电话号（toll-free），可收短信；号码不在页面显示",
+   "who": [
+    "*"
+   ],
+   "perms": "每个号只给号主自己的账号用；其他手机号/验证码找 Poke",
+   "quota": "$2/月",
+   "group": "电话号码",
+   "gw": {
+    "status": "todo",
+    "key": "SAPERLY_API_KEY",
+    "endpoint": "https://saperly.com/docs",
+    "actions": [
+     {
+      "name": "read_sms",
+      "label": "读短信",
+      "risk": "free"
+     },
+     {
+      "name": "send_sms",
+      "label": "发短信",
+      "risk": "irreversible"
+     },
+     {
+      "name": "buy_number",
+      "label": "买号码",
+      "risk": "paid"
+     }
+    ],
+    "cap": 10,
+    "card": {
+     "mode": "随用随调",
+     "cold": "—",
+     "free_total": "$5 注册额度，永不过期",
+     "free_amount": 5,
+     "unit": "USD",
+     "period": "一次性",
+     "remain_api": false,
+     "usage_url": "https://saperly.com",
+     "expires": "不过期",
+     "limits": "官方未写",
+     "billing_auto": null,
+     "billing": "预付费：余额扣费，开了 auto-recharge 才会自动充值；短信 $0.02/条起，号码 $2/月起",
+     "src": "https://saperly.com/pricing",
+     "verified": "2026-10-23"
+    }
+   },
+   "key": "SAPERLY_API_KEY"
+  },
+  {
+   "id": "tool-poke-phone",
+   "name": "Poke 提供的手机号/短信",
+   "kind": "电话号码",
+   "config": "用户家庭成员号码，经 Poke 转达",
+   "who": [
+    "poke",
+    "hark"
+   ],
+   "perms": "一人一号一账号，不轮换号码领重复优惠",
+   "quota": "—",
+   "group": "仅 Hark 可用",
+   "gw": {
+    "status": "hark",
+    "why": "号码属于用户家人，只经 Poke 转达"
+   }
+  },
+  {
+   "id": "tool-modal",
+   "name": "Modal",
+   "kind": "算力（GPU）",
+   "config": "能做什么：跑开源模型（部署 vLLM 端点后可当成员来源）、执行代码、训练/微调",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "Starter 每月 $30 免费算力（GPU/CPU/内存）；Shared Endpoints 按 token 另计费，不在免费内",
+   "quota_src": "https://modal.com/pricing",
+   "key": "MODAL_TOKEN",
+   "group": "算力（能跑自己的代码/GPU）",
+   "gw": {
+    "status": "todo",
+    "key": "MODAL_TOKEN",
+    "endpoint": "Modal 只有 gRPC/Python SDK（无 REST）",
+    "actions": [
+     {
+      "name": "run_function",
+      "label": "运行已部署的函数（GPU）",
+      "risk": "paid"
+     }
+    ],
+    "cap": 10,
+    "card": {
+     "mode": "随用随调（无服务器）：最后一次输入后默认保持 60 秒再缩到 0（官方 FAQ）",
+     "cold": "官方：容器 1–2 秒起停",
+     "free_total": "Starter 每月 $30 免费算力",
+     "free_amount": 30,
+     "unit": "USD",
+     "period": "每月",
+     "remain_api": false,
+     "usage_url": "https://modal.com/settings/usage",
+     "expires": "按月重置",
+     "limits": "Starter：100 个容器、10 个 GPU 并发",
+     "billing_auto": true,
+     "billing": "⚠ 超过每月 $30 自动按量扣费（官方：You're billed when you exceed that）；Shared Endpoints 的 token 从第一次请求就收费。可在 Modal 设预算上限",
+     "src": "https://modal.com/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-kaggle",
+   "name": "Kaggle",
+   "kind": "算力（GPU）",
+   "config": "能做什么：批量跑开源模型/训练（Notebook 批处理，不能当常驻接口）",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "GPU 每周约 30 小时（P100，按供需浮动），每周重置",
+   "quota_src": "https://www.kaggle.com/docs/efficient-gpu-usage",
+   "key": "KAGGLE_API_TOKEN",
+   "group": "算力（能跑自己的代码/GPU）",
+   "gw": {
+    "status": "todo",
+    "key": "KAGGLE_API_TOKEN",
+    "endpoint": "https://www.kaggle.com/api/v1",
+    "actions": [
+     {
+      "name": "push_kernel",
+      "label": "推送 Notebook 批处理",
+      "risk": "free"
+     }
+    ],
+    "cap": 5,
+    "card": {
+     "mode": "批处理：推送 Notebook 版本后排队运行，不能当常驻接口；交互会话 60 分钟空闲超时",
+     "cold": "排队时间不定",
+     "free_total": "GPU 每周 30 小时（P100，有时更多，按供需）",
+     "free_amount": 30,
+     "unit": "GPU 小时",
+     "period": "每周重置",
+     "remain_api": false,
+     "usage_url": "https://www.kaggle.com/settings",
+     "expires": "每周重置",
+     "limits": "官方未写并发上限",
+     "billing_auto": false,
+     "billing": "免费，不收费",
+     "src": "https://www.kaggle.com/docs/efficient-gpu-usage",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-lightning",
+   "name": "Lightning AI",
+   "kind": "算力（GPU）",
+   "config": "能做什么：跑开源模型（Studio / 部署端点）、执行代码",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "注册送 5 credits，绑卡再送 25（最多 30，约 80 小时可中断 GPU，12 个月过期）；1 个免费 CPU Studio（每 4 小时重启）；领 GPU 需手机号。官网目前因安全事件锁站",
+   "quota_src": "https://lightning.ai/pricing",
+   "key": "LIGHTNING_API_KEY",
+   "group": "算力（能跑自己的代码/GPU）",
+   "gw": {
+    "status": "todo",
+    "key": "LIGHTNING_API_KEY",
+    "endpoint": "Lightning SDK（官网锁站，API 未核实）",
+    "actions": [
+     {
+      "name": "run_studio",
+      "label": "启动 Studio 跑任务（GPU）",
+      "risk": "paid"
+     }
+    ],
+    "cap": 5,
+    "card": {
+     "mode": "实例（Studio）：有自动休眠；免费 Studio 每 4 小时要重启",
+     "cold": "未核实",
+     "free_total": "注册送 5 credits，绑卡再送 25（最多 30，约 80 小时可中断 GPU）",
+     "free_amount": 30,
+     "unit": "credits",
+     "period": "一次性，12 个月过期",
+     "remain_api": false,
+     "usage_url": "https://lightning.ai",
+     "expires": "领取后 12 个月",
+     "limits": "Free：最多 2 个并发 GPU；模型 API 15 次/分、12 万 token/分",
+     "billing_auto": null,
+     "billing": "用完后按量付费（Pay-as-you-go）；有「Credits Auto-Reload」功能，是否默认开启未核实",
+     "src": "https://lightning.ai/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-lambda",
+   "name": "Lambda Cloud",
+   "kind": "算力（GPU）",
+   "config": "能做什么：租 GPU 虚拟机跑开源模型（付费）",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "没有免费档，需绑卡按量付费（官方 API 文档未写免费额度）",
+   "quota_src": "https://docs.lambda.ai/api/cloud",
+   "key": "LAMBDA_API_KEY",
+   "group": "算力（能跑自己的代码/GPU）",
+   "gw": {
+    "status": "todo",
+    "key": "LAMBDA_API_KEY",
+    "endpoint": "https://cloud.lambda.ai/api/v1",
+    "actions": [
+     {
+      "name": "launch_instance",
+      "label": "开 GPU 实例",
+      "risk": "paid"
+     },
+     {
+      "name": "list_instances",
+      "label": "列出实例",
+      "risk": "free"
+     }
+    ],
+    "cap": 3,
+    "card": {
+     "mode": "实例：开机后一直计费，直到你终止（不会自动休眠）",
+     "cold": "官方未写",
+     "free_total": "没有免费额度",
+     "period": "—",
+     "remain_api": false,
+     "usage_url": "https://cloud.lambda.ai",
+     "expires": "—",
+     "limits": "官方计费页未写并发上限",
+     "billing_auto": true,
+     "billing": "⚠ 按分钟计费，实例开着就一直扣费（不管用没用），每周出账单（官方 Billing 文档）",
+     "src": "https://docs.lambda.ai/public-cloud/billing/",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-beam",
+   "name": "Beam",
+   "kind": "算力（GPU）",
+   "config": "能做什么：无服务器 GPU 跑开源模型、沙盒执行代码（付费）",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "没有免费档：Developer 每月 $20（含 $20 额度）",
+   "quota_src": "https://www.beam.cloud/pricing",
+   "key": "BEAM_API_KEY",
+   "group": "算力（能跑自己的代码/GPU）",
+   "gw": {
+    "status": "todo",
+    "key": "BEAM_API_KEY",
+    "endpoint": "Beam SDK / REST（未核实）",
+    "actions": [
+     {
+      "name": "run_task",
+      "label": "跑 GPU/沙盒任务",
+      "risk": "paid"
+     }
+    ],
+    "cap": 3,
+    "card": {
+     "mode": "随用随调（无服务器，默认每次请求后缩容）；也可常驻",
+     "cold": "官方：不收冷启动的开机时间",
+     "free_total": "没有免费档：Developer 每月 $20（含 $20 额度）",
+     "free_amount": 20,
+     "unit": "USD",
+     "period": "每月，未用完的月度额度到期作废",
+     "remain_api": false,
+     "usage_url": "https://platform.beam.cloud",
+     "expires": "每月续费日",
+     "limits": "Developer：GPU 并发 5、CPU 并发 30",
+     "billing_auto": true,
+     "billing": "⚠ 月费制 + 超额按量（Pay as you go），超出额度自动计费",
+     "src": "https://www.beam.cloud/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-e2b",
+   "name": "E2B 沙盒",
+   "kind": "沙盒",
+   "config": "能做什么：执行代码、装软件、跑浏览器（无 GPU）",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "Hobby 免费：一次性 $100 额度，单次会话最长 1 小时，20 个并发沙盒，免绑卡",
+   "quota_src": "https://e2b.dev/pricing",
+   "key": "E2B_API_KEY",
+   "group": "沙盒（执行代码）",
+   "gw": {
+    "status": "ok",
+    "key": "E2B_API_KEY",
+    "endpoint": "https://api.e2b.dev",
+    "actions": [
+     {
+      "name": "run_code",
+      "label": "运行代码",
+      "risk": "free"
+     }
+    ],
+    "cap": 30,
+    "rate_usd_s": 4.6e-05,
+    "card": {
+     "mode": "随用随调：每次调用新建沙盒，跑完立即删除",
+     "cold": "建沙盒约 1 秒内（本群实测 2026-10-23）",
+     "free_total": "一次性 $100 额度",
+     "free_amount": 100,
+     "unit": "USD",
+     "period": "一次性（不按月重置）",
+     "remain_api": false,
+     "usage_url": "https://e2b.dev/dashboard",
+     "expires": "官方页未写到期日",
+     "limits": "20 个并发沙盒；单次会话最长 1 小时；默认 2 vCPU / 4 GiB",
+     "billing_auto": false,
+     "billing": "Hobby 免绑卡（官方：No credit card required）；不绑卡就不会扣费，额度用完需升级 Pro（$150/月+用量）",
+     "price": "默认规格约 $0.000046/秒（2 vCPU $0.000028 + 4 GiB $0.000018）",
+     "src": "https://e2b.dev/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-daytona",
+   "name": "Daytona",
+   "kind": "沙盒",
+   "config": "能做什么：执行代码；GPU 沙盒可跑开源模型",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "免费试用含 $200 算力，免绑卡；有 GPU 价目（RTX 4090 起），免费额度能否用于 GPU 未核实；免费档网络有白名单",
+   "quota_src": "https://www.daytona.io/pricing",
+   "key": "DAYTONA_API_KEY",
+   "group": "沙盒（执行代码）",
+   "gw": {
+    "status": "ok",
+    "key": "DAYTONA_API_KEY",
+    "endpoint": "https://app.daytona.io/api",
+    "actions": [
+     {
+      "name": "run_code",
+      "label": "运行代码",
+      "risk": "free"
+     }
+    ],
+    "cap": 30,
+    "rate_usd_s": 1.84e-05,
+    "card": {
+     "mode": "随用随调：每次新建沙盒，跑完立即删除（另设 5 分钟无操作自动停止、10 分钟自动删除兜底）",
+     "cold": "新建到可执行约 3–6 秒（本群实测 2026-10-23）",
+     "free_total": "$200 免费算力",
+     "free_amount": 200,
+     "unit": "USD",
+     "period": "一次性（官方页未写按月重置）",
+     "remain_api": false,
+     "usage_url": "https://app.daytona.io/dashboard",
+     "expires": "官方页未写到期日",
+     "limits": "官方定价页未写并发上限",
+     "billing_auto": null,
+     "billing": "免绑卡试用（官方：no credit card required）；之后按用量按秒计费（Pay as you go）。绑卡后超额是否自动扣费：官方定价页未写，未核实",
+     "price": "1 vCPU + 1 GiB 约 $0.0000184/秒（vCPU $0.0504/时 + 内存 $0.0162/时）",
+     "src": "https://www.daytona.io/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-instabox",
+   "name": "InstaBox",
+   "kind": "沙盒",
+   "config": "能做什么：执行代码（无 GPU、无 KVM）",
+   "who": [
+    "*"
+   ],
+   "perms": "Hark 与有执行能力的成员可调用；付费项需你确认",
+   "quota": "5 台免费机器（4 vCPU / 8GB / 20GB，无 GPU，空闲 30 分钟自动暂停）——账户实测记录，官方页未核实",
+   "quota_src": "",
+   "key": "INSTABOX_API_KEY",
+   "group": "沙盒（执行代码）",
+   "gw": {
+    "status": "todo",
+    "key": "INSTABOX_API_KEY",
+    "endpoint": "https://api.instabox.sh/v1",
+    "actions": [
+     {
+      "name": "exec",
+      "label": "在机器上执行命令",
+      "risk": "free"
+     }
+    ],
+    "cap": 20,
+    "card": {
+     "mode": "实例：常驻机器，暂停后只收存储费（官方 FAQ）",
+     "cold": "未核实",
+     "free_total": "Free 档：1 台机器（4 vCPU / 8 GiB）、5 个快照",
+     "period": "长期（Free 档）",
+     "remain_api": false,
+     "usage_url": "https://dashboard.instabox.sh/dashboard/account",
+     "expires": "无（Free 档）",
+     "limits": "Free 档 1 台机器",
+     "billing_auto": null,
+     "billing": "Free $0；Free 档超出后是否计费官方页未写，未核实（Pro 起「用完额度后按量付费」）",
+     "src": "https://instabox.sh/pricing",
+     "verified": "2026-10-23"
+    }
+   }
+  },
+  {
+   "id": "tool-phonebox",
+   "name": "Phonebox 云手机",
+   "kind": "云手机",
+   "group": "云手机",
+   "config": "云端安卓（Pixel 8 / Android 15），让成员操作没有 API 的安卓 App；不带号码/短信",
+   "who": [
+    "*"
+   ],
+   "perms": "只用于用户要求的 App 测试；不用它注册账号",
+   "quota": "新号送 $2，之后 $0.06/分钟，默认月上限 $100（2026-10-12 账户记录，未在官方页核实）",
+   "gw": {
+    "status": "todo",
+    "key": "PHONEBOX_API_KEY",
+    "endpoint": "https://phonebox.dev（API 文档 /docs）",
+    "actions": [
+     {
+      "name": "start_phone",
+      "label": "启动云手机",
+      "risk": "paid"
+     }
+    ],
+    "cap": 5,
+    "card": {
+     "mode": "实例：5 分钟无操作自动停放（parked，免费保留 App 和登录），单次会话默认 15 分钟、最长 3 小时",
+     "cold": "官方未写",
+     "free_total": "$2 新号赠送额度（约 33 手机分钟）",
+     "free_amount": 2,
+     "unit": "USD",
+     "period": "一次性，额度不过期",
+     "remain_api": false,
+     "usage_url": "https://phonebox.dev",
+     "expires": "不过期",
+     "limits": "最多同时 5 台运行",
+     "billing_auto": false,
+     "billing": "预付费：额度用完新会话直接拒绝，不会自动扣卡；$0.06/手机分钟，每次至少 1 分钟",
+     "src": "https://phonebox.dev/pricing",
+     "verified": "2026-10-23"
+    }
+   },
+   "key": "PHONEBOX_API_KEY"
+  },
+  {
+   "id": "tool-airtap",
+   "name": "Airtap 云手机",
+   "kind": "云手机",
+   "group": "云手机",
+   "config": "云手机 + Cortex API，可装 App；无蜂窝网络",
+   "who": [
+    "*"
+   ],
+   "perms": "用户 2026-10-12 叫停过用它注册 Telegram，需用户明确同意再用",
+   "quota": "未核实",
+   "gw": {
+    "status": "todo",
+    "key": "AIRTAP_TOKEN",
+    "endpoint": "Cortex API（旧版 legacy.airtap.ai 到 10-31）",
+    "actions": [
+     {
+      "name": "run_task",
+      "label": "让云手机执行任务",
+      "risk": "free"
+     }
+    ],
+    "cap": 10,
+    "card": {
+     "mode": "实例：专属云手机常开",
+     "cold": "官方未写",
+     "free_total": "第一版免费，有每日用量上限（上限数字未公布）",
+     "period": "每天",
+     "remain_api": false,
+     "usage_url": "https://airtap.ai",
+     "expires": "官网首页：旧版可用到 10 月 31 日；新版邀请制",
+     "limits": "每日上限未公布",
+     "billing_auto": false,
+     "billing": "第一版免费，官方条款写收费前会提前通知",
+     "src": "https://airtap.ai/about-us",
+     "verified": "2026-10-23"
+    }
+   },
+   "key": "AIRTAP_TOKEN"
+  },
+  {
+   "id": "tool-freestyle",
+   "name": "Freestyle 云浏览器",
+   "kind": "浏览器",
+   "group": "浏览器",
+   "config": "用户自己的云端 Chrome，经 MCP/REST 网关控制",
+   "who": [
+    "*"
+   ],
+   "perms": "不得用于 muse.ai",
+   "quota": "未核实",
+   "gw": {
+    "status": "todo",
+    "key": "FREESTYLE_TOKEN",
+    "endpoint": "Freestyle REST/MCP 网关",
+    "actions": [
+     {
+      "name": "browse",
+      "label": "控制云端浏览器",
+      "risk": "free"
+     }
+    ],
+    "cap": 10,
+    "card": {
+     "mode": "实例（虚拟机）",
+     "cold": "官方未写",
+     "free_total": "Free 永久：每月 200 vCPU 小时、400 GiB 内存小时、50 GB 流量",
+     "free_amount": 200,
+     "unit": "vCPU 小时",
+     "period": "每月重置",
+     "remain_api": false,
+     "usage_url": "https://dash.freestyle.sh",
+     "expires": "每月重置",
+     "limits": "Free：10 台并发 VM、每台最多 4 vCPU / 8 GiB",
+     "billing_auto": false,
+     "billing": "Free 档额度是硬上限，用完即停，不产生超额费用（官方）",
+     "src": "https://www.freestyle.sh/pricing",
+     "verified": "2026-10-23"
+    }
+   },
+   "key": "FREESTYLE_TOKEN"
+  }
+ ],
+ "admission": {
+  "rule": "AI成员以“模型/能干活的实体”为单位；同一模型的多个渠道合并成一张卡（sources），调用时自动挑可用渠道。入选门槛：至少有一项做得好的岗位，依据只认实际效果——公开评测/排行/社区口碑（附链接）、最短实测、以及本群项目结束后的用户打分 + 成员互评 + 实测记录。不按价格或模型大小预设岗位。哪一项都做不好的不招。",
+  "auto_discovered": "中转站 /v1/models 扫到的新模型先进“候选”，不自动入群；要入选需补 jobs（附依据）后写进 members.json。",
+  "not_members": "显卡/算力、电话号码、沙盒、代理节点、邮箱、浏览器是工具，放 tools，不做成员。",
+  "rejected": [
+   {
+    "name": "gemma-3-12b-it",
+    "why": "Workers AI 已下架（5018）"
+   },
+   {
+    "name": "Workers AI 付费专属模型",
+    "why": "免费账号调不了"
+   }
+  ],
+  "feedback": "每个项目结束可以给每个 AI成员 打分（1–5）并标注岗位；同一岗位平均分≥4 且≥2 次 → 自动加入“擅长岗位（实测）”，平均分≤2 → 加入“不擅长（实测）”。Hark 派工时实测分优先于配置里的口碑标签。",
+  "tag_lifecycle": "入职时按网友/社区评价给初步标签（from=社区评价，附链接和日期），不按大小或价格预设；之后每个项目结束：用户打分（from=用户打分）+ 成员互评（from=互评）存在 Durable Object 里，按岗位汇总后自动更新“擅长/不擅长”，每条记来源和更新时间。"
+ },
+ "keys": [
+  {
+   "env": "GROQ_API_KEY",
+   "name": "Groq",
+   "group": "模型",
+   "free": "免费档：gpt-oss-120b / gpt-oss-20b / qwen3.8-27b 每模型每天 1,000 次、20 万 tokens、每分钟 30 次",
+   "free_src": "https://console.groq.com/docs/rate-limits",
+   "console": "https://console.groq.com/keys",
+   "console_note": "官方文档导航「API Keys」核实",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://api.groq.com/openai/v1/models"
+   }
+  },
+  {
+   "env": "NVIDIA_API_KEY",
+   "name": "NVIDIA NIM",
+   "group": "模型",
+   "free": "开发者免费调用（官方文档没写具体次数，以 build.nvidia.com 账户页为准）",
+   "free_src": "https://docs.api.nvidia.com/nim/docs/api-quickstart",
+   "console": "https://build.nvidia.com",
+   "console_note": "任意模型页右侧点「Get API Key」（官方 quickstart 核实）",
+   "verify": {
+    "type": "bearer-chat",
+    "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+    "model": "meta/llama-3.1-8b-instruct"
+   }
+  },
+  {
+   "env": "GEMINI_API_KEY",
+   "name": "Google Gemini",
+   "group": "模型",
+   "free": "有免费档（Free tier），具体每分钟/每天次数在 AI Studio 限额页查看；每天太平洋时间 0 点重置",
+   "free_src": "https://ai.google.dev/gemini-api/docs/rate-limits",
+   "console": "https://aistudio.google.com/apikey",
+   "console_note": "官方文档「Get API key」核实",
+   "verify": {
+    "type": "goog-get",
+    "url": "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1"
+   }
+  },
+  {
+   "env": "AGNES_API_KEY",
+   "name": "Agnes AI",
+   "group": "模型",
+   "free": "生图模型官方写「目前免费」（限时，截止日未公布）；对话模型额度未核实",
+   "free_src": "",
+   "console": "https://apihub.agnes-ai.com",
+   "console_note": "页面是 JS 渲染，未能静态核实具体菜单",
+   "verify": {
+    "type": "bearer-chat",
+    "url": "https://apihub.agnes-ai.com/v1/chat/completions",
+    "model": "agnes-3.0-flash"
+   }
+  },
+  {
+   "env": "POKE_API_KEY",
+   "name": "Poke",
+   "group": "智能体",
+   "free": "官方未公布 API 限额",
+   "free_src": "",
+   "console": "https://poke.com",
+   "console_note": "Poke 设置里的 Kitchen 建 V2 Key（官方文档页 404，未能核实）",
+   "verify": {
+    "type": "none",
+    "why": "Poke 没有不发消息的验证接口；保存后显示「已填」，第一次派任务时才知道是否有效"
+   }
+  },
+  {
+   "env": "PM_API_KEY",
+   "name": "PM 公益站",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://pmcat.top/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://pmcat.top/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "HAPPYCODING_API_KEY",
+   "name": "HappyCoding 公益站",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://happycoding.xyz/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://happycoding.xyz/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "VYCE_API_KEY",
+   "name": "Vyce AI",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://vyceai.com/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://vyceai.com/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "QINGYU_API_KEY",
+   "name": "清羽公益站",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://qui.cc.cd/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://qui.cc.cd/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "HUAN_API_KEY",
+   "name": "Huan 公益站",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://ai.huan666.de/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://ai.huan666.de/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "API42_API_KEY",
+   "name": "42api",
+   "group": "模型",
+   "free": "公益站，额度靠签到/站长发放，以站点余额为准",
+   "free_src": "",
+   "console": "https://api.42x.shop/console/token",
+   "console_note": "（New API 面板通用位置：登录后进「令牌」页新建；未逐站核实）",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://api.42x.shop/v1/dashboard/billing/subscription"
+   }
+  },
+  {
+   "env": "",
+   "name": "Pollinations（免 Key）",
+   "group": "模型",
+   "keyless": true,
+   "free": "匿名档免 Key：openai-fast（gpt-oss-20b），按 IP 每 30 秒 1 次；Cloudflare 共享出口常被占满，2026-10-23 实测从 Worker 调用两次都被限速，只作兜底",
+   "free_src": "https://text.pollinations.ai/models",
+   "console": "",
+   "console_note": "不需要 Key",
+   "verify": {
+    "type": "none"
+   }
+  },
+  {
+   "env": "",
+   "name": "Cloudflare Workers AI",
+   "group": "模型",
+   "keyless": true,
+   "binding": true,
+   "free": "每天 10,000 neurons（整个主账号共用），每天 00:00 UTC 重置",
+   "free_src": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+   "console": "",
+   "console_note": "Worker 的 AI 账号绑定，不用填 Key",
+   "can": "gpt-oss、llama、mistral、qwen 等开源模型成员的「Cloudflare Workers AI 直连」来源",
+   "verify": {
+    "type": "none"
+   }
+  },
+  {
+   "env": "MODAL_TOKEN",
+   "name": "Modal",
+   "group": "算力",
+   "free": "Starter 每月 $30 免费算力（GPU/CPU/内存）；Shared Endpoints 按 token 另计费，不在免费内",
+   "free_src": "https://modal.com/pricing",
+   "console": "https://modal.com/settings/tokens",
+   "console_note": "令牌页地址未能静态核实；格式「token_id:token_secret」（ak-…:as-…，官方 config 文档核实）",
+   "can": "跑开源模型（部署 vLLM 端点后可当成员来源）、执行代码、训练/微调",
+   "verify": {
+    "type": "none",
+    "why": "Modal 只有 gRPC 接口，没有轻量 REST 身份接口；保存后显示「已填」，第一次部署时验证"
+   }
+  },
+  {
+   "env": "KAGGLE_API_TOKEN",
+   "name": "Kaggle",
+   "group": "算力",
+   "free": "GPU 每周约 30 小时（P100，按供需浮动），每周重置",
+   "free_src": "https://www.kaggle.com/docs/efficient-gpu-usage",
+   "console": "https://www.kaggle.com/settings/api",
+   "console_note": "「Generate New Token」（官方 CLI 文档核实）；旧版可填「用户名:key」",
+   "can": "批量跑开源模型/训练（Notebook 批处理，不能当常驻接口）",
+   "verify": {
+    "type": "kaggle",
+    "url": "https://www.kaggle.com/api/v1/competitions/list?page=1"
+   }
+  },
+  {
+   "env": "LIGHTNING_API_KEY",
+   "name": "Lightning AI",
+   "group": "算力",
+   "free": "注册送 5 credits，绑卡再送 25（最多 30，约 80 小时可中断 GPU，12 个月过期）；1 个免费 CPU Studio（每 4 小时重启）；领 GPU 需手机号。官网目前因安全事件锁站",
+   "free_src": "https://lightning.ai/pricing",
+   "console": "https://lightning.ai",
+   "console_note": "官网锁站中，Key 页位置未能核实",
+   "can": "跑开源模型（Studio / 部署端点）、执行代码",
+   "verify": {
+    "type": "none",
+    "why": "官网锁站，没有可用的身份接口"
+   }
+  },
+  {
+   "env": "LAMBDA_API_KEY",
+   "name": "Lambda Cloud",
+   "group": "算力",
+   "free": "没有免费档，需绑卡按量付费（官方 API 文档未写免费额度）",
+   "free_src": "https://docs.lambda.ai/api/cloud",
+   "console": "https://cloud.lambda.ai/api-keys",
+   "console_note": "控制台 API keys 页（地址未能静态核实）",
+   "can": "租 GPU 虚拟机跑开源模型（付费）",
+   "paid": true,
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://cloud.lambda.ai/api/v1/account"
+   }
+  },
+  {
+   "env": "BEAM_API_KEY",
+   "name": "Beam",
+   "group": "算力",
+   "free": "没有免费档：Developer 每月 $20（含 $20 额度）",
+   "free_src": "https://www.beam.cloud/pricing",
+   "console": "https://platform.beam.cloud",
+   "console_note": "登录后在设置里建 API Key（具体菜单未能静态核实）",
+   "can": "无服务器 GPU 跑开源模型、沙盒执行代码（付费）",
+   "paid": true,
+   "verify": {
+    "type": "none",
+    "why": "没找到官方公开的轻量身份接口"
+   }
+  },
+  {
+   "env": "E2B_API_KEY",
+   "name": "E2B",
+   "group": "沙盒",
+   "free": "Hobby 免费：一次性 $100 额度，单次会话最长 1 小时，20 个并发沙盒，免绑卡",
+   "free_src": "https://e2b.dev/pricing",
+   "console": "https://console.e2b.dev/?tab=keys",
+   "console_note": "官方文档「Where to find API key」核实",
+   "can": "执行代码、装软件、跑浏览器（无 GPU）",
+   "verify": {
+    "type": "xkey-get",
+    "url": "https://api.e2b.dev/sandboxes"
+   }
+  },
+  {
+   "env": "DAYTONA_API_KEY",
+   "name": "Daytona",
+   "group": "沙盒",
+   "free": "免费试用含 $200 算力，免绑卡；有 GPU 价目（RTX 4090 起），免费额度能否用于 GPU 未核实；免费档网络有白名单",
+   "free_src": "https://www.daytona.io/pricing",
+   "console": "https://app.daytona.io/dashboard/keys",
+   "console_note": "官方 API Keys 文档核实",
+   "can": "执行代码；GPU 沙盒可跑开源模型",
+   "verify": {
+    "type": "bearer-get",
+    "url": "https://app.daytona.io/api/sandbox"
+   }
+  },
+  {
+   "env": "INSTABOX_API_KEY",
+   "name": "InstaBox",
+   "group": "沙盒",
+   "free": "Free 档：1 台机器（4 vCPU / 8 GiB）、5 个快照；暂停只收存储费",
+   "free_src": "https://instabox.sh/pricing",
+   "console": "https://instabox.sh",
+   "console_note": "控制台 API Key 页位置未能静态核实",
+   "can": "执行代码（无 GPU、无 KVM）",
+   "verify": {
+    "type": "xkey-get",
+    "url": "https://api.instabox.sh/v1/machines"
+   }
+  },
+  {
+   "env": "PHONEBOX_API_KEY",
+   "name": "Phonebox 云手机",
+   "group": "云手机",
+   "free": "$2 新号额度（约 33 手机分钟），不过期",
+   "free_src": "https://phonebox.dev/pricing",
+   "console": "https://phonebox.dev",
+   "console_note": "登录后在控制台建 API Key（菜单位置未能静态核实）",
+   "can": "让成员操作没有 API 的安卓 App（网关骨架，执行器待测）",
+   "verify": {
+    "type": "none",
+    "why": "还没接验证接口（执行器待测）"
+   }
+  },
+  {
+   "env": "AIRTAP_TOKEN",
+   "name": "Airtap 云手机",
+   "group": "云手机",
+   "free": "第一版免费，每日上限未公布",
+   "free_src": "https://airtap.ai/about-us",
+   "console": "https://airtap.ai",
+   "console_note": "Personal Access Token（位置未能静态核实）",
+   "can": "云手机执行任务（网关骨架，执行器待测）",
+   "verify": {
+    "type": "none",
+    "why": "还没接验证接口（执行器待测）"
+   }
+  },
+  {
+   "env": "FREESTYLE_TOKEN",
+   "name": "Freestyle 云浏览器",
+   "group": "浏览器",
+   "free": "Free 永久：每月 200 vCPU 小时，硬上限不超额",
+   "free_src": "https://www.freestyle.sh/pricing",
+   "console": "https://dash.freestyle.sh",
+   "console_note": "控制台建 Token（位置未能静态核实）",
+   "can": "控制云端浏览器（网关骨架，执行器待测）",
+   "verify": {
+    "type": "none",
+    "why": "还没接验证接口（执行器待测）"
+   }
+  },
+  {
+   "env": "SAPERLY_API_KEY",
+   "name": "Saperly 电话号码",
+   "group": "电话",
+   "free": "$5 注册额度，永不过期",
+   "free_src": "https://saperly.com/pricing",
+   "console": "https://saperly.com/sign-in",
+   "console_note": "控制台 API Key（位置未能静态核实）",
+   "can": "读短信 / 发短信（要你确认）/ 买号码（要你确认）——网关骨架，执行器待测",
+   "verify": {
+    "type": "none",
+    "why": "还没接验证接口（执行器待测）"
+   }
+  },
+  {
+   "env": "BARK_KEY",
+   "name": "Bark 推送（iPhone）",
+   "group": "推送",
+   "free": "Bark 是免费开源的 iPhone 推送 App",
+   "free_src": "https://github.com/Finb/Bark",
+   "console": "https://apps.apple.com/app/id1403753865",
+   "console_note": "装 Bark → 首页推送地址 https://api.day.app/ 后面那一段就是设备 Key",
+   "can": "项目出结论时推送到 iPhone（设置 → 完成提醒）",
+   "verify": {
+    "type": "none",
+    "why": "验证会给手机发一条推送，所以改在「设置 → 完成提醒 → 发测试推送」里验证"
+   }
+  }
+ ],
+ "product": {
+  "name": "Aroomo",
+  "short": "Aroomo",
+  "zh": "Aroomo",
+  "_说明": "产品名唯一配置：页面标题、PWA manifest、开场白、岗位说明书、接手须知、操作技能都从这里取。改名只改这一处（例如改名），然后 python3 deploy.py upload。"
+ },
+ "_caps说明": "caps = 结构化能力（P1-1）：tags 多选 chat/vision/reason/code/write/image/video/audio；context_window 数字或 null；tool_call true/false/\"unknown\"；capability_status verified/pending；source 来源说明；kind model/agent/builtin；web=网页成员。负责人资格：模型成员须 chat + context_window≥32000 + tool_call=true + verified，unknown 一律按不合格；生图/视频/语音/只写作/网页成员只能当执行成员；配对智能体与外部智能体连接器不受此规则约束。改能力可用 POST /api/member/:id/caps（只认网页登录 cookie），覆盖值存 kv caps:<id>。"
+}

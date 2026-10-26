@@ -1,0 +1,19 @@
+# 只记录（未安装）name	group	purpose	src	why
+OpenMontage	视频	AI 视频剪辑 agent	https://github.com/calesthio/OpenMontage	AGPL、体量大，和已装工具重叠
+claude-code-video-toolkit	视频	开源视频模型部署到 Modal 的工具箱	https://github.com/digitalsamba/claude-code-video-toolkit	已克隆，未部署（需 Modal 算力）
+klingai-tech/skills	视频	可灵官方 CLI/MCP skill	https://github.com/klingai-tech/skills	需用户可灵账号授权
+pyvideotrans	视频	转录/翻译/配音	https://github.com/jianchang512/pyvideotrans	体量大，CPU 慢
+VoiceStudio	配音	本地开源声音克隆/配音	https://github.com/debpalash/VoiceStudio	需本地 GPU，AGPL
+Open-LLM-VTuber	配音	本地 Live2D 语音伴侣	https://github.com/Open-LLM-VTuber/Open-LLM-VTuber	沙盒跑不了，装用户电脑需同意
+StemDeck	音频	把歌拆成 6 轨	https://github.com/stemdeckapp/stemdeck	桌面 App，装用户电脑需同意
+PromptDirector	提示词	提示词案例本地管理 Chrome 插件	https://github.com/wchao6891/PromptDirector	插件装浏览器需同意
+OpenUI	页面	生成式 UI 标准（省 token）	https://github.com/thesysdev/openui	只作参考
+onlook	页面	可视化编辑 React 应用	https://github.com/onlook-dev/onlook	只记录
+Figma-Context-MCP	页面	Figma 设计读给 agent	https://github.com/GLips/Figma-Context-MCP	需 Figma token
+Shepherd	编程	Agent 执行过程版本控制	https://github.com/Manorgw/shepherd	Alpha，需 Anthropic Key
+harness2	编程	让 agent 优化自己的外壳	https://github.com/google-research/harness2	需 Vertex AI
+bot-team-playbook	编程	多 bot 主管+专员团队手册	https://github.com/doublesq97-ui/bot-team-playbook	已借鉴派活/回报格式
+OpenGCUA	编程	电脑操作 agent 开源栈	https://github.com/Tongyi-MAI/OpenGCUA	只记录
+wshobson/agents	编程	多 harness 插件市场	https://github.com/wshobson/agents	与已装大量重叠
+ai-live-avatar	视频	AI 实时数字人直播场控层	https://github.com/garycaogan/ai-live-avatar	需付费 Vidu API
+agency-agents	编程	300+ 专家角色提示词	https://github.com/msitarzewski/agency-agents	已克隆，未注册专长
