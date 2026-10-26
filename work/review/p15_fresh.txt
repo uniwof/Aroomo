@@ -1,0 +1,57 @@
+你没见过这个项目。Cloudflare Worker（JS）+ SQLite Durable Object（s.q(sql,...args) 是对 DO 的一次 RPC，返回行数组）。下面是新功能「主负责人代收资源」的最终代码。中间件已保证：只有已激活的主负责人操作员令牌能走到 /api/steward/submit 的 POST（副负责人非 GET 一律 403）。safeUrl(u) 只返回公网 https URL 或 null。ingestLink/ingestText 抓正文→分类→到官方页逐字核实，对上才 vstate='已核实'。
+要求：去重、未核实不显示已核实、不刷屏、测试模式数据可清理、令牌鉴权。请独立找真问题（并发、注入、去重漏洞、数据泄露、错误处理），没有就写"未发现"。
+```js
+112:    this.sql.exec('CREATE TABLE IF NOT EXISTS subs(id INTEGER PRIMARY KEY AUTOINCREMENT, rid TEXT, ts INTEGER, who TEXT, url TEXT, text TEXT, note TEXT, source TEXT, status TEXT, why TEXT, name TEXT, state TEXT, test INTEGER DEFAULT 0)');   // P1-5 代收记录（逐行 INSERT，避免并发读改写丢记录）
+// ───── P1-5 主负责人代收资源 ─────
+// 用户在主负责人所在的外部 App 里直接发链接/文件/帖子 → 主负责人用操作员令牌静默投递到这里 → 走资源管家同一条流水线
+// （去重 → 抓正文 → 分类 → 官方页逐字核实才标已核实）。不往任何房间发消息（不刷屏），条目标「来源：主负责人代收」，计入每周汇总。
+const SUBMIT_REPLY = () => `已收进 ${PRODUCT.name} 资源库`;
+const SUB_BUSY_MS = 10 * 60000;
+async function subLog(s, rows, test) { for (const r of rows) await s.q('INSERT INTO subs(rid,ts,who,url,text,note,source,status,why,test) VALUES(?,?,?,?,?,?,?,?,?,?)', r.id, r.ts, r.by, r.url || '', r.text || '', r.note || '', r.source || '', r.status, r.why || '', test ? 1 : 0); await s.q('DELETE FROM subs WHERE id <= (SELECT id FROM subs ORDER BY id DESC LIMIT 1 OFFSET 200)'); }
+async function subMark(s, id, p) { await s.q("UPDATE subs SET status=?, why=?, name=?, state=? WHERE rid=? AND status='queued'", p.status, p.why || '', p.name || '', p.state || '', id); }
+// 原子占位：同一条 10 分钟内只排一次（单条 SQL，并发请求不会都抢到）
+async function subClaim(s, id, now) { return (await s.q("INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v WHERE CAST(kv.v AS INTEGER) < ? RETURNING k", 'sub_busy:' + id, String(now), now - SUB_BUSY_MS)).length > 0; }
+async function submitResource(env, s, ctx, OP, body) {
+  const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+  const url = str(body.url, 2000), text = str(body.text, MAX_MSG), note = str(body.note, 200), source = str(body.source, 80);
+  if (!url && !text) return { error: '要给 url（链接）或 text（帖子原文/文件内容）至少一个' };
+  const raw = [...(url ? [url] : []), ...((text.match(/https?:\/\/[^\s<>"'，。）)】]+/g) || []))];
+  const seen = new Set(), urls = [];
+  for (const r of raw) { const u = safeUrl(r.replace(/^http:/i, 'https:')); if (!u) { if (r === url) return { error: '只收公网 https 链接（内网/本机地址不收）' }; continue; } const k = urlKey(u); if (!seen.has(k)) { seen.add(k); urls.push(u); } }
+  const jobs = [];
+  if (urls.length) for (const u of urls.slice(0, 3)) jobs.push({ id: 'u-' + await sha(urlKey(u)), url: u });
+  else jobs.push({ id: 't-' + await sha(normTxt(text)), text });
+  const queued = [], duplicates = [], now = Date.now(), test = await testModeOn(s);
+  for (const j of jobs) {
+    const ex = (await s.q("SELECT id,name,vstate,expires FROM res_items WHERE id=? AND COALESCE(vstate,'')<>'候选'", j.id))[0];
+    if (ex) duplicates.push({ id: j.id, name: ex.name, state: resState(ex), why: '资源库里已有这条' });
+    else if (!(await subClaim(s, j.id, now))) duplicates.push({ id: j.id, why: '同一条正在处理中' });
+    else queued.push(j);
+  }
+  const who = { via_by: OP.name, via_note: note, via_src: source, test };
+  await subLog(s, [...queued.map((j) => ({ id: j.id, ts: now, by: OP.name, url: j.url || '', text: j.url ? '' : text.slice(0, 80), note, source, status: 'queued' })),
+    ...duplicates.map((d) => ({ id: d.id, ts: now, by: OP.name, url: (jobs.find((x) => x.id === d.id) || {}).url || '', note, source, status: 'duplicate', why: d.why }))], test);
+  await opLog(s, OP, 'POST', '/api/steward/submit', `代收资源：排队 ${queued.length} 条，重复 ${duplicates.length} 条` + (source ? `（来源：${source}）` : ''));
+  if (queued.length) ctx.waitUntil((async () => {
+    for (const j of queued) {
+      let r; try { r = j.url ? await ingestLink(env, s, j.url, who) : await ingestText(env, s, j.id, j.text, who); } catch (e) { r = { error: '处理出错：' + String((e && e.message) || e).slice(0, 100) }; }
+      await subMark(s, j.id, r.error ? { status: 'failed', why: r.error.slice(0, 160) } : { status: 'done', name: r.name, state: r.state });
+      await kvDel(s, 'sub_busy:' + j.id);
+    }
+  })().catch(() => {}));
+  return { ok: true, reply: SUBMIT_REPLY(), queued: queued.map((j) => ({ id: j.id, url: j.url || '' })), duplicates, more: urls.length > 3 ? `这次只收前 3 个链接，剩下 ${urls.length - 3} 个请再投一次` : '', check: 'GET /api/steward/submissions 看处理结果' };
+}
+// 「搜集羊毛」：只在用户点按钮时抓；结果只进候选（未经核实），不写入正式资源库
+1400:      if (path === '/api/steward/submissions' && req.method === 'GET') return json({ items: (await s.q('SELECT rid AS id, ts, who AS by, url, text, note, source, status, why, name, state FROM subs ORDER BY id DESC LIMIT 60')) });
+1401:      if (path === '/api/steward/submit' && req.method === 'POST') {   // P1-5 主负责人代收资源（只认操作员令牌；网页用户直接发给资源管家）
+1403:        const r = await submitResource(env, s, ctx, OP, body); return json(r.error ? { error: r.error } : r, r.error ? 400 : 200);
+2021:async function submitResource(env, s, ctx, OP, body) {
+2049:  return { ok: true, reply: SUBMIT_REPLY(), queued: queued.map((j) => ({ id: j.id, url: j.url || '' })), duplicates, more: urls.length > 3 ? `这次只收前 3 个链接，剩下 ${urls.length - 3} 个请再投一次` : '', check: 'GET /api/steward/submissions 看处理结果' };
+async function ingestText(env, s, id, text, via) {
+  const t = String(text).slice(0, 6000); const first = (t.split(/\n/).map((x) => x.trim()).find(Boolean) || '').slice(0, 80);
+  const links = [...new Set((t.match(/https?:\/\/[^\s<>"'，。）)】]+/g) || []).map((u) => safeUrl(u.replace(/^http:/, 'https:'))).filter(Boolean))].slice(0, 3);
+  return ingestPage(env, s, id, '', { kind: 'post', url: '', title: first, text: t, links }, via);
+}
+async function ingestPage(env, s, id, u, page, via) {   // via：P1-5 代收 {via_by, via_note, via_src, test}，和条目同一条 INSERT 写入
+799:  await s.q('DELETE FROM res_items WHERE test=1'); await s.q('DELETE FROM subs WHERE test=1');   // P1-5：测试期间代收的条目和记录
+```

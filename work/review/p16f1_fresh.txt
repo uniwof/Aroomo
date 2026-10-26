@@ -1,0 +1,25 @@
+你没见过这个项目。Cloudflare Worker（compatibility_flags: nodejs_als）+ SQLite Durable Object。目标：一个 Worker 请求里所有数据库调用共用一个 DO RPC 会话（Cloudflare 文档：RPC 返回 RpcTarget 后，在它上面的调用属于同一会话、只计 1 次请求）。下面是最终代码。本机实测一轮测试 4335 次 s.q 只开了 382 个会话。请独立找真问题（请求结束后 ctx.waitUntil 里能否继续用会话、递归 fetch、并发、错误处理），没有就写"未发现"。
+```js
+5:import { DurableObject, RpcTarget } from 'cloudflare:workers';
+6:import { AsyncLocalStorage } from 'node:async_hooks';   // P1-6 fix1：一个 Worker 请求只开一个 DO RPC 会话（需要 compatibility_flags nodejs_als）
+7:import CONFIG from './members.js';   // deploy.py 把 members.json 包成 JS 模块（上传 API 不收 JSON 模块）
+  session() { return new StoreSession(this); }   // P1-6 fix1：返回 RpcTarget，之后在它上面的调用都算同一个 RPC 会话（Cloudflare 只计 1 次 DO 请求）
+}
+class StoreSession extends RpcTarget { constructor(o) { super(); this.o = o; } q(sql, ...args) { return this.o.q(sql, ...args); } batch(list) { return this.o.batch(list); } }
+// P1-6 fix1（2026-10-24 线上 DO 免费额度 10 万次/天被用穿）：原来每个 s.q() 都是一次独立 RPC = 一次计费的 DO 请求，一个页面请求要几十次。
+// 现在每个 Worker 请求（fetch / scheduled）在 ALS 里懒开一个会话，所有 s.q 共用；没有 ALS 上下文时退回旧做法。
+const ALS = new AsyncLocalStorage();
+const stubOf = (env) => env.DB.get(env.DB.idFromName('main'));
+const store = (env) => {
+  const c = ALS.getStore();
+  if (!c) { const st = stubOf(env); return { q: (sql, ...a) => { RQ.dos++; RQ.calls++; return st.q(sql, ...a); }, batch: (l) => { RQ.dos++; return st.batch(l); } }; }   // 没有 ALS 上下文（不应发生）：退回每次一个 RPC，但照样计数
+  if (!c.s) {
+    const st = stubOf(env); let p = null;
+    const open = () => p || (p = (RQ.dos++, st.session()));   // 同一请求里开会话失败就一直用这个失败结果，不反复重试（复审采纳：防重试风暴）
+    c.s = { q: async (sql, ...a) => { RQ.calls++; return (await open()).q(sql, ...a); }, batch: async (l) => (await open()).batch(l) };
+  }
+  return c.s;
+};
+1350:  fetch(req, env, ctx) { return ALS.run({}, () => { RQ.n++; if (RQ.n >= 25 || Date.now() - RQ.last > 60000) ctx.waitUntil(reqFlush(env).catch(() => {})); return WORKER._fetch(req, env, ctx); }); },
+1351:  scheduled(event, env, ctx) { return ALS.run({}, () => WORKER._scheduled(event, env, ctx)); },
+```

@@ -1,0 +1,129 @@
+项目 Aroomo（Cloudflare Worker + SQLite Durable Object 多 AI 群聊，免费版）。本次 P1-6「Cloudflare 额度保险」第 1、2 条。规格：
+1. 用量显示：顶部显示当天 Worker 请求用量（免费 100,000 次/日，UTC 0 点重置）；80% 提醒；超限 Cloudflare 返回 Error 1027，前端识别并显示明白提示。
+2. 发件箱：用户消息先写 IndexedDB（不可用时 localStorage）再发送；网络失败或 1027 时标「待发送」，恢复后自动补发；每条用客户端消息 ID cid，服务端按 cid 幂等，不丢不重。
+已有：s.q(sql,...)=对 DO 的一次 RPC（SQLite）；kvGet/kvSet/kvDel；startRound 写用户消息并返回 {room, lineup}；全局鉴权在路由前。
+请审下面 diff（worker.js 与 page.html 相关部分）：
+diff --git a/worker.js b/worker.js
+index 80a7501..31df676 100644
+--- a/worker.js
++++ b/worker.js
+@@ -1305,5 +1305,25 @@ async function handleHooks(req, env, url, path) {
+ 
++// ───── P1-6 Cloudflare 额度保险：本站自己数 Worker 请求（每个实例在内存里累加，满 25 次或隔 60 秒写一次 DO，约值）─────
++const REQ_LIMIT = 100000, REQ_WARN = 0.8;
++const RQ = { n: 0, last: 0 };
++async function reqFlush(env) {
++  const n = RQ.n; if (!n) return; RQ.n = 0; RQ.last = Date.now();
++  const s = store(env); const day = utcDay(); const k = 'reqs:' + day;
++  const r = await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=CAST(kv.v AS INTEGER)+? RETURNING v', k, String(n), n);
++  const tot = Number((r[0] || {}).v || 0);
++  if (tot >= REQ_LIMIT * REQ_WARN && tot - n < REQ_LIMIT * REQ_WARN) {   // 刚越过 80%：每天只提醒一次
++    const got = await s.q("INSERT INTO kv(k,v) VALUES(?, '1') ON CONFLICT(k) DO NOTHING RETURNING k", 'reqwarn:' + day);
++    if (got.length) { try { await ensureStewardRoom(s); await addMsg(s, STEWARD_ROOM, 'note', '', '', `提醒：今天 Cloudflare 免费请求已用约 ${Math.round(tot / REQ_LIMIT * 100)}%（${tot} / ${REQ_LIMIT}，本站自己计数）。用完后网站会暂时打不开（错误 1027），UTC 0 点（英国时间 ${londonTime(nextUtcMidnight())}）自动恢复；没发出去的消息会留在发件箱，恢复后自动补发。不会升级付费。`, ''); } catch {} }
++  }
++}
++async function usageView(env) {
++  const day = utcDay(); const v = Number((await kvGet(store(env), 'reqs:' + day)) || 0) + RQ.n;
++  const pct = Math.min(1, v / REQ_LIMIT);
++  return { day, requests: v, limit: REQ_LIMIT, pct: Math.round(pct * 1000) / 1000, warnAt: REQ_WARN, level: pct >= 1 ? 'over' : pct >= REQ_WARN ? 'warn' : 'ok',
++    reset: 'UTC 0 点重置（英国时间 ' + londonTime(nextUtcMidnight()) + '）', note: '本站自己计数（约值，部署当天从部署时起算）；以 Cloudflare 后台为准。超限时 Cloudflare 直接返回错误 1027。' };
++}
+ const WORKER = {
+-  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch(() => {})); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
++  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch(() => {})); ctx.waitUntil((async () => { const s = store(env); await s.q("DELETE FROM kv WHERE k LIKE 'cid:%' AND CAST(json_extract(v,'$.ts') AS INTEGER) < ?", Date.now() - 3 * 86400000); await s.q("DELETE FROM kv WHERE (k LIKE 'reqs:%' OR k LIKE 'reqwarn:%') AND substr(k, instr(k, ':') + 1) < ?", utcDay(Date.now() - 7 * 86400000)); await reqFlush(env); })().catch(() => {})); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
+   async fetch(req, env, ctx) {
++    RQ.n++; if (RQ.n >= 25 || Date.now() - RQ.last > 60000) ctx.waitUntil(reqFlush(env).catch(() => {}));
+     const url = new URL(req.url);
+@@ -1588,3 +1608,15 @@ const WORKER = {
+       if (path === '/api/search' && req.method === 'GET') return json(await search(s, await enrichAll(env, s), url.searchParams.get('q') || ''));
+-      if (path === '/api/start' && req.method === 'POST') { const r = await startRound(env, s, body, await enrichAll(env, s)); return r.error ? json(r, 400) : json(r); }
++      if (path === '/api/usage' && req.method === 'GET') return json(await usageView(env));
++      if (path === '/api/start' && req.method === 'POST') {
++        // P1-6 发件箱：客户端消息 ID（cid）幂等——同一 cid 只写一次；失败（4xx）释放 cid 允许重试
++        const cid = typeof body.cid === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.cid) ? body.cid : '';
++        if (body.cid !== undefined && !cid) return json({ error: 'cid 格式不对（8–64 位字母数字 - _）' }, 400);
++        if (cid) {
++          const got = await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO NOTHING RETURNING k', 'cid:' + cid, JSON.stringify({ ts: Date.now(), room: body.room || null, state: 'busy' }));
++          if (!got.length) { const v = (await kvGet(s, 'cid:' + cid)) || {}; return json({ ok: true, dup: true, cid, room: v.room || body.room || null, lineup: v.lineup || [] }); }
++        }
++        let r; try { r = await startRound(env, s, body, await enrichAll(env, s)); } catch (e) { if (cid) await kvDel(s, 'cid:' + cid); throw e; }
++        if (cid) { if (r.error) await kvDel(s, 'cid:' + cid); else await kvSet(s, 'cid:' + cid, { ts: Date.now(), room: r.room, state: 'done', lineup: (r.lineup || []).map((x) => ({ id: x.id, role: x.role })) }); }
++        return r.error ? json(r, 400) : json(r);
++      }
+       if (path === '/api/turn' && req.method === 'POST') {
+
+diff --git a/page.html b/page.html
+index 6227717..2aa3e84 100644
+--- a/page.html
++++ b/page.html
+@@ -52,2 +52,9 @@ header.top.scrolled{border-bottom-color:var(--line)}
++.ubtn{flex:0 0 auto;min-width:56px;height:44px;border:var(--bw) solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font-size:18px;font-weight:700;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
++.ubtn.warn{border-color:var(--coral-ln);background:var(--coral-bg)}
++.ubtn.over{border-color:var(--bad);color:var(--bad)}
++#cfBanner{display:none;margin:10px auto 0;max-width:900px;padding:12px 16px;font-size:19px;line-height:1.55;background:var(--coral-bg);border:var(--bw) solid var(--bad);border-radius:14px}
++#cfBanner.on{display:block}
++.msg.pending .bubble{border-style:dashed}
++.msg.pending .pend{display:block;font-size:17px;color:var(--muted);margin-top:6px}
+@@ -596,2 +603,3 @@ button.irow{width:100%;background:transparent;border-left:0;border-right:0;borde
++  <button class="ubtn" id="usageBtn" type="button" aria-label="今日 Cloudflare 免费请求用量">—</button>
+@@ -600,2 +608,3 @@ button.irow{width:100%;background:transparent;border-left:0;border-right:0;borde
++<div id="cfBanner" role="alert"></div>
+@@ -687,8 +696,43 @@ const icon=(n,c)=>'<svg class="ic'+(c?' '+c:'')+'" aria-hidden="true"><use href=
+-  const r=await fetch(p,{credentials:'same-origin',headers:{'content-type':'application/json'},...opt});
+-  let d={};try{d=await r.json()}catch(e){}
++  let r;try{r=await fetch(p,{credentials:'same-origin',headers:{'content-type':'application/json'},...opt})}catch(e){const er=new Error('网络不通（'+String(e&&e.message||e).slice(0,40)+'）');er.net=true;throw er}
++  let d={},raw='';try{raw=await r.text();d=JSON.parse(raw)}catch(e){}
++  if(!r.ok&&/\b1027\b/.test(raw)&&!/^\s*\{/.test(raw)){const er=new Error('Cloudflare 今日免费请求额度已用完（错误 1027），UTC 0 点自动恢复');er.net=true;er.cf1027=true;showCfBanner('Cloudflare 返回错误 1027：今天的免费请求额度用完了，网站暂时用不了。UTC 0 点（英国时间半夜 0–1 点）自动恢复；你发的消息会留在发件箱，恢复后自动补发。不会升级付费。','1027');throw er}
+-  if(!r.ok)throw new Error(d.error||('出错 '+r.status));
++  if(!r.ok){const er=new Error(d.error||('出错 '+r.status));if(r.status>=500)er.net=true;throw er}
++  if(CFB==='1027')hideCfBanner();
++/* P1-6 Cloudflare 额度保险：顶部用量胶囊 + 1027 横幅 */
++let USAGE=null,CFB='';
++function showCfBanner(t,kind){const b=$('#cfBanner');if(!b)return;b.textContent=t;b.classList.add('on');CFB=kind||'usage'}
++function hideCfBanner(){const b=$('#cfBanner');if(b){b.classList.remove('on');b.textContent=''}CFB=''}
++function renderUsage(u){USAGE=u;const b=$('#usageBtn');if(!b||!u)return;const p=Math.round((u.pct||0)*100);
++  b.textContent=(u.level==='over'?'满 ':'')+p+'%';b.classList.toggle('warn',u.level==='warn');b.classList.toggle('over',u.level==='over');
++  b.setAttribute('aria-label','今日 Cloudflare 免费请求已用 '+p+'%'+(u.level==='warn'?'，超过 80% 提醒线':u.level==='over'?'，已用完':'')+'，点开看详情');
++  if(u.level==='over')showCfBanner('今天 Cloudflare 免费请求额度已用完（'+(u.requests||0)+' / '+(u.limit||100000)+' 次）。网站可能暂时打不开（错误 1027），UTC 0 点自动恢复'+(u.reset?'（'+u.reset.replace(/^UTC 0 点重置/,'')+'）':'')+'；没发出去的消息会留在发件箱，恢复后自动补发。不会升级付费。','usage');
++  else{if(CFB==='usage')hideCfBanner();if(u.level==='warn'&&u.day&&localStorage.getItem('agc-usage-warned')!==u.day){localStorage.setItem('agc-usage-warned',u.day);toast('今天 Cloudflare 免费请求已用 '+p+'%，接近上限','bad')}}}
++async function loadUsage(){if(document.hidden)return;try{renderUsage(await api('/api/usage'))}catch(e){}}
++function usageSheet(){const u=USAGE||{};const p=Math.round((u.pct||0)*100);openSheet('<p style="margin-top:0">今天已用 <b>'+(u.requests==null?'—':u.requests)+'</b> / '+(u.limit||100000)+' 次（'+p+'%）。</p><p class="sub">'+esc(u.reset||'UTC 0 点重置')+'。用到 80% 会提醒；用完时 Cloudflare 直接返回错误 1027，网站暂时打不开，没发出去的消息会留在发件箱，恢复后自动补发。</p><p class="sub">'+esc(u.note||'')+' 费用红线：不会升级付费、不会付款。</p>','今日请求用量')}
++/* P1-6 发件箱：消息先存浏览器（IndexedDB，不行就 localStorage），带 cid 发送；失败标「待发送」，恢复后自动补发（服务端按 cid 去重） */
++let OBC=[];
++const OB={_db:undefined,
++  kind(){return this._db?'indexeddb':'localstorage'},
++  async db(){if(this._db!==undefined)return this._db;try{this._db=await new Promise((res,rej)=>{const q=indexedDB.open('aroomo-outbox',1);q.onupgradeneeded=()=>q.result.createObjectStore('m',{keyPath:'cid'});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);setTimeout(()=>rej(new Error('timeout')),3000)})}catch(e){this._db=null}return this._db},
++  ls(){try{return JSON.parse(localStorage.getItem('agc-outbox')||'[]')}catch(e){return []}},
++  async tx(mode,fn){const d=await this.db();return new Promise((res,rej)=>{const t=d.transaction('m',mode);const q=fn(t.objectStore('m'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
++  async all(){if(!(await this.db()))return this.ls();return (await this.tx('readonly',st=>st.getAll()))||[]},
++  async put(x){if(!(await this.db())){const L=this.ls().filter(y=>y.cid!==x.cid);L.push(x);localStorage.setItem('agc-outbox',JSON.stringify(L));return}await this.tx('readwrite',st=>st.put(x))},
++  async del(cid){if(!(await this.db())){localStorage.setItem('agc-outbox',JSON.stringify(this.ls().filter(y=>y.cid!==cid)));return}await this.tx('readwrite',st=>st.delete(cid))}};
++async function obRefresh(){try{OBC=await OB.all()}catch(e){OBC=[]}}
++function newCid(){try{if(crypto.randomUUID)return 'c'+crypto.randomUUID().replace(/-/g,'')}catch(e){}return 'c'+[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('')}
++let OBT=null,FLUSHING=false;
++async function flushOutbox(){if(FLUSHING)return 0;FLUSHING=true;let n=0;const rooms=new Set();
++  try{const L=(await OB.all()).filter(x=>x.state==='pending'||(x.state==='sending'&&Date.now()-x.ts>60000)).sort((a,b)=>a.ts-b.ts);
++    for(const x of L){try{const st=await api('/api/start',{method:'POST',body:JSON.stringify(x.body)});await OB.del(x.cid);n++;rooms.add(st.room||x.body.room)}catch(e){if(e.net)break;await OB.del(x.cid);toast('有一条没补发成功（'+e.message+'）：'+String(x.body.message||'').slice(0,40),'bad')}}
++  }catch(e){}finally{FLUSHING=false;await obRefresh()}
++  if(n){if(room&&rooms.has(room)&&!busy){try{roomData=await api('/api/room/'+room);renderRoom()}catch(e){}}toast('发件箱已补发 '+n+' 条（点「再来一轮」让成员回应）','ok')}
++  if(!OBC.length&&OBT){clearInterval(OBT);OBT=null}
++  return n}
++function armOutbox(){if(OBT)return;OBT=setInterval(()=>{flushOutbox()},30000)}
++addEventListener('online',()=>flushOutbox());document.addEventListener('visibilitychange',()=>{if(!document.hidden){flushOutbox();loadUsage()}});
+@@ -839,2 +883,3 @@ function renderRoom(){
++  for(const o of OBC.filter(o=>o.body&&o.body.room===room&&o.state==='pending').sort((a,b)=>a.ts-b.ts)){const el=msgEl({kind:'user',text:o.body.message});el.classList.add('pending');el.querySelector('.bubble').insertAdjacentHTML('beforeend','<span class="pend">待发送 · 网络恢复后自动补发</span>');c.appendChild(el)}
+@@ -887,5 +932,9 @@ async function send(message,extra){
++  const body={room,message,mode:curMode||(roomData&&roomData.mode)||'debate',...(extra||{})};let ob=null;
++  if(message&&room){ob={cid:newCid(),ts:Date.now(),state:'sending',body};body.cid=ob.cid;try{await OB.put(ob)}catch(e){}}
+-    let st=await api('/api/start',{method:'POST',body:JSON.stringify({room,message,mode:curMode||(roomData&&roomData.mode)||'debate',...(extra||{})})});
++    let st=await api('/api/start',{method:'POST',body:JSON.stringify(body)});
++    if(ob){try{await OB.del(ob.cid)}catch(e){}}
++    if(st.dup){roomData=await api('/api/room/'+room);renderRoom();setBusy(false,'');return}
+@@ -894,3 +943,6 @@ async function send(message,extra){
+-  }catch(e){setBusy(false,'');toast(e.message,'bad')}
++  }catch(e){
++    if(ob&&e.net){ob.state='pending';ob.err=e.message;try{await OB.put(ob)}catch(x){}await obRefresh();$('#inp').value='';autoGrow();renderRoom();setBusy(false,'没发出去，已存进发件箱（待发送），恢复后自动补发');armOutbox();return}
++    if(ob){try{await OB.del(ob.cid)}catch(x){}}
++    setBusy(false,'');toast(e.message,'bad')}
+@@ -1377,2 +1429,3 @@ $('#chat').innerHTML='<div style="padding-top:20px">'+SKROWS(3).replace(/class="
++$('#usageBtn').onclick=usageSheet;loadUsage();

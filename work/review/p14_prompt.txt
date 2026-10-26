@@ -1,0 +1,351 @@
+你是苛刻审查员。下面是 Cloudflare Durable Object 单用户 AI 群聊（Aroomo）的 P1-4 改动 diff：主持模式（host，负责人点名 1–3 位、用户 @ 点名）、快速建项目（quick=true 全员加入）、暂停/继续（kv pause:<room>，runTurn 遇暂停直接返回）、消息内决策按钮（kv decision:<msgId>，条件 UPDATE … json_extract IS NULL RETURNING 实现幂等）、模式说明。规格：新建项目不强制选成员；N2 发送键原位变暂停，当前这位说完就停、下一位不启动，中断失败要提示；N3 2–3 个 ≥48px 按钮，点后整组禁用写「你选了」，服务端幂等；只有用户本人（cookie/bearer）能拍板，负责人（operator）只能出题。鉴权：cookie=网页、bearer=用户自己的令牌（同权）、operator=主负责人令牌。DO 单线程、同步 sql.exec。只挑真问题（安全/正确性/规格），每条：文件/函数、问题、为什么、怎么改、把握度。
+diff --git a/p1.js b/p1.js
+index 7640414..db727f0 100644
+--- a/p1.js
++++ b/p1.js
+@@ -110,3 +110,47 @@ export const IDEA_SEEDS = [
+   { id: 'seed-newterm', title: '新词站 / AI 出海', status: '正在做', tags: ['出海', '网站', 'SEO'], thought: '抓刚冒头的 AI 新名词，抢先做工具站拿搜索流量。', plan: '新词雷达每天挑候选词；配合 Gumroad 榜、vercel.app 新流量、Stripe 收银台反查找需求。', expect: '首日出单式的小站；只用免费信号。', summary: '新词雷达已在用户自己的 Cloudflare 上每天运行。', source: '用户 2026-10-11 / 10-20' },
+   { id: 'seed-pcman', title: 'pcmanai.com：电脑维修 / 数据恢复 / AI 服务', status: '暂时收藏', tags: ['本地服务', '网站'], thought: '用 pcmanai.com 做电脑维修、数据恢复和 AI 服务的门面。', plan: '域名已注册并接入 Cloudflare；服务形式未定。', expect: '待定。', summary: '目前域名主要用来挂各种自建服务。', source: '用户 2026-10-07' },
+ ];
++
++// ── P1-4 主持模式 + 快速建项目 + 暂停 + 决策按钮 ──
++export const MODE_INFO = {
++  debate: '两方对立，裁判最后给结论',
++  review: '一位写方案，其他人逐条挑错、核查',
++  free: '大家自由发言，不分输赢',
++  task: '分工合作，做出成品',
++  host: '主持人决定谁说话，你随时可暂停；也可以 @ 某位成员直接点名',
++};
++// @ 点名：@名字 或 @id；@ 前面是字母数字（邮箱）不算；长的先匹配；只认本项目成员
++export function parseMentions(text, roster) {
++  const t = String(text || ''); if (!t.includes('@') || !Array.isArray(roster) || !roster.length) return [];
++  const keys = [];
++  for (const r of roster) for (const k of [r.name, r.id]) if (k && String(k).trim()) keys.push({ k: String(k).trim().toLowerCase(), r });
++  keys.sort((a, b) => b.k.length - a.k.length);
++  const out = []; const seen = new Set(); const low = t.toLowerCase();
++  for (let i = low.indexOf('@'); i >= 0; i = low.indexOf('@', i + 1)) {
++    if (i > 0 && /[a-z0-9._-]/i.test(t[i - 1])) continue;
++    const rest = low.slice(i + 1);
++    const hit = keys.find(({ k }) => rest.startsWith(k) && !/[a-z0-9_-]/i.test(rest[k.length] || ''));
++    if (hit && !seen.has(hit.r.id)) { seen.add(hit.r.id); out.push(hit.r); }
++  }
++  return out;
++}
++// 快速建项目：全员加入（负责人、资源管家、退役、只当负责人、离线的不算），角色统一「成员」，最多 20 位
++export function quickLineup(all) {
++  return (all || []).filter((m) => m && m.id && !String(m.id).startsWith('lead-') && !m.lead && !m.steward && !m.retired && !m.leadOnly && m.state !== 'down' && m.id !== 'hark').slice(0, 20).map((m) => ({ id: m.id, role: '成员' }));
++}
++// 主持人点名：按规则推荐顺序挑本项目成员，最多 3 位；推荐里一个都不在项目里 → 按项目顺序前 2 位
++export function hostPick(roster, rankedIds) {
++  const R = Array.isArray(roster) ? roster : []; if (!R.length) return [];
++  const out = []; for (const id of rankedIds || []) { const r = R.find((x) => x.id === id); if (r && !out.includes(r)) out.push(r); if (out.length >= 3) break; }
++  return out.length ? out : R.slice(0, 2);
++}
++// 决策题：负责人请用户拍板（付费、命名、代收资源确认）
++export function validateDecision(b) {
++  const question = String((b && b.question) || '').trim();
++  if (!question || question.length > 300) return { ok: false, error: '问题必填，最多 300 字' };
++  const opts = (Array.isArray(b.options) ? b.options : []).map((x) => String(x || '').trim()).filter(Boolean);
++  if (opts.length < 2 || opts.length > 3) return { ok: false, error: '选项要 2–3 个' };
++  if (new Set(opts).size !== opts.length) return { ok: false, error: '选项不能重复' };
++  if (opts.some((x) => x.length > 12)) return { ok: false, error: '每个选项最多 12 字' };
++  return { ok: true, question, options: opts };
++}
+diff --git a/page.html b/page.html
+index 4ae2130..75d02ee 100644
+--- a/page.html
++++ b/page.html
+@@ -525,6 +525,18 @@ button.irow{width:100%;background:transparent;border-left:0;border-right:0;borde
+ #drawerNew.btn.primary{background:var(--head);color:#151412;box-shadow:4px 4px 0 0 var(--ink-sh)}
+ :root[data-theme=dark] #drawerNew.btn.primary{box-shadow:4px 4px 0 0 #000,4px 4px 0 2px var(--line)}
+ @media (prefers-color-scheme:dark){:root:not([data-theme=light]) #drawerNew.btn.primary{box-shadow:4px 4px 0 0 #000,4px 4px 0 2px var(--line)}}
++
++/* P1-4：模式说明（L7）、决策按钮（N3）、暂停/继续（N2） */
++.menu.modes button{padding:10px 12px}
++.menu.modes button .d{font-size:17px}
++.menu.modes button .cur{font-size:15px;font-weight:700;margin-left:6px}
++.decision .dq{margin:0}
++.decision .dbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
++.decision .dbtns .btn{min-height:48px;font-size:18px}
++.decision .dbtns .btn:disabled{opacity:.55}
++.decision .dbtns .btn.picked:disabled{opacity:1;outline:2px solid var(--ink);outline-offset:2px}
++.decision .dres{margin:10px 0 0;font-weight:700}
++#sendBtn.pausing{background:var(--s1);color:var(--ink)}
+ </style></head>
+ <body class="chatv">
+ <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+@@ -729,6 +741,11 @@ function msgEl(x){
+   const el=document.createElement('div');el.dataset.id=x.id||'';
+   if(x.kind==='user'){el.className='msg user';el.innerHTML='<div class="bubble">'+fmt(x.text)+'</div>';return el}
+   if(x.kind==='note'){el.className='note';el.innerHTML='<span>'+esc(x.text)+'</span>';return el}
++  if(x.kind==='decision'){const d=x.decision||{options:[]};const lm=(x.member&&mem(x.member))||mem('hark')||HARK;el.className='msg long';
++    el.innerHTML=avatar(lm)+'<div class="col"><div class="whorow"><div class="who" data-mid="'+esc(lm.id)+'"><b>'+esc(lm.name)+'</b>（负责人）· 请你拍板</div></div><div class="bubble decision" role="group" aria-label="请你拍板"><p class="dq">'+fmt(x.text)+'</p><div class="dbtns">'+d.options.map(o=>'<button type="button" class="btn'+(d.choice===o?' picked':'')+'" data-dec="'+esc(o)+'"'+(d.choice?' disabled':'')+'>'+esc(o)+'</button>').join('')+'</div>'+(d.choice?'<p class="dres" tabindex="-1">你选了：'+esc(d.choice)+' · '+esc(tfmt(d.at))+'</p>':'')+'</div></div>';
++    el.querySelectorAll('[data-dec]').forEach(b=>b.onclick=async()=>{const all=el.querySelectorAll('[data-dec]');all.forEach(z=>z.disabled=true);
++      try{await api('/api/room/'+room+'/decide',{method:'POST',body:JSON.stringify({msg:x.id,choice:b.dataset.dec})});await refreshRoom();const r=document.querySelector('#chat [data-id="'+x.id+'"] .dres');if(r)r.focus({preventScroll:true})}catch(e){toast(e.message,'bad');all.forEach(z=>z.disabled=false)}});
++    return el}
+   const m=x.kind==='lead'?((x.member&&mem(x.member))||mem('hark')||HARK):(mem(x.member)||ghost(x.member));
+   const role=x.kind==='lead'?'负责人':(x.role||'');
+   el.className='msg'+(x.waiting?' waiting':'')+(((x.text||'').length>60||/\n/.test(x.text||''))?' long':'');
+@@ -827,18 +844,31 @@ async function auditSheet(){try{const d=await api('/api/room/'+room+'/audit');op
+ async function peerReview(){setBusy(true,'请裁判给各成员打分…');try{await api('/api/room/'+room+'/review',{method:'POST',body:'{}'});await refreshRoom();toast('互评完成','ok')}catch(e){toast(e.message,'bad')}setBusy(false)}
+ async function refreshRoom(){if(!room)return;roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);schedulePoll()}
+ function schedulePoll(){clearTimeout(pollT);if(roomData&&((roomData.pending&&roomData.pending.length)||roomData.leadWait))pollT=setTimeout(async()=>{try{const n=roomData.messages.length;roomData=await api('/api/room/'+room);if(roomData.messages.length!==n)renderRoom()}catch(e){}schedulePoll()},6000)}
+-function setBusy(b,msg){busy=b;['#sendBtn','#againBtn','#newBtn','#plusBtn','#drawerNew','#modeBtn'].forEach(s=>{const e=$(s);if(e)e.disabled=b});$('#status').textContent=msg||'';if(!b)updateComposer()}
++function setBusy(b,msg,running){busy=b;RUNNING=!!(b&&running);['#againBtn','#newBtn','#plusBtn','#drawerNew','#modeBtn'].forEach(s=>{const e=$(s);if(e)e.disabled=b});$('#sendBtn').disabled=b&&!RUNNING;$('#status').textContent=msg||'';sendLabel();if(!b)updateComposer()}
++/* N2 暂停/继续：发送键原位切换，读屏标签同步 */
++var RUNNING=false,RUN=null;
++function sendLabel(){const b=$('#sendBtn');if(!b)return;const has=$('#inp').value.trim().length>0;
++  const st=RUNNING?'暂停':(!busy&&!has&&room&&((RUN&&RUN.room===room&&RUN.rest&&RUN.rest.length)||(roomData&&roomData.paused)))?'继续':'发送';
++  b.classList.toggle('pausing',st==='暂停');b.setAttribute('aria-label',st==='发送'?'发言':st);b.innerHTML=st+'<svg class="ic" aria-hidden="true"><use href="#i-'+(st==='发送'?'up':st==='暂停'?'x':'again')+'"/></svg>'}
++async function requestPause(){if(!RUN)return;RUN.pauseReq=true;$('#status').textContent='已请求暂停，当前这位说完就停';$('#sendBtn').disabled=true;
++  try{await api('/api/room/'+RUN.room+'/pause',{method:'POST',body:JSON.stringify({paused:true})})}catch(e){$('#status').textContent='暂停没成功，这位说完会停'}}
++async function resumeRun(){const r=RUN&&RUN.room===room&&RUN.rest&&RUN.rest.length?RUN:null;
++  try{await api('/api/room/'+room+'/pause',{method:'POST',body:JSON.stringify({paused:false})})}catch(e){toast(e.message,'bad');return}
++  if(!r){await refreshRoom();toast('已继续。发一句话或点「再来一轮」接着讨论','ok');return}
++  const st={...r.st,lineup:r.rest};RUN=null;setBusy(true,'',true);await runRound(st)}
+ async function runRound(st){
+-  for(const x of st.lineup){
+-    const cur=(roomData&&roomData.lineup)||st.lineup;const slot=cur.find(y=>y.role===x.role)||x;const m=mem(slot.id);
++  RUN={room,st,rest:null,pauseReq:false};setBusy(true,$('#status').textContent,true);
++  for(let i=0;i<st.lineup.length;i++){const x=st.lineup[i];
++    const cur=(roomData&&roomData.lineup)||st.lineup;const slot=cur.find(y=>y.id===x.id)||cur.find(y=>y.role===x.role)||x;const m=mem(slot.id);
+     {const ag=document.querySelector('#chat .again');if(ag)ag.remove()}
+     const ph=msgEl({kind:'ai',member:slot.id,role:x.role,text:'思考中…',waiting:true});$('#chat').appendChild(ph);ph.scrollIntoView({block:'end',behavior:'smooth'});
+     $('#status').textContent=(m?m.name:slot.id)+'（'+x.role+'）思考中…';
+-    try{await api('/api/turn',{method:'POST',body:JSON.stringify({room,member:slot.id,mode:st.mode})})}catch(e){}
++    let tr=null;try{tr=await api('/api/turn',{method:'POST',body:JSON.stringify({room,member:slot.id,mode:st.mode})})}catch(e){}
+     roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);
++    if((tr&&tr.paused)||RUN.pauseReq){RUN.rest=st.lineup.slice(tr&&tr.paused?i:i+1);setBusy(false,'已暂停。'+(RUN.rest.length?'点「继续」请下一位发言':'这一轮已经说完'));schedulePoll();return}
+     if(x.role==='裁判'&&localStorage.getItem('agc-autoread')==='1'){const last=[...roomData.messages].reverse().find(y=>y.kind==='ai'&&y.role==='裁判');if(last)speak(last.text)}
+   }
+-  setBusy(false,'');schedulePoll();
++  RUN=null;setBusy(false,'');schedulePoll();
+ }
+ async function waitLead(w){
+   // 外部智能体负责人：等它回 JSON 分工；超时由服务器交给副负责人。等的时候状态栏写清楚。
+@@ -853,7 +883,7 @@ async function send(message,extra){
+   if(busy)return;
+   if(isSteward()){if(message)return stewardSend(message);toast('先写点内容或贴链接','bad');return}
+   if(!message&&!room){toast('先写个议题','bad');return}
+-  setBusy(true,'发送中…');
++  setBusy(true,'发送中…');RUN=null;
+   try{
+     let st=await api('/api/start',{method:'POST',body:JSON.stringify({room,message,mode:curMode||(roomData&&roomData.mode)||'debate',...(extra||{})})});
+     $('#inp').value='';autoGrow();
+@@ -865,16 +895,17 @@ async function send(message,extra){
+ }
+ /* 输入栏 */
+ function autoGrow(){const t=$('#inp');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,innerHeight*.38)+'px';updateComposer()}
+-function updateComposer(){const has=$('#inp').value.trim().length>0;$('#sendBtn').classList.toggle('empty-in',!has);{const ab=$('#againBtn');if(ab)ab.disabled=busy||!room}
++function updateComposer(){const has=$('#inp').value.trim().length>0;$('#sendBtn').classList.toggle('empty-in',!has&&$('#sendBtn').getAttribute('aria-label')!=='继续');if(!busy)sendLabel();{const ab=$('#againBtn');if(ab)ab.disabled=busy||!room}
+   const mk=curMode||(roomData&&roomData.mode)||'debate';$('#modeTxt').textContent=(D.modes||{})[mk]||mk;
+   $('#inp').placeholder=isSteward()?'贴链接，或问资源库…':room?'接着说…':'写下需求，开一个新项目…'}
+ $('#inp').addEventListener('input',autoGrow);
+ $('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();$('#sendBtn').click()}});
+-$('#sendBtn').onclick=()=>{const v=$('#inp').value.trim();if(!v){$('#status').textContent='先写点内容';$('#inp').focus();return}if(!room){newProject(v);return}send(v)};
++$('#sendBtn').onclick=()=>{if(RUNNING){requestPause();return}const v0=$('#inp').value.trim();if(!v0&&$('#sendBtn').getAttribute('aria-label')==='继续'){resumeRun();return}const v=v0;if(!v){$('#status').textContent='先写点内容';$('#inp').focus();return}if(!room){newProject(v);return}send(v)};
+ $('#newBtn').onclick=()=>newProject($('#inp').value.trim());
+ $('#drawerNew').onclick=()=>{closeDrawer();newProject($('#inp').value.trim())};
+ $('#modeBtn').onclick=()=>{const cur=curMode||(roomData&&roomData.mode)||'debate';
+-  openSheet('<p class="sub" style="margin-top:0">'+(room?'从下一次发言起按这个模式进行。':'新项目按这个模式开始。')+'</p><div class="menu">'+Object.entries(D.modes||{}).map(([k,v])=>'<button type="button" data-md="'+esc(k)+'" class="'+(k===cur?'on':'')+'">'+icon('mode')+'<span>'+esc(v)+'</span></button>').join('')+'</div>','讨论模式');
++  const MI={debate:'scale',review:'check',free:'chat',task:'tool',host:'mic'};
++  openSheet('<p class="sub" style="margin-top:0">'+(room?'从下一次发言起按这个模式进行。':'新项目按这个模式开始。')+'</p><div class="menu modes" role="radiogroup" aria-label="讨论模式">'+Object.entries(D.modes||{}).map(([k,v])=>'<button type="button" role="radio" aria-checked="'+(k===cur)+'" data-md="'+esc(k)+'" class="'+(k===cur?'on':'')+'">'+icon(MI[k]||'mode')+'<span>'+esc(v)+(k===cur?'<span class="cur">✓ 当前</span>':'')+'<span class="d">'+esc((D.modeInfo||{})[k]||'')+'</span></span></button>').join('')+'</div>','讨论模式');
+   document.querySelectorAll('[data-md]').forEach(b=>b.onclick=()=>{const was=curMode||(roomData&&roomData.mode)||'debate';curMode=b.dataset.md;closeSheet();updateComposer();if(roomData)renderRoom();if(curMode!==was)toast((room?'从下一次发言起用':'新项目将用')+'「'+((D.modes||{})[curMode]||curMode)+'」模式','ok')})};
+ $('#plusBtn').onclick=()=>{const has=!!roomData;
+   openSheet('<div class="menu"><button type="button" id="pmNew">'+icon('new')+'<span>新项目<span class="d">写需求，让 Hark 推荐分工</span></span></button><button type="button" id="pmAgain"'+(has?'':' disabled')+'>'+icon('again')+'<span>再来一轮<span class="d">同一阵容接着讨论</span></span></button><button type="button" id="pmLine"'+(has?'':' disabled')+'>'+icon('users')+'<span>成员与角色<span class="d">增减本项目成员、改角色</span></span></button><button type="button" id="pmRate"'+(has?'':' disabled')+'>'+icon('star')+'<span>打分<span class="d">给成员按岗位打 1–5 分</span></span></button><button type="button" id="pmRev"'+(has?'':' disabled')+'>'+icon('scale')+'<span>成员互评<span class="d">请裁判给各成员打分</span></span></button>'+(has&&roomData.idea?'<button type="button" id="pmWb">'+icon('book')+'<span>结论回写点子<span class="d">记到「'+esc(roomData.idea.title)+'」里</span></span></button>':'')+'</div>'+(has?'':'<p class="sub">后四项要先打开一个项目。</p>'),'更多操作');
+@@ -908,7 +939,7 @@ function bindPicks(){document.querySelectorAll('[data-pk]').forEach(c=>c.onchang
+   document.querySelectorAll('[data-rl]').forEach(c=>c.onchange=()=>{(pickState[c.dataset.rl]=pickState[c.dataset.rl]||{}).role=c.value})}
+ function newProject(topic,ideaId){
+   pickState={};const md=curMode||'debate';
+-  openSheet('<label class="f" for="npTopic">需求 / 议题</label><textarea class="f" id="npTopic" maxlength="4000" placeholder="例如：帮我写一段 Python 脚本，批量重命名照片">'+esc(topic||'')+'</textarea><label class="f" for="npMode">模式</label><select class="full sel" id="npMode">'+Object.entries(D.modes).map(([k,v])=>'<option value="'+k+'"'+(k===md?' selected':'')+'>'+v+'</option>').join('')+'</select><label class="f" for="npIdea">关联点子（可选）</label><select class="full sel" id="npIdea"><option value="">不关联</option></select><p class="sub" style="margin:0">关联后，点子的想法、计划和以前的结论会作为背景发给所有成员。</p><label class="switch" style="margin-top:10px"><input type="checkbox" id="npSens" role="switch"> 敏感项目：不发到中转站/公益站/免 Key 公共接口</label><p class="sub" id="npSensHint" style="margin:0">每位成员下面写了「将用」哪个来源和级别。</p><div class="toolbar"><button class="btn" id="npPlan" type="button">'+icon('users')+'让 Hark 推荐</button><label class="switch"><input type="checkbox" id="npAi" role="switch"> 用强模型复核（耗少量额度）</label></div><div class="card" id="npNoteBox" style="display:none"><div id="npNote" aria-live="polite"></div></div><h3>勾选参加的 '+TERM+'</h3><div class="seg" id="npSortSeg" style="margin-bottom:6px"><button data-s="state" class="on" type="button">按状态</button><button data-s="quota" type="button">按额度</button><button data-s="name" type="button">按名称</button></div><div id="npList"></div><div class="sticky-act"><button class="btn primary block" id="npGo" type="button">开始</button></div>','新项目');
++  openSheet('<label class="f" for="npTopic">需求 / 议题</label><textarea class="f" id="npTopic" maxlength="4000" placeholder="例如：帮我写一段 Python 脚本，批量重命名照片">'+esc(topic||'')+'</textarea><label class="f" for="npMode">模式</label><select class="full sel" id="npMode">'+Object.entries(D.modes).map(([k,v])=>'<option value="'+k+'"'+(k===md?' selected':'')+'>'+v+'</option>').join('')+'</select><label class="f" for="npIdea">关联点子（可选）</label><select class="full sel" id="npIdea"><option value="">不关联</option></select><p class="sub" style="margin:0">关联后，点子的想法、计划和以前的结论会作为背景发给所有成员。</p><label class="switch" style="margin-top:10px"><input type="checkbox" id="npSens" role="switch"> 敏感项目：不发到中转站/公益站/免 Key 公共接口</label><p class="sub" id="npSensHint" style="margin:0">每位成员下面写了「将用」哪个来源和级别。</p><div class="toolbar"><button class="btn" id="npPlan" type="button">'+icon('users')+'让 Hark 推荐</button><label class="switch"><input type="checkbox" id="npAi" role="switch"> 用强模型复核（耗少量额度）</label></div><div class="card" id="npNoteBox" style="display:none"><div id="npNote" aria-live="polite"></div></div><h3>勾选参加的 '+TERM+'</h3><div class="seg" id="npSortSeg" style="margin-bottom:6px"><button data-s="state" class="on" type="button">按状态</button><button data-s="quota" type="button">按额度</button><button data-s="name" type="button">按名称</button></div><div id="npList"></div><div class="sticky-act"><button class="btn block" id="npQuick" type="button" style="margin-bottom:10px">快速建项目（全员加入，负责人主持）</button><button class="btn primary block" id="npGo" type="button">开始</button></div>','新项目');
+   (async()=>{try{const L=IDEAS||await loadIdeas();const sel=$('#npIdea');if(!sel)return;sel.innerHTML='<option value="">不关联</option>'+L.filter(x=>x.status!=='已放弃'||x.id===ideaId).map(x=>'<option value="'+esc(x.id)+'"'+(x.id===ideaId?' selected':'')+'>'+esc(x.title)+'（'+esc(x.status)+'）</option>').join('')}catch(e){}})();
+   let srt='state';
+   const draw=()=>{$('#npList').innerHTML=memberSort(D.members.filter(m=>!m.lead&&!m.retired&&!m.steward&&!m.leadOnly),srt).map(pickRow).join('');bindPicks()};
+@@ -919,6 +950,8 @@ function newProject(topic,ideaId){
+   let planNote='';const note=t=>{$('#npNoteBox').style.display='';$('#npNote').textContent=t};
+   $('#npPlan').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){note('先写需求');$('#npTopic').focus();return}note('Hark 正在挑人…');$('#npPlan').disabled=true;
+     try{const p=await api('/api/plan',{method:'POST',body:JSON.stringify({topic:t,mode:$('#npMode').value,ai:$('#npAi').checked})});pickState={};p.members.forEach(x=>pickState[x.id]={on:true,role:x.role,reason:x.reason});planNote=p.note;note(p.note);draw()}catch(e){note(e.message)}$('#npPlan').disabled=false};
++  $('#npQuick').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){note('先写需求');$('#npTopic').focus();return}
++    const sensitive=$('#npSens').checked;const idea=$('#npIdea')?$('#npIdea').value:'';curMode='host';NP_SENS=false;closeSheet();show('chat');room=null;roomData=null;$('#inp').value='';await send(t,{quick:true,mode:'host',sensitive,idea:idea||undefined})};
+   $('#npGo').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){note('先写需求');return}
+     const members=Object.entries(pickState).filter(([,v])=>v.on).map(([id,v])=>({id,role:v.role||'审查员'}));
+     curMode=$('#npMode').value;const ai=$('#npAi')&&$('#npAi').checked;const sensitive=$('#npSens').checked;const idea=$('#npIdea')?$('#npIdea').value:'';NP_SENS=false;closeSheet();show('chat');room=null;roomData=null;$('#inp').value='';await send(t,{mode:curMode,members:members.length?members:undefined,planNote:members.length?(planNote||'成员由用户手动选择。'):undefined,ai,sensitive,idea:idea||undefined})};
+diff --git a/worker.js b/worker.js
+index 81aebc2..68d18e1 100644
+--- a/worker.js
++++ b/worker.js
+@@ -23,7 +23,7 @@ const MAX_MSG = 4000;
+ const CTX_CHARS = 9000;
+ const CF_DAILY = 10000;
+ const ROLES = CONFIG.roles;
+-const MODES = { debate: '辩论', review: '审查', free: '自由聊', task: '任务' };
++const MODES = { debate: '辩论', review: '审查', free: '自由聊', task: '任务', host: '主持' };   // P1-4：主持 = 负责人点名谁说话，用户可 @ 指定
+ const RELAYS = Object.fromEntries((CONFIG.relays || []).map((r) => [r.id, r]));
+ const ID_RE = /^[a-z0-9][a-z0-9._-]{1,63}$/;
+ const ROOM_RE = /^[a-z0-9]{6,16}$/;
+@@ -627,6 +627,7 @@ const ROLE_BRIEF = {
+   总结者: '你是总结者：把讨论或材料压缩成要点，标出结论和待办。',
+   看图员: '你负责图片相关：描述/分析图片，或给出生图提示词。',
+   执行者: '你是执行者：说明你会怎样完成这件需要动手的任务（注册/查资料/操作网页），完成后汇报结果。',
++  成员: '你是被主持人点名的成员：直接回答主持人或用户点给你的问题，简洁具体；没点到的事别展开。',
+   负责人: '你是负责人。',
+ };
+ function transcriptOf(messages, label) {
+@@ -761,6 +762,8 @@ async function getRoom(s, id) {
+   if (r.idea) { const it = await ideaGet(s, r.idea); r.idea = it ? { id: it.id, title: it.title, status: it.status } : null; r.ideaCtx = it ? P1.ideaContext(it) : ''; } else { r.idea = null; r.ideaCtx = ''; }
+   r.lineup = roomLineup(r); r.legacy = !r.members; delete r.members;
+   r.messages = (await s.q('SELECT id,kind,member,model,text,ts,role FROM msgs WHERE room=? ORDER BY id', id)).map(normMsg);
++  for (const m of r.messages) if (m.kind === 'decision') { const d = await kvGet(s, 'decision:' + m.id); m.decision = { options: (d && d.options) || [], choice: (d && d.choice) || null, at: (d && d.at) || null }; }   // N3
++  r.paused = !!(await kvGet(s, 'pause:' + id));   // N2
+   r.pending = await s.q("SELECT id,member,role,status,created FROM tasks WHERE room=? AND status IN ('pending','sent') ORDER BY created", id);
+   return r;
+ }
+@@ -769,6 +772,11 @@ async function addMsg(s, room, kind, member, model, text, role) {
+   const test = room === STEWARD_ROOM && (await testModeOn(s)) ? 1 : 0;   // 测试模式下写进资源管家私聊的消息打标记，测试结束统一删除
+   await s.batch([['INSERT INTO msgs(room,kind,member,model,text,ts,role,test) VALUES(?,?,?,?,?,?,?,?)', [room, kind, member || '', model || '', text, now, role || '', test]], ['UPDATE rooms SET updated=? WHERE id=?', [now, room]]]);
+ }
++async function addMsgId(s, room, kind, member, model, text, role) {   // 同 addMsg，但返回消息 id（决策题要用）
++  const now = Date.now();
++  const r = await s.q('INSERT INTO msgs(room,kind,member,model,text,ts,role,test) VALUES(?,?,?,?,?,?,?,0) RETURNING id', room, kind, member || '', model || '', text, now, role || '');
++  await s.q('UPDATE rooms SET updated=? WHERE id=?', now, room); return r[0].id;
++}
+ // ───── 测试模式（test_live.py 用，避免污染用户数据）─────
+ // POST /api/testmode {on:true}：快照下列 kv，之后 20 分钟内写进资源管家私聊的消息打 test=1、完成推送不发；
+ // POST /api/testmode {on:false}（或过期后的 cron）：删掉 test=1 消息、kv 还原到快照。
+@@ -807,7 +815,8 @@ function cleanLineup(list, ids) {
+   return out;
+ }
+ async function startRound(env, s, body, all) {
+-  const mode = MODES[body.mode] ? body.mode : 'debate';
++  const quick = body.quick === true && !body.room;   // P1-4 快速建项目：全员加入、主持模式
++  const mode = quick ? 'host' : (MODES[body.mode] ? body.mode : 'debate');
+   const message = typeof body.message === 'string' ? body.message.trim().slice(0, MAX_MSG) : '';
+   let room = typeof body.room === 'string' && ROOM_RE.test(body.room) ? body.room : null;
+   const exists = room ? await getRoom(s, room) : null;
+@@ -819,6 +828,10 @@ async function startRound(env, s, body, all) {
+   const ids = new Set(all.map((m) => m.id));
+   let lineup = Array.isArray(body.members) ? cleanLineup(body.members, ids) : null;
+   let planNote = null;
++  if (quick) {
++    lineup = P1.quickLineup(all.map((m) => ({ id: m.id, state: m.state, retired: m.retired, leadOnly: m.leadOnly, steward: m.id === STEWARD, lead: ((m.sources || [])[0] || {}).invoke?.kind === 'lead' })));
++    if (!lineup.length) return { error: '现在没有可用的成员，没法快速建项目' };
++  }
+   if (!exists) {
+     room = rid();
+     let lp = null;
+@@ -828,7 +841,8 @@ async function startRound(env, s, body, all) {
+       const plan = lp.async ? { ...base, engine: '规则暂定（等负责人回复）' } : lp.plan;
+       lineup = plan.members.map(({ id, role }) => ({ id, role }));
+       planNote = planText(all, plan.members, plan.engine, plan.tags);
+-    } else if (typeof body.planNote === 'string') planNote = body.planNote.slice(0, 1500);
++    } else if (quick) planNote = `快速建项目：全员加入（${lineup.length} 位），由负责人主持点名；你也可以 @ 指定成员。`;
++    else if (typeof body.planNote === 'string') planNote = body.planNote.slice(0, 1500);
+     const now = Date.now();
+     await s.q("INSERT INTO rooms(id,title,mode,created,updated,members,status,sens,idea) VALUES(?,?,?,?,?,?,'进行中',?,?)", room, (typeof body.title === 'string' && body.title.trim() ? body.title : message).slice(0, 40), mode, now, now, JSON.stringify(lineup), body.sensitive ? 1 : 0, ideaId);
+     await setLineup(s, room, lineup);
+@@ -849,12 +863,26 @@ async function startRound(env, s, body, all) {
+     }
+   } else {
+     await s.q("UPDATE rooms SET mode=?, updated=?, status='进行中' WHERE id=?", mode, Date.now(), room);
++    if (message) await kvDel(s, 'pause:' + room);   // N2：用户发新消息 = 继续
+     if (lineup && lineup.length) await setLineup(s, room, lineup); else lineup = exists.lineup;
+   }
+   if (message) await addMsg(s, room, 'user', '', '', message, '');
+   else await addMsg(s, room, 'note', '', '', `—— 再来一轮（${MODES[mode]}）——`, '');
+   if (planNote) await addMsg(s, room, 'lead', exists ? await roomLeadId(s, room) : 'hark', '', planNote, '负责人');
+-  return { room, mode, lineup: sortRoles(lineup), planNote };
++  // P1-4：@ 点名优先（任何模式）；主持模式由负责人从项目成员里点 1–3 位；项目阵容本身不变
++  const nameOf = (id) => (all.find((m) => m.id === id) || {}).name || id;
++  let speakers = lineup;
++  const named = message ? P1.parseMentions(message, lineup.map((x) => ({ ...x, name: nameOf(x.id) }))) : [];
++  if (named.length) {
++    speakers = named.map(({ id, role }) => ({ id, role }));
++    await addMsg(s, room, 'note', '', '', `你点名了：${named.map((x) => x.name).join('、')}——本轮只请${named.length > 1 ? '他们' : '这位'}发言。`, '');
++  } else if (mode === 'host') {
++    const ranked = heuristicPlan(all, message || (exists && exists.title) || '', 'debate', { pool: lineup.map((x) => x.id) }).members.map((x) => x.id);
++    speakers = P1.hostPick(lineup, ranked);
++    const lid = exists ? await roomLeadId(s, room) : 'hark';
++    await addMsg(s, room, 'lead', lid || 'hark', '', `主持人点名：${speakers.map((x) => nameOf(x.id)).join('、')}。其他成员这轮先听；想指定谁，就 @ 他。`, '负责人');
++  }
++  return { room, mode, lineup: sortRoles(speakers), planNote, roster: lineup.length };
+ }
+ 
+ // OpenAI 兼容来源 + 工具网关：最多 2 轮工具调用，结果写进这次发言之前的上下文；每次工具调用都写 calls
+@@ -886,6 +914,7 @@ async function runTurn(env, s, room, memberId, opts = {}) {
+   const all = opts.all || await enrichAll(env, s);
+   const slot = r0.lineup.find((x) => x.id === memberId);
+   if (!slot) return { error: '这个 AI成员 不在本房间' };
++  if (r0.paused) return { member: memberId, skipped: true, paused: true, notice: '项目已暂停，下一位不启动' };   // N2
+   const m = all.find((x) => x.id === memberId);
+   const mode = MODES[opts.mode] ? opts.mode : (MODES[r0.mode] ? r0.mode : 'debate');
+   if (!m || m.state === 'down') return replace(env, s, r0, slot, m, all, mode, opts);
+@@ -1392,7 +1421,7 @@ const WORKER = {
+         const last = await kvGet(s, 'last_probe');
+         if (!last || Date.now() - last > 3600000) { await kvSet(s, 'last_probe', Date.now()); ctx.waitUntil(probeAll(env).catch(() => {})); } // cron 兜底
+         const all = await enrichAll(env, s);
+-        return json({ term: TERM, members: all.map(publicView), tools: CONFIG.tools || [], candidates: await candidates(s, all), admission: CONFIG.admission || {}, roles: ROLES.filter((r) => r !== '负责人'), modes: MODES,
++        return json({ term: TERM, members: all.map(publicView), tools: CONFIG.tools || [], candidates: await candidates(s, all), admission: CONFIG.admission || {}, roles: ROLES.filter((r) => r !== '负责人'), modes: MODES, modeInfo: P1.MODE_INFO,
+           connectors: Object.fromEntries(CUSTOM_KINDS.map((k) => [k, { label: CONNECTORS[k].label, how: CONNECTORS[k].how }])), execTags: CONFIG.exec_tags || [], lastProbe: last,
+           gw: await toolsView(env, s), gwFns: gwFunctions(env).map((f) => f.function.name), lead: await leadView(env, s), asyncKinds: ASYNC_KINDS });
+       }
+@@ -1502,6 +1531,33 @@ const WORKER = {
+       }
+       const ra = path.match(/^\/api\/room\/([a-z0-9]{6,16})\/audit$/);
+       if (ra && req.method === 'GET') return json({ audit: await s.q('SELECT member,via,level,action,note,ts FROM audit WHERE room=? ORDER BY id DESC LIMIT 100', ra[1]), levels: LEVELS });
++      const rp = path.match(/^\/api\/room\/([a-z0-9]{6,16})\/(pause|ask|decide)$/);   // P1-4：N2 暂停/继续、N3 决策题
++      if (rp && req.method === 'POST') {
++        const r = await getRoom(s, rp[1]); if (!r) return json({ error: '房间不存在' }, 404);
++        if (rp[1] === STEWARD_ROOM) return json({ error: '资源管家私聊不支持' }, 400);
++        if (rp[2] === 'pause') {
++          const want = body.paused === true;
++          if (want !== r.paused) { if (want) await kvSet(s, 'pause:' + rp[1], { at: Date.now(), by: kind }); else await kvDel(s, 'pause:' + rp[1]); await addMsg(s, rp[1], 'note', '', '', want ? '—— 已暂停：当前这位说完就停，下一位不启动 ——' : '—— 已继续 ——', ''); }
++          return json({ ok: true, paused: want });
++        }
++        if (rp[2] === 'ask') {
++          if (!['cookie', 'bearer', 'operator'].includes(kind)) return json({ error: '没有权限' }, 403);
++          const v = P1.validateDecision(body); if (!v.ok) return json({ error: v.error }, 400);
++          const mid = await addMsgId(s, rp[1], 'decision', (await roomLeadId(s, rp[1])) || 'hark', '', v.question, '负责人');
++          await kvSet(s, 'decision:' + mid, { options: v.options, choice: null, at: null, by: kind });
++          return json({ ok: true, msg: mid });
++        }
++        if (kind !== 'cookie' && kind !== 'bearer') return json({ error: '只有你本人能拍板' }, 403);
++        const mid = Math.floor(+body.msg) || 0; const key = 'decision:' + mid;
++        const d = await kvGet(s, key); const row = (await s.q("SELECT id,text FROM msgs WHERE id=? AND room=? AND kind='decision'", mid, rp[1]))[0];
++        if (!d || !row) return json({ error: '没有这道决策题' }, 404);
++        if (!d.options.includes(body.choice)) return json({ error: '只能从给出的选项里选' }, 400);
++        const at = Date.now();
++        const upd = await s.q("UPDATE kv SET v=? WHERE k=? AND json_extract(v,'$.choice') IS NULL RETURNING k", JSON.stringify({ ...d, choice: body.choice, at }), key);   // 幂等：只有第一次生效
++        if (!upd.length) { const cur = await kvGet(s, key) || {}; return json({ ok: true, already: true, choice: cur.choice, at: cur.at }); }
++        await addMsg(s, rp[1], 'note', '', '', `用户选择：${body.choice}（${String(row.text).slice(0, 40)}）`, '');
++        return json({ ok: true, choice: body.choice, at });
++      }
+       const rs = path.match(/^\/api\/room\/([a-z0-9]{6,16})\/(members|status|rate|review)$/);
+       if (rs && req.method === 'POST') {
+         const r = await getRoom(s, rs[1]); if (!r) return json({ error: '房间不存在' }, 404);
+@@ -1535,6 +1591,7 @@ const WORKER = {
+         for (const x of st.lineup) {
+           const cur = await getRoom(s, st.room); const slot = cur.lineup.find((y) => y.role === x.role && (y.id === x.id || !st.lineup.some((z) => z.id === y.id)));
+           const t = await runTurn(env, s, st.room, slot ? slot.id : x.id, { mode: st.mode, all });  // 复用同一份成员视图，省 CPU（免费版 10ms）
++          if (t.paused) break;   // N2：暂停后下一位不启动
+           if (t.skipped || t.replaced) all = await enrichAll(env, s);
+           replies.push({ member: t.name || t.member, id: t.member, role: x.role, model: t.model || null, via: t.via || null, text: t.text || t.notice || '', skipped: !!t.skipped, pending: !!t.pending, replaced: t.replaced ? t.replaced.note : undefined });
+           if (x.role === '裁判' && t.text) verdict = t.text;
+@@ -2543,7 +2600,7 @@ const MCP_TOOLS = [
+   ['list_projects', '列出项目（房间）。', {}, [], 'GET', () => '/api/rooms'],
+   ['get_project', '读一个项目的全部消息、阵容、待回复任务。', { room: { type: 'string' } }, ['room'], 'GET', (a) => '/api/room/' + encodeURIComponent(a.room || '')],
+   ['plan_lineup', '按议题推荐阵容（不建项目）。', { topic: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task'] } }, ['topic'], 'POST', () => '/api/plan'],
+-  ['create_project', '新建项目并写入用户需求；不给 members 就由负责人自动派工；idea 可关联一个点子（背景会给所有成员）。建完再用 run_turn 逐个让成员发言，或直接用 run_round。', { idea: { type: 'string' }, message: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task'] }, members: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, role: { type: 'string' } } } }, sensitive: { type: 'boolean' } }, ['message'], 'POST', () => '/api/start'],
++  ['create_project', '新建项目并写入用户需求；不给 members 就由负责人自动派工；quick=true 快速建项目（全员加入、主持模式，由你点名谁说话，用户也可 @ 成员）；idea 可关联一个点子（背景会给所有成员）。建完再用 run_turn 逐个让成员发言，或直接用 run_round。', { quick: { type: 'boolean' }, idea: { type: 'string' }, message: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task', 'host'] }, members: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, role: { type: 'string' } } } }, sensitive: { type: 'boolean' } }, ['message'], 'POST', () => '/api/start'],
+   ['send_message', '在已有项目里以用户身份追加一句话（之后用 run_turn / run_round 让成员回应）。', { room: { type: 'string' }, message: { type: 'string' } }, ['room', 'message'], 'POST', () => '/api/start'],
+   ['run_turn', '让项目里的某位成员发言一次（外部成员会返回 pending，稍后用 get_project 看回复）。', { room: { type: 'string' }, member: { type: 'string' } }, ['room', 'member'], 'POST', () => '/api/turn'],
+   ['run_round', '一次跑完整轮（新项目或已有项目），返回每位成员的回复和裁判结论，适合汇总给用户。', { message: { type: 'string' }, room: { type: 'string' }, mode: { type: 'string' } }, [], 'POST', () => '/api/round'],
+@@ -2560,6 +2617,8 @@ const MCP_TOOLS = [
+   ['confirm_pool_model', '资源管家确认候选池里的一个模型，让它成为成员（能力为 pending，不能当负责人，直到用户核实）：{norm}。', { norm: { type: 'string' } }, ['norm'], 'POST', () => '/api/models/pool/confirm'],
+   ['set_lead', '改主/副负责人与超时：{p:{type:"member",id}|null, s:…, timeoutSec}（不能写入 Key）。', { p: { type: ['object', 'null'] }, s: { type: ['object', 'null'] }, timeoutSec: { type: 'number' } }, [], 'POST', () => '/api/lead'],
+   ['write_handoff_note', '写交接备注（换人时自动附给下一任）。', { note: { type: 'string' } }, ['note'], 'POST', () => '/api/lead/handoff-note'],
++  ['ask_user', '请用户拍板（付费、命名、代收资源确认等要用户决定的事）：{room, question, options}，options 2–3 个、每个 ≤12 字。消息里会出现按钮；用户点了以后项目里会写「用户选择：…」，用 get_project 读。', { room: { type: 'string' }, question: { type: 'string' }, options: { type: 'array', items: { type: 'string' } } }, ['room', 'question', 'options'], 'POST', (a) => '/api/room/' + encodeURIComponent(a.room || '') + '/ask'],
++  ['pause_project', '暂停或继续一个项目的讨论：{room, paused}。暂停后下一位成员不会被启动；用户发新消息也会自动继续。', { room: { type: 'string' }, paused: { type: 'boolean' } }, ['room', 'paused'], 'POST', (a) => '/api/room/' + encodeURIComponent(a.room || '') + '/pause'],
+   ['list_ideas', '列出点子库（点子只是存档：正在做/暂时收藏/已放弃；不是项目）。', {}, [], 'GET', () => '/api/ideas'],
+   ['get_idea', '读一个点子：当时的想法、计划、预期、沟通摘要、关联项目、以前回写的结论。', { id: { type: 'string' } }, ['id'], 'GET', (a) => '/api/idea/' + encodeURIComponent(a.id || '')],
+   ['save_idea', '新建或修改点子（不给 id 就新建）：{id?, title, thought, plan, expect, summary, source, tags[], status}。', { id: { type: 'string' }, title: { type: 'string' }, thought: { type: 'string' }, plan: { type: 'string' }, expect: { type: 'string' }, summary: { type: 'string' }, source: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, status: { type: 'string', enum: ['正在做', '暂时收藏', '已放弃'] } }, ['title'], 'POST', () => '/api/ideas'],

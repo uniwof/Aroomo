@@ -1,0 +1,72 @@
+Cloudflare Workers + SQLite Durable Object（免费版：DO 请求 10 万次/天，官方文档：每次 stub 上的 RPC 方法调用 = 1 次计费请求；RPC 方法返回 RpcTarget 后，在返回对象上的后续调用属于同一 RPC 会话、不单独计费）。线上今天因为每个 s.q() 都是独立 RPC 把 DO 额度用穿。修复：每个 Worker 请求（fetch/scheduled）用 AsyncLocalStorage 懒开一个会话，全部 s.q 共用。compatibility_flags 已加 nodejs_als。MCP 内部会递归调用 WORKER.fetch（新 ALS 上下文）。ctx.waitUntil 的后台任务也调用 store(env)。请只挑错（会话生命周期、请求结束后 waitUntil 里还能不能用、并发、错误后重开、计数）：
+```js
+diff --git a/worker.js b/worker.js
+index 86ebdaa..fce973e 100644
+--- a/worker.js
++++ b/worker.js
+@@ -3,5 +3,6 @@
+ // 沙盒、浏览器、代理、邮箱、号码、算力是「资源库 → 工具与算力」(tools)，不是成员。资源库还含 API 密钥、技能、学习与网站资源（resources.json + 资源管家写入的 res_items）。
+ // 配置：members.json（唯一权威来源）；logos.json（simple-icons，CC0）；page.html（前端）。部署：python3 deploy.py。说明见 README.md。
+-import { DurableObject } from 'cloudflare:workers';
++import { DurableObject, RpcTarget } from 'cloudflare:workers';
++import { AsyncLocalStorage } from 'node:async_hooks';   // P1-6 fix1：一个 Worker 请求只开一个 DO RPC 会话（需要 compatibility_flags nodejs_als）
+ import CONFIG from './members.js';   // deploy.py 把 members.json 包成 JS 模块（上传 API 不收 JSON 模块）
+ import LOGOS from './logos.js';
+@@ -116,6 +117,20 @@ export class ChatStore extends DurableObject {
+   q(sql, ...args) { return this.sql.exec(sql, ...args).toArray(); }
+   batch(list) { for (const [sql, args] of list) this.sql.exec(sql, ...(args || [])); return true; }
+-}
+-const store = (env) => env.DB.get(env.DB.idFromName('main'));
++  session() { return new StoreSession(this); }   // P1-6 fix1：返回 RpcTarget，之后在它上面的调用都算同一个 RPC 会话（Cloudflare 只计 1 次 DO 请求）
++}
++class StoreSession extends RpcTarget { constructor(o) { super(); this.o = o; } q(sql, ...args) { return this.o.q(sql, ...args); } batch(list) { return this.o.batch(list); } }
++// P1-6 fix1（2026-10-24 线上 DO 免费额度 10 万次/天被用穿）：原来每个 s.q() 都是一次独立 RPC = 一次计费的 DO 请求，一个页面请求要几十次。
++// 现在每个 Worker 请求（fetch / scheduled）在 ALS 里懒开一个会话，所有 s.q 共用；没有 ALS 上下文时退回旧做法。
++const ALS = new AsyncLocalStorage();
++const stubOf = (env) => env.DB.get(env.DB.idFromName('main'));
++const store = (env) => {
++  const c = ALS.getStore(); if (!c) return stubOf(env);
++  if (!c.s) {
++    const st = stubOf(env); let p = null;
++    const open = () => p || (p = (RQ.dos++, st.session()).catch((e) => { p = null; throw e; }));
++    c.s = { q: async (sql, ...a) => { RQ.calls++; return (await open()).q(sql, ...a); }, batch: async (l) => (await open()).batch(l) };
++  }
++  return c.s;
++};
+ 
+ // ───────────────────────── 工具 ─────────────────────────
+@@ -1306,28 +1321,33 @@ async function handleHooks(req, env, url, path) {
+ // ───── P1-6 Cloudflare 额度保险：本站自己数 Worker 请求（每个实例在内存里累加，满 25 次或隔 60 秒写一次 DO，约值）─────
+ const REQ_LIMIT = 100000, REQ_WARN = 0.8;
+-const RQ = { n: 0, last: 0 };
++const RQ = { n: 0, last: 0, dos: 0, calls: 0, dosFlushed: 0 };
+ async function reqFlush(env) {
+   const n = RQ.n; if (!n) return; RQ.n = 0; RQ.last = Date.now();
+   const s = store(env); const day = utcDay(); const k = 'reqs:' + day;
++  const dn = RQ.dos - RQ.dosFlushed; if (dn > 0) { RQ.dosFlushed = RQ.dos; try { await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=CAST(kv.v AS INTEGER)+?', 'dos:' + day, String(dn), dn); } catch { RQ.dosFlushed -= dn; } }
+   let r; try { r = await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=CAST(kv.v AS INTEGER)+? RETURNING v', k, String(n), n); } catch (e) { RQ.n += n; throw e; }   // 写失败把数加回去，下次再写
+   const tot = Number((r[0] || {}).v || 0);
+-  if (tot >= REQ_LIMIT * REQ_WARN && tot - n < REQ_LIMIT * REQ_WARN) await reqWarn(s, day, tot);   // 刚越过 80%（自增是原子的，只有一次 flush 会越线）
++  if (tot >= REQ_LIMIT * REQ_WARN && tot - n < REQ_LIMIT * REQ_WARN) await reqWarn(s, day, tot);
++  const dt = Number((await kvGet(s, 'dos:' + day)) || 0); if (dt >= REQ_LIMIT * REQ_WARN) await reqWarn(s, day, dt);   // 刚越过 80%（自增是原子的，只有一次 flush 会越线）
+ }
+ async function reqWarn(s, day, tot) {   // 每天只提醒一次（原子占位）；cron 每小时也兜底检查一次
+   {
+     const got = await s.q("INSERT INTO kv(k,v) VALUES(?, '1') ON CONFLICT(k) DO NOTHING RETURNING k", 'reqwarn:' + day);
+-    if (got.length) { try { await ensureStewardRoom(s); await addMsg(s, STEWARD_ROOM, 'note', '', '', `提醒：今天 Cloudflare 免费请求已用约 ${Math.round(tot / REQ_LIMIT * 100)}%（${tot} / ${REQ_LIMIT}，本站自己计数）。用完后网站会暂时打不开（错误 1027），UTC 0 点（英国时间 ${londonTime(nextUtcMidnight())}）自动恢复；没发出去的消息会留在发件箱，恢复后自动补发。不会升级付费。`, ''); } catch {} }
++    if (got.length) { try { await ensureStewardRoom(s); await addMsg(s, STEWARD_ROOM, 'note', '', '', `提醒：今天 Cloudflare 免费请求（Worker 或 Durable Object，取较高的）已用约 ${Math.round(tot / REQ_LIMIT * 100)}%（${tot} / ${REQ_LIMIT}，本站自己计数）。用完后网站会暂时打不开（错误 1027），UTC 0 点（英国时间 ${londonTime(nextUtcMidnight())}）自动恢复；没发出去的消息会留在发件箱，恢复后自动补发。不会升级付费。`, ''); } catch {} }
+   }
+ }
+ async function usageView(env) {
+-  const day = utcDay(); const v = Number((await kvGet(store(env), 'reqs:' + day)) || 0) + RQ.n;
+-  const pct = Math.min(1, v / REQ_LIMIT);
+-  return { day, requests: v, limit: REQ_LIMIT, pct: Math.round(pct * 1000) / 1000, warnAt: REQ_WARN, level: pct >= 1 ? 'over' : pct >= REQ_WARN ? 'warn' : 'ok',
++  const day = utcDay(); const s = store(env); const v = Number((await kvGet(s, 'reqs:' + day)) || 0) + RQ.n;
++  const dv = Number((await kvGet(s, 'dos:' + day)) || 0) + (RQ.dos - RQ.dosFlushed);
++  const pw = v / REQ_LIMIT, pd = dv / REQ_LIMIT; const pct = Math.min(1, Math.max(pw, pd));
++  return { day, requests: v, limit: REQ_LIMIT, do: { requests: dv, limit: REQ_LIMIT, pct: Math.round(Math.min(1, pd) * 1000) / 1000, callsThisInstance: RQ.calls, sessionsThisInstance: RQ.dos }, which: pd > pw ? 'Durable Object 请求' : 'Worker 请求',
++    pct: Math.round(pct * 1000) / 1000, warnAt: REQ_WARN, level: pct >= 1 ? 'over' : pct >= REQ_WARN ? 'warn' : 'ok',
+     reset: 'UTC 0 点重置（英国时间 ' + londonTime(nextUtcMidnight()) + '）', note: '本站自己计数（约值，部署当天从部署时起算）；以 Cloudflare 后台为准。超限时 Cloudflare 直接返回错误 1027。' };
+ }
+ const WORKER = {
+-  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch```

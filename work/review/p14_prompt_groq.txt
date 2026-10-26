@@ -1,0 +1,120 @@
+你是苛刻审查员。下面是 Cloudflare Durable Object 单用户 AI 群聊（Aroomo）的 P1-4 改动 diff：主持模式（host，负责人点名 1–3 位、用户 @ 点名）、快速建项目（quick=true 全员加入）、暂停/继续（kv pause:<room>，runTurn 遇暂停直接返回）、消息内决策按钮（kv decision:<msgId>，条件 UPDATE … json_extract IS NULL RETURNING 实现幂等）、模式说明。规格：新建项目不强制选成员；N2 发送键原位变暂停，当前这位说完就停、下一位不启动，中断失败要提示；N3 2–3 个 ≥48px 按钮，点后整组禁用写「你选了」，服务端幂等；只有用户本人（cookie/bearer）能拍板，负责人（operator）只能出题。鉴权：cookie=网页、bearer=用户自己的令牌（同权）、operator=主负责人令牌。DO 单线程、同步 sql.exec。只挑真问题（安�diff --git a/worker.js b/worker.js
+index 81aebc2..68d18e1 100644
+--- a/worker.js
++++ b/worker.js
+@@ -25,3 +25,3 @@ const CF_DAILY = 10000;
+ const ROLES = CONFIG.roles;
+-const MODES = { debate: '辩论', review: '审查', free: '自由聊', task: '任务' };
++const MODES = { debate: '辩论', review: '审查', free: '自由聊', task: '任务', host: '主持' };   // P1-4：主持 = 负责人点名谁说话，用户可 @ 指定
+ const RELAYS = Object.fromEntries((CONFIG.relays || []).map((r) => [r.id, r]));
+@@ -629,2 +629,3 @@ const ROLE_BRIEF = {
+   执行者: '你是执行者：说明你会怎样完成这件需要动手的任务（注册/查资料/操作网页），完成后汇报结果。',
++  成员: '你是被主持人点名的成员：直接回答主持人或用户点给你的问题，简洁具体；没点到的事别展开。',
+   负责人: '你是负责人。',
+@@ -763,2 +764,4 @@ async function getRoom(s, id) {
+   r.messages = (await s.q('SELECT id,kind,member,model,text,ts,role FROM msgs WHERE room=? ORDER BY id', id)).map(normMsg);
++  for (const m of r.messages) if (m.kind === 'decision') { const d = await kvGet(s, 'decision:' + m.id); m.decision = { options: (d && d.options) || [], choice: (d && d.choice) || null, at: (d && d.at) || null }; }   // N3
++  r.paused = !!(await kvGet(s, 'pause:' + id));   // N2
+   r.pending = await s.q("SELECT id,member,role,status,created FROM tasks WHERE room=? AND status IN ('pending','sent') ORDER BY created", id);
+@@ -771,2 +774,7 @@ async function addMsg(s, room, kind, member, model, text, role) {
+ }
++async function addMsgId(s, room, kind, member, model, text, role) {   // 同 addMsg，但返回消息 id（决策题要用）
++  const now = Date.now();
++  const r = await s.q('INSERT INTO msgs(room,kind,member,model,text,ts,role,test) VALUES(?,?,?,?,?,?,?,0) RETURNING id', room, kind, member || '', model || '', text, now, role || '');
++  await s.q('UPDATE rooms SET updated=? WHERE id=?', now, room); return r[0].id;
++}
+ // ───── 测试模式（test_live.py 用，避免污染用户数据）─────
+@@ -809,3 +817,4 @@ function cleanLineup(list, ids) {
+ async function startRound(env, s, body, all) {
+-  const mode = MODES[body.mode] ? body.mode : 'debate';
++  const quick = body.quick === true && !body.room;   // P1-4 快速建项目：全员加入、主持模式
++  const mode = quick ? 'host' : (MODES[body.mode] ? body.mode : 'debate');
+   const message = typeof body.message === 'string' ? body.message.trim().slice(0, MAX_MSG) : '';
+@@ -821,2 +830,6 @@ async function startRound(env, s, body, all) {
+   let planNote = null;
++  if (quick) {
++    lineup = P1.quickLineup(all.map((m) => ({ id: m.id, state: m.state, retired: m.retired, leadOnly: m.leadOnly, steward: m.id === STEWARD, lead: ((m.sources || [])[0] || {}).invoke?.kind === 'lead' })));
++    if (!lineup.length) return { error: '现在没有可用的成员，没法快速建项目' };
++  }
+   if (!exists) {
+@@ -830,3 +843,4 @@ async function startRound(env, s, body, all) {
+       planNote = planText(all, plan.members, plan.engine, plan.tags);
+-    } else if (typeof body.planNote === 'string') planNote = body.planNote.slice(0, 1500);
++    } else if (quick) planNote = `快速建项目：全员加入（${lineup.length} 位），由负责人主持点名；你也可以 @ 指定成员。`;
++    else if (typeof body.planNote === 'string') planNote = body.planNote.slice(0, 1500);
+     const now = Date.now();
+@@ -851,2 +865,3 @@ async function startRound(env, s, body, all) {
+     await s.q("UPDATE rooms SET mode=?, updated=?, status='进行中' WHERE id=?", mode, Date.now(), room);
++    if (message) await kvDel(s, 'pause:' + room);   // N2：用户发新消息 = 继续
+     if (lineup && lineup.length) await setLineup(s, room, lineup); else lineup = exists.lineup;
+@@ -856,3 +871,16 @@ async function startRound(env, s, body, all) {
+   if (planNote) await addMsg(s, room, 'lead', exists ? await roomLeadId(s, room) : 'hark', '', planNote, '负责人');
+-  return { room, mode, lineup: sortRoles(lineup), planNote };
++  // P1-4：@ 点名优先（任何模式）；主持模式由负责人从项目成员里点 1–3 位；项目阵容本身不变
++  const nameOf = (id) => (all.find((m) => m.id === id) || {}).name || id;
++  let speakers = lineup;
++  const named = message ? P1.parseMentions(message, lineup.map((x) => ({ ...x, name: nameOf(x.id) }))) : [];
++  if (named.length) {
++    speakers = named.map(({ id, role }) => ({ id, role }));
++    await addMsg(s, room, 'note', '', '', `你点名了：${named.map((x) => x.name).join('、')}——本轮只请${named.length > 1 ? '他们' : '这位'}发言。`, '');
++  } else if (mode === 'host') {
++    const ranked = heuristicPlan(all, message || (exists && exists.title) || '', 'debate', { pool: lineup.map((x) => x.id) }).members.map((x) => x.id);
++    speakers = P1.hostPick(lineup, ranked);
++    const lid = exists ? await roomLeadId(s, room) : 'hark';
++    await addMsg(s, room, 'lead', lid || 'hark', '', `主持人点名：${speakers.map((x) => nameOf(x.id)).join('、')}。其他成员这轮先听；想指定谁，就 @ 他。`, '负责人');
++  }
++  return { room, mode, lineup: sortRoles(speakers), planNote, roster: lineup.length };
+ }
+@@ -888,2 +916,3 @@ async function runTurn(env, s, room, memberId, opts = {}) {
+   if (!slot) return { error: '这个 AI成员 不在本房间' };
++  if (r0.paused) return { member: memberId, skipped: true, paused: true, notice: '项目已暂停，下一位不启动' };   // N2
+   const m = all.find((x) => x.id === memberId);
+@@ -1394,3 +1423,3 @@ const WORKER = {
+         const all = await enrichAll(env, s);
+-        return json({ term: TERM, members: all.map(publicView), tools: CONFIG.tools || [], candidates: await candidates(s, all), admission: CONFIG.admission || {}, roles: ROLES.filter((r) => r !== '负责人'), modes: MODES,
++        return json({ term: TERM, members: all.map(publicView), tools: CONFIG.tools || [], candidates: await candidates(s, all), admission: CONFIG.admission || {}, roles: ROLES.filter((r) => r !== '负责人'), modes: MODES, modeInfo: P1.MODE_INFO,
+           connectors: Object.fromEntries(CUSTOM_KINDS.map((k) => [k, { label: CONNECTORS[k].label, how: CONNECTORS[k].how }])), execTags: CONFIG.exec_tags || [], lastProbe: last,
+@@ -1504,2 +1533,29 @@ const WORKER = {
+       if (ra && req.method === 'GET') return json({ audit: await s.q('SELECT member,via,level,action,note,ts FROM audit WHERE room=? ORDER BY id DESC LIMIT 100', ra[1]), levels: LEVELS });
++      const rp = path.match(/^\/api\/room\/([a-z0-9]{6,16})\/(pause|ask|decide)$/);   // P1-4：N2 暂停/继续、N3 决策题
++      if (rp && req.method === 'POST') {
++        const r = await getRoom(s, rp[1]); if (!r) return json({ error: '房间不存在' }, 404);
++        if (rp[1] === STEWARD_ROOM) return json({ error: '资源管家私聊不支持' }, 400);
++        if (rp[2] === 'pause') {
++          const want = body.paused === true;
++          if (want !== r.paused) { if (want) await kvSet(s, 'pause:' + rp[1], { at: Date.now(), by: kind }); else await kvDel(s, 'pause:' + rp[1]); await addMsg(s, rp[1], 'note', '', '', want ? '—— 已暂停：当前这位说完就停，下一位不启动 ——' : '—— 已继续 ——', ''); }
++          return json({ ok: true, paused: want });
++        }
++        if (rp[2] === 'ask') {
++          if (!['cookie', 'bearer', 'operator'].includes(kind)) return json({ error: '没有权限' }, 403);
++          const v = P1.validateDecision(body); if (!v.ok) return json({ error: v.error }, 400);
++          const mid = await addMsgId(s, rp[1], 'decision', (await roomLeadId(s, rp[1])) || 'hark', '', v.question, '负责人');
++          await kvSet(s, 'decision:' + mid, { options: v.options, choice: null, at: null, by: kind });
++          return json({ ok: true, msg: mid });
++        }
++        if (kind !== 'cookie' && kind !== 'bearer') return json({ error: '只有你本人能拍板' }, 403);
++        const mid = Math.floor(+body.msg) || 0; const key = 'decision:' + mid;
++        const d = await kvGet(s, key); const row = (await s.q("SELECT id,text FROM msgs WHERE id=? AND room=? AND kind='decision'", mid, rp[1]))[0];
++        if (!d || !row) return json({ error: '没有这道决策题' }, 404);
++        if (!d.options.includes(body.choice)) return json({ error: '只能从给出的选项里选' }, 400);
++        const at = Date.now();
++        const upd = await s.q("UPDATE kv SET v=? WHERE k=? AND json_extract(v,'$.choice') IS NULL RETURNING k", JSON.stringify({ ...d, choice: body.choice, at }), key);   // 幂等：只有第一次生效
++        if (!upd.length) { const cur = await kvGet(s, key) || {}; return json({ ok: true, already: true, choice: cur.choice, at: cur.at }); }
++        await addMsg(s, rp[1], 'note', '', '', `用户选择：${body.choice}（${String(row.text).slice(0, 40)}）`, '');
++        return json({ ok: true, choice: body.choice, at });
++      }
+       const rs = path.match(/^\/api\/room\/([a-z0-9]{6,16})\/(members|status|rate|review)$/);
+@@ -1537,2 +1593,3 @@ const WORKER = {
+           const t = await runTurn(env, s, st.room, slot ? slot.id : x.id, { mode: st.mode, all });  // 复用同一份成员视图，省 CPU（免费版 10ms）
++          if (t.paused) break;   // N2：暂停后下一位不启动
+           if (t.skipped || t.replaced) all = await enrichAll(env, s);
+@@ -2545,3 +2602,3 @@ const MCP_TOOLS = [
+   ['plan_lineup', '按议题推荐阵容（不建项目）。', { topic: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task'] } }, ['topic'], 'POST', () => '/api/plan'],
+-  ['create_project', '新建项目并写入用户需求；不给 members 就由负责人自动派工；idea 可关联一个点子（背景会给所有成员）。建完再用 run_turn 逐个让成员发言，或直接用 run_round。', { idea: { type: 'string' }, message: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task'] }, members: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, role: { type: 'string' } } } }, sensitive: { type: 'boolean' } }, ['message'], 'POST', () => '/api/start'],
++  ['create_project', '新建项目并写入用户需求；不给 members 就由负责人自动派工；quick=true 快速建项目（全员加入、主持模式，由你点名谁说话，用户也可 @ 成员）；idea 可关联一个点子（背景会给所有成员）。建完再用 run_turn 逐个让成员发言，或直接用 run_round。', { quick: { type: 'boolean' }, idea: { type: 'string' }, message: { type: 'string' }, mode: { type: 'string', enum: ['debate', 'review', 'free', 'task', 'host'] }, members: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, role: { type: 'string' } } } }, sensitive: { type: 'boolean' } }, ['message'], 'POST', () => '/api/start'],
+   ['send_message', '在已有项目里以用户身份追加一句话（之后用 run_turn / run_round 让成员回应）。', { room: { type: 'string' }, message: { type: 'string' } }, ['room', 'message'], 'POST', () => '/api/start'],
+@@ -2562,2 +2619,4 @@ const MCP_TOOLS = [
+   ['write_handoff_note', '写交接备注（换人时自动附给下一任）。', { note: { type: 'string' } }, ['note'], 'POST', () => '/api/lead/handoff-note'],
++  ['ask_user', '请用户拍板（付费、命名、代收资源确认等要用户决定的事）：{room, question, options}，options 2–3 个、每个 ≤12 字。消息里会出现按钮；用户点了以后项目里会写「用户选择：…」，用 get_project 读。', { room: { type: 'string' }, question: { type: 'string' }, options: { type: 'array', items: { type: 'string' } } }, ['room', 'question', 'options'], 'POST', (a) => '/api/room/' + encodeURIComponent(a.room || '') + '/ask'],
++  ['pause_project', '暂停或继续一个项目的讨论：{room, paused}。暂停后下一位成员不会被启动；用户发新消息也会自动继续。', { room: { type: 'string' }, paused: { type: 'boolean' } }, ['room', 'paused'], 'POST', (a) => '/api/room/' + encodeURIComponent(a.room || '') + '/pause'],
+   ['list_ideas', '列出点子库（点子只是存档：正在做/暂时收藏/已放弃；不是项目）。', {}, [], 'GET', () => '/api/ideas'],

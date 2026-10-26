@@ -1,0 +1,128 @@
+项目 Aroomo（Cloudflare Worker + SQLite Durable Object 的多 AI 群聊）。本次改动 P1-5「主负责人代收资源」。规格：
+- 新增操作员接口 POST /api/steward/submit {url?, text?, note?, source?} + MCP 工具 submit_resource；只有「主负责人」用操作员令牌可调（副负责人待命时只读，接班后可用）；访问令牌 Bearer 和网页 cookie 都不行。
+- 走资源管家同一流水线：去重、抓正文、分类、到官方页逐字核实后才标「已核实」；不往任何房间发消息（不刷屏）。
+- 条目标「来源：主负责人代收」，计入每周汇总新增（「其中主负责人代收 N 条」）。
+- 常驻规则写进技能文件、配对开场白、get_brief 的 standingRules。
+已有中间件（不在 diff 里）：操作员请求先过 opDeny；slot==='s' 且非 GET → 403；未激活 → 403；每次请求写 opaudit。safeUrl() 只放行公网 https。ctx.waitUntil 跑后台。kv 是 DO 内 SQLite 表。
+请审下面 diff（worker.js 部分）：
+diff --git a/worker.js b/worker.js
+index 87f054a..4c85358 100644
+--- a/worker.js
++++ b/worker.js
+@@ -107,4 +107,7 @@ export class ChatStore extends DurableObject {
+     if (!tc.includes('attempts')) this.sql.exec('ALTER TABLE tasks ADD COLUMN attempts INTEGER DEFAULT 0');
+     this.sql.exec('CREATE INDEX IF NOT EXISTS tasks_kind ON tasks(kind, status)');
++    const xc = cols('res_items');   // P1-5：主负责人代收 → via='lead'、代收人、用户给的备注/来源；test=测试模式写入（结束时删）
++    for (const c of ['via', 'via_by', 'via_note', 'via_src']) if (!xc.includes(c)) this.sql.exec(`ALTER TABLE res_items ADD COLUMN ${c} TEXT`);
++    if (!xc.includes('test')) this.sql.exec('ALTER TABLE res_items ADD COLUMN test INTEGER DEFAULT 0');
+     this.sql.exec("UPDATE calls SET ok=7 WHERE ok=1 AND detail='你已确认，见下一条执行记录'");
+   }
+@@ -781,5 +784,5 @@ async function addMsgId(s, room, kind, member, model, text, role) {   // 同 add
+ // POST /api/testmode {on:true}：快照下列 kv，之后 20 分钟内写进资源管家私聊的消息打 test=1、完成推送不发；
+ // POST /api/testmode {on:false}（或过期后的 cron）：删掉 test=1 消息、kv 还原到快照。
+-const TESTMODE_KEYS = ['lead_cfg', 'op_tokens', 'handoff_note', 'route_policy', 'notify', 'steward_week', 'steward_weekly_last', 'model_pool', 'model_extra', 'model_pool_dismissed', 'lead_inelig_note:p', 'lead_inelig_note:s'];
++const TESTMODE_KEYS = ['lead_cfg', 'op_tokens', 'handoff_note', 'route_policy', 'notify', 'steward_week', 'steward_weekly_last', 'model_pool', 'model_extra', 'model_pool_dismissed', 'lead_inelig_note:p', 'lead_inelig_note:s', 'sub_log'];
+ async function testModeOn(s) { const t = await kvGet(s, 'testmode'); return !!(t && t.until > Date.now()); }
+ async function testModeBegin(s) {
+@@ -793,4 +796,6 @@ async function testModeEnd(s) {
+   const n = (await s.q('SELECT COUNT(*) AS n FROM msgs WHERE room=? AND test=1', STEWARD_ROOM))[0].n;
+   await s.q('DELETE FROM msgs WHERE room=? AND test=1', STEWARD_ROOM);
++  await s.q('DELETE FROM res_items WHERE test=1');   // P1-5：测试期间代收的条目
++  for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'sub_busy:%'")) await kvDel(s, r.k);
+   await s.q("UPDATE tasks SET status='failed' WHERE kind='web' AND status IN ('pending','sent') AND ext LIKE '%\"test\":true%'");   // P1-2：测试期间排的网页任务作废
+   const R0 = (await kvGet(s, 'web_relays')) || {}; let rch = false; for (const k of Object.keys(R0)) if (R0[k].test) { delete R0[k]; rch = true; } if (rch) await kvSet(s, 'web_relays', R0);   // 测试代发员一并清掉
+@@ -1393,4 +1398,9 @@ const WORKER = {
+       if (path === '/api/steward/weekly' && req.method === 'GET') { const w = await kvGet(s, 'steward_weekly_last'); return json({ last: w, schedule: '英国时间每周一 8 点后自动生成（Workers cron）', reader: '主负责人（操作员令牌）每周抽查' }); }
+       if (path === '/api/steward/weekly' && req.method === 'POST') { if (kind !== 'cookie') return json({ error: '只能在已登录的页面里手动生成' }, 403); return json(await stewardWeekly(env, s, true)); }
++      if (path === '/api/steward/submissions' && req.method === 'GET') return json({ items: (await kvGet(s, 'sub_log')) || [] });
++      if (path === '/api/steward/submit' && req.method === 'POST') {   // P1-5 主负责人代收资源（只认操作员令牌；网页用户直接发给资源管家）
++        if (kind !== 'operator') return json({ error: kind === 'cookie' ? '网页里请直接把链接发给资源管家私聊；这个接口给主负责人（操作员令牌）代收用' : '只给主负责人用（操作员令牌）' }, 403);
++        const r = await submitResource(env, s, ctx, OP, body); return json(r.error ? { error: r.error } : r, r.error ? 400 : 200);
++      }
+       if (path.startsWith('/api/steward/') && req.method === 'POST') {
+         if (kind !== 'cookie' && kind !== 'operator') return json({ error: '只能在已登录的页面里和资源管家说话' }, 403);
+@@ -1843,16 +1853,25 @@ async function verifyTiered(env, s, cands, item) {
+ }
+ function resState(it) { const today = todayLondon(); if (it.expires && it.expires < today) return '已过期'; return it.vstate || '未核实'; }
+-async function ingestLink(env, s, u) {
++async function ingestLink(env, s, u, via) {
+   const key = urlKey(u); const id = 'u-' + await sha(key);
+-  const old = (await s.q('SELECT * FROM res_items WHERE id=?', id))[0];
+   let page;
+   try { page = await readLink(u); } catch (e) { return { url: u, error: '抓取失败：' + String((e && e.message) || e).slice(0, 120) + '。我没有用搜索摘要或模型去补内容，这条先不入库。' }; }
++  return ingestPage(env, s, id, u, page, via);
++}
++// P1-5：没有链接、只有一段文字（帖子原文/文件内容）→ 同一条流水线：整理 → 官方页核实（只认正文里给出的官方页）
++async function ingestText(env, s, id, text, via) {
++  const t = String(text).slice(0, 6000); const first = (t.split(/\n/).map((x) => x.trim()).find(Boolean) || '').slice(0, 80);
++  const links = [...new Set((t.match(/https?:\/\/[^\s<>"'，。）)】]+/g) || []).map((u) => safeUrl(u.replace(/^http:/, 'https:'))).filter(Boolean))].slice(0, 3);
++  return ingestPage(env, s, id, '', { kind: 'post', url: '', title: first, text: t, links }, via);
++}
++async function ingestPage(env, s, id, u, page, via) {   // via：P1-5 代收 {via_by, via_note, via_src, test}，和条目同一条 INSERT 写入
++  const old = (await s.q('SELECT * FROM res_items WHERE id=?', id))[0];
+   let llm = await stewardLLM(env, s, `链接：${page.url}\n标题：${page.title}\n正文：\n${page.text}`);
+   const j = llm.json || {}; const rule = ruleExtract(page.text);
+-  const cat = RES_CATS[j.category] ? j.category : ruleCat(page.url, page.text);
++  const cat = RES_CATS[j.category] ? j.category : ruleCat(page.url || (page.links || [])[0] || '', page.text);
+   const item = {
+     id, cat, name: String(j.name || page.title || page.url).slice(0, 80), purpose: String(j.purpose || '').slice(0, 200),
+     free: String(j.free || rule.free || '').slice(0, 300), expires: /^\d{4}-\d{2}-\d{2}$/.test(j.expires || '') ? j.expires : rule.expires,
+-    url: page.url, src_url: u, official_url: safeUrl(j.official_url || '') || '', evidence: String(j.evidence || rule.evidence || '').slice(0, 300),
++    url: page.url || (page.links || [])[0] || '', src_url: u, official_url: safeUrl(j.official_url || '') || '', evidence: String(j.evidence || rule.evidence || '').slice(0, 300),
+     paid: j.paid === true || /付费|收费|paid only|no free/i.test(j.free || '') ? 1 : 0, model: llm.model || '规则（未用模型）', kind: page.kind,
+   };
+@@ -1864,7 +1883,9 @@ async function ingestLink(env, s, u) {
+   item.model = `整理：${item.model}；核实：${v.model}`; if (!official) llm.skipped = [llm.skipped, '核实失败：' + v.note].filter(Boolean).join('；');
+   const now = Date.now();
+-  await s.q(`INSERT INTO res_items(id,cat,name,purpose,free,expires,url,src_url,official_url,evidence,vstate,verified_at,verified_url,paid,model,added,updated,note)
+-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET cat=excluded.cat,name=excluded.name,purpose=excluded.purpose,free=excluded.free,expires=excluded.expires,url=excluded.url,official_url=excluded.official_url,evidence=excluded.evidence,vstate=excluded.vstate,verified_at=excluded.verified_at,verified_url=excluded.verified_url,paid=excluded.paid,model=excluded.model,updated=excluded.updated`,
+-    item.id, item.cat, item.name, item.purpose, item.free, item.expires || '', item.url, item.src_url, item.official_url, item.evidence, item.vstate, item.verified_at, item.verified_url, item.paid, item.model, old ? old.added : now, now, llm.skipped || '');
++  const V = via || {};
++  await s.q(`INSERT INTO res_items(id,cat,name,purpose,free,expires,url,src_url,official_url,evidence,vstate,verified_at,verified_url,paid,model,added,updated,note,via,via_by,via_note,via_src,test)
++    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET cat=excluded.cat,name=excluded.name,purpose=excluded.purpose,free=excluded.free,expires=excluded.expires,url=excluded.url,official_url=excluded.official_url,evidence=excluded.evidence,vstate=excluded.vstate,verified_at=excluded.verified_at,verified_url=excluded.verified_url,paid=excluded.paid,model=excluded.model,updated=excluded.updated,via=COALESCE(excluded.via,res_items.via),via_by=COALESCE(excluded.via_by,res_items.via_by),via_note=COALESCE(excluded.via_note,res_items.via_note),via_src=COALESCE(excluded.via_src,res_items.via_src)`,
++    item.id, item.cat, item.name, item.purpose, item.free, item.expires || '', item.url, item.src_url, item.official_url, item.evidence, item.vstate, item.verified_at, item.verified_url, item.paid, item.model, old ? old.added : now, now, llm.skipped || '',
++    via ? 'lead' : null, via ? V.via_by || '' : null, via ? V.via_note || '' : null, via ? V.via_src || '' : null, V.test ? 1 : 0);
+   return { ...item, state: resState(item), updated: !!old, note: llm.skipped || '' };
+ }
+@@ -1890,5 +1911,5 @@ async function ensureStewardRoom(s) {
+ async function allResources(s) {
+   const today = todayLondon();
+-  const user = (await s.q('SELECT * FROM res_items ORDER BY updated DESC LIMIT 500')).map((x) => ({ ...x, state: x.vstate === '候选' ? '候选' : resState(x), mine: true }));
++  const user = (await s.q('SELECT * FROM res_items ORDER BY updated DESC LIMIT 500')).map((x) => ({ ...x, state: x.vstate === '候选' ? '候选' : resState(x), mine: true, from: x.via === 'lead' ? '主负责人代收' : '' }));
+   const sites = (RES.sites || []).map((x) => ({ ...x, state: x.expires && x.expires < today ? '已过期' : x.verify_state }));
+   return { built: RES.built, skills: RES.skills || [], sites, user, today };
+@@ -1968,6 +1989,6 @@ async function stewardWeekly(env, s, force) {
+   await ensureStewardRoom(s);
+   const since = Date.now() - 7 * 86400000; const today = todayLondon(); const plus14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+-  const items = await s.q("SELECT id,name,cat,vstate,expires,url,note,added,updated,official_url FROM res_items WHERE vstate<>'候选' OR vstate IS NULL ORDER BY updated DESC LIMIT 500");
+-  const added = items.filter((x) => x.added >= since), updated = items.filter((x) => x.added < since && x.updated >= since);
++  const items = await s.q("SELECT id,name,cat,vstate,expires,url,note,added,updated,official_url,via FROM res_items WHERE vstate<>'候选' OR vstate IS NULL ORDER BY updated DESC LIMIT 500");
++  const added = items.filter((x) => x.added >= since), byLead = added.filter((x) => x.via === 'lead'), updated = items.filter((x) => x.added < since && x.updated >= since);
+   const failed = items.filter((x) => x.updated >= since && x.vstate !== '已核实' && /核实失败/.test(x.note || ''));
+   const R = await allResources(s);
+@@ -1977,5 +1998,5 @@ async function stewardWeekly(env, s, force) {
+   const lp = (await leadCfg(s)).p; const all = await loadMembers(s); const leadName = lp ? (lp.type === 'member' ? ((all.find((m) => m.id === lp.id) || {}).name || lp.id) : '自定义端点') : 'Hark 内置规则';
+   const text = [`资源管家每周汇总（${wk}，英国时间 ${londonTime(Date.now())}）`,
+-    `新增 ${added.length} 条` + (added.length ? '：\n' + cap(added) : ''),
++    `新增 ${added.length} 条` + (byLead.length ? `（其中主负责人代收 ${byLead.length} 条）` : '') + (added.length ? '：\n' + cap(added) : ''),
+     `更新 ${updated.length} 条` + (updated.length ? '：\n' + cap(updated) : ''),
+     `核实失败 ${failed.length} 条` + (failed.length ? '（官方页没对上，状态仍是未核实）：\n' + cap(failed) : ''),
+@@ -1985,8 +2006,46 @@ async function stewardWeekly(env, s, force) {
+   await addMsg(s, STEWARD_ROOM, 'ai', STEWARD, '规则汇总（不耗额度）', text, '资源管家');
+   await addMsg(s, STEWARD_ROOM, 'note', '', '', `通知主负责人（${leadName}）：本周资源管家汇总已生成，请抽查。操作员令牌读取：GET /api/steward/weekly，或 get_brief 里的 stewardWeekly。`, '');
+-  const rec = { week: wk, at: Date.now(), lead: leadName, counts: { added: added.length, updated: updated.length, failed: failed.length, soon: soon.length }, text };
++  const rec = { week: wk, at: Date.now(), lead: leadName, counts: { added: added.length, lead: byLead.length, updated: updated.length, failed: failed.length, soon: soon.length }, text };
+   await kvSet(s, 'steward_week', wk); await kvSet(s, 'steward_weekly_last', rec);
+   return rec;
+ }
++// ───── P1-5 主负责人代收资源 ─────
++// 用户在主负责人所在的外部 App 里直接发链接/文件/帖子 → 主负责人用操作员令牌静默投递到这里 → 走资源管家同一条流水线
++// （去重 → 抓正文 → 分类 → 官方页逐字核实才标已核实）。不往任何房间发消息（不刷屏），条目标「来源：主负责人代收」，计入每周汇总。
++const SUBMIT_REPLY = () => `已收进 ${PRODUCT.name} 资源库`;
++const SUB_BUSY_MS = 10 * 60000;
++async function subLog(s, rows) { const L = (await kvGet(s, 'sub_log')) || []; await kvSet(s, 'sub_log', [...rows, ...L].slice(0, 60)); }
++async function subMark(s, id, patch) { const L = (await kvGet(s, 'sub_log')) || []; const x = L.find((r) => r.id === id && r.status === 'queued'); if (x) { Object.assign(x, patch); await kvSet(s, 'sub_log', L); } }
++async function submitResource(env, s, ctx, OP, body) {
++  const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
++  const url = str(body.url, 2000), text = str(body.text, MAX_MSG), note = str(body.note, 200), source = str(body.source, 80);
++  if (!url && !text) return { error: '要给 url（链接）或 text�

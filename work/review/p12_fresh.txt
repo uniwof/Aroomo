@@ -1,0 +1,60 @@
+你是全新的复核员（没看过之前的讨论）。下面是对一个 Cloudflare Durable Object 任务队列（网页代发：代发员领取→回传，10 分钟超时改派）的复审修复补丁（Python 脚本里 rep(旧,新) 就是代码替换）。请逐条判断每个修复是否真的修好了它声称的问题、有没有引入新问题（对/错 + 理由）。只挑错，不附和。DO 单线程但 await 之间会交错；SQLite 支持 RETURNING。
+```python
+R='/workspace/projects-src/ai-groupchat/'
+p=R+'worker.js'; s=open(p).read()
+def rep(a,b,n=1):
+    global s
+    assert s.count(a)==n, (a[:80], s.count(a)); s=s.replace(a,b)
+# 1 敏感项目：网页成员算第三方网页，敏感项目不发
+rep("const LEVELS = { official: '官方 API', relay: '中转站/公益站', public: '免 Key 公共接口', agent: '外部智能体', builtin: '内置' };",
+    "const LEVELS = { official: '官方 API', relay: '中转站/公益站', public: '免 Key 公共接口', web: '第三方网页（经代发）', agent: '外部智能体', builtin: '内置' };")
+rep("  if (iv.relay) return 'relay';\n  if (/pollinations/i", "  if (iv.relay) return 'relay';\n  if (iv.kind === 'web') return 'web';   // P1-2：网页成员 = 第三方网页服务，敏感项目不发\n  if (/pollinations/i")
+rep("if (policy && policy.blockRelay && ['relay', 'public'].includes(srcLevel(src)))", "if (policy && policy.blockRelay && ['relay', 'public', 'web'].includes(srcLevel(src)))", 2)
+rep("policy.blockRelay && ['relay', 'public'].includes(x.level)", "policy.blockRelay && ['relay', 'public', 'web'].includes(x.level)")
+# 2 去掉遍历所有代发员的鉴权回退；回传时按任务上的领取者鉴权
+rep("""    let relay = await relayAuth(env, s, req, id);
+    if (!relay && !id) { const R = await webRelays(s); for (const rid_ of Object.keys(R)) { relay = await relayAuth(env, s, req, rid_); if (relay) break; } }""",
+"""    let rid0 = id;
+    if (!rid0 && path === '/bridge/web/reply' && /^[a-z0-9]{16}$/.test(String(rb.body.task || ''))) rid0 = ((await s.q("SELECT relay FROM tasks WHERE id=? AND kind='web'", String(rb.body.task)))[0] || {}).relay || '';   // 不带 relay 时按任务的领取者鉴权（不遍历所有代发员）
+    const relay = await relayAuth(env, s, req, rid0);""")
+# 3 改派竞态：条件更新 + RETURNING，只有真改了才写提示；超过 24 小时还没人领的 pending 标失败
+rep("""    if (x.action === 'fail') {
+      await s.q("UPDATE tasks SET status='failed', attempts=?, ext=? WHERE id=?", x.attempts, JSON.stringify(ext), x.id);
+      await addMsg(""", """    if (x.action === 'fail') {
+      const ch = await s.q("UPDATE tasks SET status='failed', attempts=?, ext=? WHERE id=? AND status='sent' AND relay=? AND claimed=? RETURNING id", x.attempts, JSON.stringify(ext), x.id, t.relay, t.claimed);
+      if (!ch.length) continue;   // 这期间已回传或已被别的扫描处理
+      await addMsg(""")
+rep("""      await s.q("UPDATE tasks SET status='pending', relay=NULL, claimed=NULL, attempts=?, ext=? WHERE id=?", x.attempts, JSON.stringify(ext), x.id);
+""", """      const ch = await s.q("UPDATE tasks SET status='pending', relay=NULL, claimed=NULL, attempts=?, ext=? WHERE id=? AND status='sent' AND relay=? AND claimed=? RETURNING id", x.attempts, JSON.stringify(ext), x.id, t.relay, t.claimed);
+      if (!ch.length) continue;
+""")
+rep("""async function webSweep(s, now = Date.now()) {
+""", """async function webSweep(s, now = Date.now()) {
+  await s.q("UPDATE tasks SET status='failed' WHERE kind='web' AND status='pending' AND created<?", now - 86400000);   // 一天没人领的不再挂着
+""")
+# 回传也用条件更新
+rep("""  await s.q("UPDATE tasks SET status='done' WHERE id=? AND status='sent'", task);
+  const sess = P1.cleanSession(body.session);""", """  const ch = await s.q("UPDATE tasks SET status='done' WHERE id=? AND status='sent' AND relay=? RETURNING id", task, relay.id);
+  if (!ch.length) return [{ error: '任务刚被改派或已完成' }, 409];
+  const sess = P1.cleanSession(body.session);""")
+# 领取也用条件更新（await 之间可能被别的请求领走）
+rep("""    await s.q("UPDATE tasks SET status='sent', relay=?, claimed=? WHERE id=? AND status='pending'", relay.id, now, t.id);
+""", """    const ch = await s.q("UPDATE tasks SET status='sent', relay=?, claimed=? WHERE id=? AND status='pending' RETURNING id", relay.id, now, t.id);
+    if (!ch.length) continue;
+""")
+# 4 成员令牌的小桥拉取不碰网页任务（网页任务只走代发员队列）
+rep("""const tasks = await s.q("SELECT id,room,role,prompt,created FROM tasks WHERE member=? AND status IN ('pending','sent') AND created>? ORDER BY created LIMIT 5", member, Date.now() - 86400000);""",
+    """const tasks = await s.q("SELECT id,room,role,prompt,created FROM tasks WHERE member=? AND status IN ('pending','sent') AND COALESCE(kind,'')<>'web' AND created>? ORDER BY created LIMIT 5", member, Date.now() - 86400000);""")
+# 5 测试模式结束：测试期间排的网页任务作废，不留僵尸
+rep("""  await s.q('DELETE FROM msgs WHERE room=? AND test=1', STEWARD_ROOM);
+  const restored = [];""", """  await s.q('DELETE FROM msgs WHERE room=? AND test=1', STEWARD_ROOM);
+  await s.q("UPDATE tasks SET status='failed' WHERE kind='web' AND status IN ('pending','sent') AND ext LIKE '%\\"test\\":true%'");   // P1-2：测试期间排的网页任务作废
+  const R0 = (await kvGet(s, 'web_relays')) || {}; let rch = false; for (const k of Object.keys(R0)) if (R0[k].test) { delete R0[k]; rch = true; } if (rch) await kvSet(s, 'web_relays', R0);   // 测试代发员一并清掉
+  const restored = [];""")
+open(p,'w').write(s)
+p=R+'page.html'; s=open(p).read()
+a="const risky=['relay','public'].includes(r.level);const alt=(m.sources||[]).some(x=>x.state!=='down'&&!['relay','public'].includes(x.level));"
+assert s.count(a)==1
+s=s.replace(a,"const risky=['relay','public','web'].includes(r.level);const alt=(m.sources||[]).some(x=>x.state!=='down'&&!['relay','public','web'].includes(x.level));")
+open(p,'w').write(s); print('ok')
+```

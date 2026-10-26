@@ -1,0 +1,41 @@
+审查这个小补丁（Cloudflare DO，SQLite kv 表 k TEXT PRIMARY KEY）。背景：网页成员每天签到，记录在 kv 键 webcheckin:<成员id>:<日期>；之前删掉成员再用同 id 新建，会继承"今天已签到"，导致不再列出。修法：saveAgent 里 prev 不存在（新建）时删除该成员 id 的所有 webcheckin 键；id 已校验为 ^x-[a-z0-9._-]{1,60}$。另外 ui_test 加了一条只读断言。只挑错。
+diff --git a/ui_test.py b/ui_test.py
+index b7864ca..63c647d 100644
+--- a/ui_test.py
++++ b/ui_test.py
+@@ -265,6 +265,8 @@ async def main():
+         # 深色
+         await cmd("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": "dark"}]); await asyncio.sleep(1)
+         bg = await ev("getComputedStyle(document.body).backgroundColor"); check("深色模式（wizardzines 暖黑画布 #191815）", bg == "rgb(25, 24, 21)", bg)
++        abc = await ev("(()=>{const cs=getComputedStyle(document.documentElement);const st=document.querySelector('#status');return {head:cs.getPropertyValue('--head').trim().toLowerCase(),line:cs.getPropertyValue('--line').trim().toLowerCase(),hb:getComputedStyle(document.querySelector('header.top')).backgroundColor,stfs:st?parseFloat(getComputedStyle(st).fontSize):0}})()")
++        check("设计项 A/B/C：深色帘子 #c4651a、深色描边 #efe9dc、底部状态行 16px", abc['head'] == '#c4651a' and abc['line'] == '#efe9dc' and abc['hb'] == 'rgb(196, 101, 26)' and abc['stfs'] == 16, abc)
+         await ev("document.querySelector('#sideNav button[data-v=members]').click()"); await asyncio.sleep(1)
+         inv = await ev("document.querySelectorAll('#memList .av.inv').length"); check("深色下黑色系头像反转为描边", inv >= 1, inv)
+         await shot("v2-09-members-dark.png")
+diff --git a/worker.js b/worker.js
+index 64c7318..e36e537 100644
+--- a/worker.js
++++ b/worker.js
+@@ -2012,6 +2012,7 @@ async function saveAgent(s, b, { operator = false } = {}) {
+     jobs_note: jobs.length ? '' : '擅长岗位待定：等打分/互评', exec: { tags: execTags, note: execTags.length ? '用户填写' : '未填写执行能力' }, tools: [], limits: {}, privacy: '指令和聊天记录会发到该端点。',
+     sources: [{ via: CONNECTORS[kind].label, invoke: iv, quota: { kind: 'calls', source: 'unverified', text: '额度未知' } }] };
+   if (kind === 'web') { m.privacy = '指令和聊天记录会由代发员发到 ' + iv.site + '。'; m.caps = { kind: 'model', web: true, tags: ['chat'], context_window: null, tool_call: false, capability_status: 'pending', source: '网页成员（经代发），只能当执行成员' }; }
++  if (!prev) { const pf = `webcheckin:${id}:`; await s.q('DELETE FROM kv WHERE substr(k,1,?)=?', pf.length, pf); }   // 新建（含删后重建同 id）不继承旧成员的签到记录
+   await s.q('INSERT INTO custom(id,json,created) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET json=excluded.json', id, JSON.stringify(m), Date.now());
+   return [{ ok: true, id }, 200];
+ }
+diff --git a/test_live.py b/test_live.py
+index cf75334..629a657 100644
+--- a/test_live.py
++++ b/test_live.py
+@@ -514,6 +514,10 @@ c, b = curl(*RH('r-t-h1'), f'{BASE}/bridge/web/pull?relay=r-t-h1'); P0 = J(b); c
+ check('P1-2 签到也由代发员执行：拉取结果里列出今天要签到的网页成员', any(x.get('member') == 'x-webt' for x in P0.get('checkins', [])), P0.get('checkins'))
+ c, b = curl(*RH('r-t-h1'), *JS, '-d', json.dumps({'member': 'x-webt', 'ok': True, 'note': '已签到'}), f'{BASE}/bridge/web/checkin?relay=r-t-h1'); c2, b2 = curl(*RH('r-t-h1'), f'{BASE}/bridge/web/pull?relay=r-t-h1')
+ check('P1-2 签到回报 200，之后当天不再列出', c == 200 and not any(x.get('member') == 'x-webt' for x in J(b2).get('checkins', [])), f'{c} {b[:80]}')
++_w2 = json.dumps({'id': 'x-webt2', 'conn': 'web', 'name': '网页签到复用测试', 'site': 'https://chat.example.com/', 'checkin': True}); curl(*COOK, *JS, '-d', _w2, f'{BASE}/api/agents')
++curl(*RH('r-t-h1'), *JS, '-d', json.dumps({'member': 'x-webt2', 'ok': True}), f'{BASE}/bridge/web/checkin?relay=r-t-h1'); curl(*COOK, '-X', 'DELETE', f'{BASE}/api/agents/x-webt2'); curl(*COOK, *JS, '-d', _w2, f'{BASE}/api/agents')
++c, b = curl(*RH('r-t-h1'), f'{BASE}/bridge/web/pull?relay=r-t-h1'); curl(*COOK, '-X', 'DELETE', f'{BASE}/api/agents/x-webt2')
++check('P1-2 删掉再新建同 id 的网页成员：不继承旧的「今天已签到」，重新列出', any(x.get('member') == 'x-webt2' for x in J(b).get('checkins', [])), J(b).get('checkins'))
+ MB = J(curl(*AUTH, f'{BASE}/api/members')[1]); WM = next((m for m in MB.get('members', []) if m['id'] == 'x-webt'), {}); check('P1-2 有代发员在线 → 网页成员在线', WM.get('state') == 'ok' and '代发员' in (WM.get('why') or ''), WM.get('why'))
+ c, b = curl(*AUTH, *JS, '-d', json.dumps({'message': '网页成员链路测试：请评价这个点子', 'members': [{'id': 'x-webt', 'role': '审查员'}]}), f'{BASE}/api/start'); wroom = J(b).get('room')
+ c, b = curl(*AUTH, *JS, '-d', json.dumps({'room': wroom, 'member': 'x-webt'}), f'{BASE}/api/turn'); WT = J(b)

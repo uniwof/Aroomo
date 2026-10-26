@@ -1,0 +1,1 @@
+<!-- model=openai/gpt-oss-120b secs=7 usage={'queue_time': 0.117915542, 'prompt_tokens': 5006, 'prompt_time': 0.201430944, 'completion_tokens': 3000, 'completion_time': 6.184552847, 'total_tokens': 8006, 'total_time': 6.385983791, 'completion_tokens_details': {'reasoning_tokens': 2998}} -->

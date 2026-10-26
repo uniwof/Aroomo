@@ -1,0 +1,50 @@
+项目 Aroomo（Cloudflare Worker + SQLite Durable Object 多 AI 群聊，免费版）。本次 P1-6「Cloudflare 额度保险」第 1、2 条。规格：
+1. 用量显示：顶部显示当天 Worker 请求用量（免费 100,000 次/日，UTC 0 点重置）；80% 提醒；超限 Cloudflare 返回 Er
+diff --git a/worker.js b/worker.js
+index 80a7501..707d36c 100644
+--- a/worker.js
++++ b/worker.js
+@@ -1305,5 +1305,28 @@ async function handleHooks(req, env, url, path) {
+ 
++// ───── P1-6 Cloudflare 额度保险：本站自己数 Worker 请求（每个实例在内存里累加，满 25 次或隔 60 秒写一次 DO，约值）─────
++const REQ_LIMIT = 100000, REQ_WARN = 0.8;
++const RQ = { n: 0, last: 0 };
++async function reqFlush(env) {
++  const n = RQ.n; if (!n) return; RQ.n = 0; RQ.last = Date.now();
++  const s = store(env); const day = utcDay(); const k = 'reqs:' + day;
++  const r = await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=CAST(kv.v AS INTEGER)+? RETURNING v', k, String(n), n);
++  const tot = Number((r[0] || {}).v || 0);
++  if (tot >= REQ_LIMIT * REQ_WARN && tot - n < REQ_LIMIT * REQ_WARN) await reqWarn(s, day, tot);   // 刚越过 80%（自增是原子的，只有一次 flush 会越线）
++}
++async function reqWarn(s, day, tot) {   // 每天只提醒一次（原子占位）；cron 每小时也兜底检查一次
++  {
++    const got = await s.q("INSERT INTO kv(k,v) VALUES(?, '1') ON CONFLICT(k) DO NOTHING RETURNING k", 'reqwarn:' + day);
++    if (got.length) { try { await ensureStewardRoom(s); await addMsg(s, STEWARD_ROOM, 'note', '', '', `提醒：今天 Cloudflare 免费请求已用约 ${Math.round(tot / REQ_LIMIT * 100)}%（${tot} / ${REQ_LIMIT}，本站自己计数）。用完后网站会暂时打不开（错误 1027），UTC 0 点（英国时间 ${londonTime(nextUtcMidnight())}）自动恢复；没发出去的消息会留在发件箱，恢复后自动补发。不会升级付费。`, ''); } catch {} }
++  }
++}
++async function usageView(env) {
++  const day = utcDay(); const v = Number((await kvGet(store(env), 'reqs:' + day)) || 0) + RQ.n;
++  const pct = Math.min(1, v / REQ_LIMIT);
++  return { day, requests: v, limit: REQ_LIMIT, pct: Math.round(pct * 1000) / 1000, warnAt: REQ_WARN, level: pct >= 1 ? 'over' : pct >= REQ_WARN ? 'warn' : 'ok',
++    reset: 'UTC 0 点重置（英国时间 ' + londonTime(nextUtcMidnight()) + '）', note: '本站自己计数（约值，部署当天从部署时起算）；以 Cloudflare 后台为准。超限时 Cloudflare 直接返回错误 1027。' };
++}
+ const WORKER = {
+-  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch(() => {})); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
++  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch(() => {})); ctx.waitUntil((async () => { const s = store(env); await s.q("DELETE FROM kv WHERE k LIKE 'cid:%' AND CAST(json_extract(v,'$.ts') AS INTEGER) < ?", Date.now() - 3 * 86400000); await s.q("DELETE FROM kv WHERE (k LIKE 'reqs:%' OR k LIKE 'reqwarn:%') AND substr(k, instr(k, ':') + 1) < ?", utcDay(Date.now() - 7 * 86400000)); await reqFlush(env); const day = utcDay(); const tot = Number((await kvGet(s, 'reqs:' + day)) || 0); if (tot >= REQ_LIMIT * REQ_WARN) await reqWarn(s, day, tot); })().catch(() => {})); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
+   async fetch(req, env, ctx) {
++    RQ.n++; if (RQ.n >= 25 || Date.now() - RQ.last > 60000) ctx.waitUntil(reqFlush(env).catch(() => {}));
+     const url = new URL(req.url);
+@@ -1588,3 +1611,15 @@ const WORKER = {
+       if (path === '/api/search' && req.method === 'GET') return json(await search(s, await enrichAll(env, s), url.searchParams.get('q') || ''));
+-      if (path === '/api/start' && req.method === 'POST') { const r = await startRound(env, s, body, await enrichAll(env, s)); return r.error ? json(r, 400) : json(r); }
++      if (path === '/api/usage' && req.method === 'GET') return json(await usageView(env));
++      if (path === '/api/start' && req.method === 'POST') {
++        // P1-6 发件箱：客户端消息 ID（cid）幂等——同一 cid 只写一次；失败（4xx）释放 cid 允许重试
++        const cid = typeof body.cid === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.cid) ? body.cid : '';
++        if (body.cid !== undefined && !cid) return json({ error: 'cid 格式不对（8–64 位字母数字 - _）' }, 400);
++        if (cid) {
++          const got = await s.q('INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO NOTHING RETURNING k', 'cid:' + cid, JSON.stringify({ ts: Date.now(), room: body.room || null, state: 'busy' }));
++          if (!got.length) { const v = (await kvGet(s, 'cid:' + cid)) || {}; return json({ ok: true, dup: true, cid, room: v.room || body.room || null, lineup: v.lineup || [] }); }
++        }
++        let r; try { r = await startRound(env, s, body, await enrichAll(env, s)); } catch (e) { if (cid) await kvDel(s, 'cid:' + cid); throw e; }
++        if (cid) { if (r.error) await kvDel(s, 'cid:' + cid); else await kvSet(s, 'cid:' + cid, { ts: Date.now(), room: r.room, state: 'done', lineup: (r.lineup || []).map((x) => ({ id: x.id, role

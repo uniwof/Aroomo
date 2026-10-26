@@ -1,0 +1,92 @@
+你是苛刻的前端审查员（只挑错）。下面是一个单页聊天应用的前端 diff：N2 讨论中发送键原位变「暂停」、暂停后变「继续」；N3 消息内决策按钮（点后整组禁用、写你选了、焦点移出）；L7 模式弹层单选组；快速建项目按钮。要求：读屏标签同步、按钮≥44/48px、正文≥19px、新动效需挂 prefers-reduced-motion。全局变量 busy/room/roomData 已存在；api() 失败会 throw；esc() 转义；fmt() 转义后加格式。每条：位置、问题、为什么、怎么改、把握度。
+diff --git a/page.html b/page.html
+index 4ae2130..75d02ee 100644
+--- a/page.html
++++ b/page.html
+@@ -527,2 +527,14 @@ button.irow{width:100%;background:transparent;border-left:0;border-right:0;borde
+ @media (prefers-color-scheme:dark){:root:not([data-theme=light]) #drawerNew.btn.primary{box-shadow:4px 4px 0 0 #000,4px 4px 0 2px var(--line)}}
++
++/* P1-4：模式说明（L7）、决策按钮（N3）、暂停/继续（N2） */
++.menu.modes button{padding:10px 12px}
++.menu.modes button .d{font-size:17px}
++.menu.modes button .cur{font-size:15px;font-weight:700;margin-left:6px}
++.decision .dq{margin:0}
++.decision .dbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
++.decision .dbtns .btn{min-height:48px;font-size:18px}
++.decision .dbtns .btn:disabled{opacity:.55}
++.decision .dbtns .btn.picked:disabled{opacity:1;outline:2px solid var(--ink);outline-offset:2px}
++.decision .dres{margin:10px 0 0;font-weight:700}
++#sendBtn.pausing{background:var(--s1);color:var(--ink)}
+ </style></head>
+@@ -731,2 +743,7 @@ function msgEl(x){
+   if(x.kind==='note'){el.className='note';el.innerHTML='<span>'+esc(x.text)+'</span>';return el}
++  if(x.kind==='decision'){const d=x.decision||{options:[]};const lm=(x.member&&mem(x.member))||mem('hark')||HARK;el.className='msg long';
++    el.innerHTML=avatar(lm)+'<div class="col"><div class="whorow"><div class="who" data-mid="'+esc(lm.id)+'"><b>'+esc(lm.name)+'</b>（负责人）· 请你拍板</div></div><div class="bubble decision" role="group" aria-label="请你拍板"><p class="dq">'+fmt(x.text)+'</p><div class="dbtns">'+d.options.map(o=>'<button type="button" class="btn'+(d.choice===o?' picked':'')+'" data-dec="'+esc(o)+'"'+(d.choice?' disabled':'')+'>'+esc(o)+'</button>').join('')+'</div>'+(d.choice?'<p class="dres" tabindex="-1">你选了：'+esc(d.choice)+' · '+esc(tfmt(d.at))+'</p>':'')+'</div></div>';
++    el.querySelectorAll('[data-dec]').forEach(b=>b.onclick=async()=>{const all=el.querySelectorAll('[data-dec]');all.forEach(z=>z.disabled=true);
++      try{await api('/api/room/'+room+'/decide',{method:'POST',body:JSON.stringify({msg:x.id,choice:b.dataset.dec})});await refreshRoom();const r=document.querySelector('#chat [data-id="'+x.id+'"] .dres');if(r)r.focus({preventScroll:true})}catch(e){toast(e.message,'bad');all.forEach(z=>z.disabled=false)}});
++    return el}
+   const m=x.kind==='lead'?((x.member&&mem(x.member))||mem('hark')||HARK):(mem(x.member)||ghost(x.member));
+@@ -829,6 +846,18 @@ async function refreshRoom(){if(!room)return;roomData=await api('/api/room/'+roo
+ function schedulePoll(){clearTimeout(pollT);if(roomData&&((roomData.pending&&roomData.pending.length)||roomData.leadWait))pollT=setTimeout(async()=>{try{const n=roomData.messages.length;roomData=await api('/api/room/'+room);if(roomData.messages.length!==n)renderRoom()}catch(e){}schedulePoll()},6000)}
+-function setBusy(b,msg){busy=b;['#sendBtn','#againBtn','#newBtn','#plusBtn','#drawerNew','#modeBtn'].forEach(s=>{const e=$(s);if(e)e.disabled=b});$('#status').textContent=msg||'';if(!b)updateComposer()}
++function setBusy(b,msg,running){busy=b;RUNNING=!!(b&&running);['#againBtn','#newBtn','#plusBtn','#drawerNew','#modeBtn'].forEach(s=>{const e=$(s);if(e)e.disabled=b});$('#sendBtn').disabled=b&&!RUNNING;$('#status').textContent=msg||'';sendLabel();if(!b)updateComposer()}
++/* N2 暂停/继续：发送键原位切换，读屏标签同步 */
++var RUNNING=false,RUN=null;
++function sendLabel(){const b=$('#sendBtn');if(!b)return;const has=$('#inp').value.trim().length>0;
++  const st=RUNNING?'暂停':(!busy&&!has&&room&&((RUN&&RUN.room===room&&RUN.rest&&RUN.rest.length)||(roomData&&roomData.paused)))?'继续':'发送';
++  b.classList.toggle('pausing',st==='暂停');b.setAttribute('aria-label',st==='发送'?'发言':st);b.innerHTML=st+'<svg class="ic" aria-hidden="true"><use href="#i-'+(st==='发送'?'up':st==='暂停'?'x':'again')+'"/></svg>'}
++async function requestPause(){if(!RUN)return;RUN.pauseReq=true;$('#status').textContent='已请求暂停，当前这位说完就停';$('#sendBtn').disabled=true;
++  try{await api('/api/room/'+RUN.room+'/pause',{method:'POST',body:JSON.stringify({paused:true})})}catch(e){$('#status').textContent='暂停没成功，这位说完会停'}}
++async function resumeRun(){const r=RUN&&RUN.room===room&&RUN.rest&&RUN.rest.length?RUN:null;
++  try{await api('/api/room/'+room+'/pause',{method:'POST',body:JSON.stringify({paused:false})})}catch(e){toast(e.message,'bad');return}
++  if(!r){await refreshRoom();toast('已继续。发一句话或点「再来一轮」接着讨论','ok');return}
++  const st={...r.st,lineup:r.rest};RUN=null;setBusy(true,'',true);await runRound(st)}
+ async function runRound(st){
+-  for(const x of st.lineup){
+-    const cur=(roomData&&roomData.lineup)||st.lineup;const slot=cur.find(y=>y.role===x.role)||x;const m=mem(slot.id);
++  RUN={room,st,rest:null,pauseReq:false};setBusy(true,$('#status').textContent,true);
++  for(let i=0;i<st.lineup.length;i++){const x=st.lineup[i];
++    const cur=(roomData&&roomData.lineup)||st.lineup;const slot=cur.find(y=>y.id===x.id)||cur.find(y=>y.role===x.role)||x;const m=mem(slot.id);
+     {const ag=document.querySelector('#chat .again');if(ag)ag.remove()}
+@@ -836,7 +865,8 @@ async function runRound(st){
+     $('#status').textContent=(m?m.name:slot.id)+'（'+x.role+'）思考中…';
+-    try{await api('/api/turn',{method:'POST',body:JSON.stringify({room,member:slot.id,mode:st.mode})})}catch(e){}
++    let tr=null;try{tr=await api('/api/turn',{method:'POST',body:JSON.stringify({room,member:slot.id,mode:st.mode})})}catch(e){}
+     roomData=await api('/api/room/'+room);renderRoom();window.scrollTo(0,document.body.scrollHeight);
++    if((tr&&tr.paused)||RUN.pauseReq){RUN.rest=st.lineup.slice(tr&&tr.paused?i:i+1);setBusy(false,'已暂停。'+(RUN.rest.length?'点「继续」请下一位发言':'这一轮已经说完'));schedulePoll();return}
+     if(x.role==='裁判'&&localStorage.getItem('agc-autoread')==='1'){const last=[...roomData.messages].reverse().find(y=>y.kind==='ai'&&y.role==='裁判');if(last)speak(last.text)}
+   }
+-  setBusy(false,'');schedulePoll();
++  RUN=null;setBusy(false,'');schedulePoll();
+ }
+@@ -855,3 +885,3 @@ async function send(message,extra){
+   if(!message&&!room){toast('先写个议题','bad');return}
+-  setBusy(true,'发送中…');
++  setBusy(true,'发送中…');RUN=null;
+   try{
+@@ -867,3 +897,3 @@ async function send(message,extra){
+ function autoGrow(){const t=$('#inp');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,innerHeight*.38)+'px';updateComposer()}
+-function updateComposer(){const has=$('#inp').value.trim().length>0;$('#sendBtn').classList.toggle('empty-in',!has);{const ab=$('#againBtn');if(ab)ab.disabled=busy||!room}
++function updateComposer(){const has=$('#inp').value.trim().length>0;$('#sendBtn').classList.toggle('empty-in',!has&&$('#sendBtn').getAttribute('aria-label')!=='继续');if(!busy)sendLabel();{const ab=$('#againBtn');if(ab)ab.disabled=busy||!room}
+   const mk=curMode||(roomData&&roomData.mode)||'debate';$('#modeTxt').textContent=(D.modes||{})[mk]||mk;
+@@ -872,3 +902,3 @@ $('#inp').addEventListener('input',autoGrow);
+ $('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();$('#sendBtn').click()}});
+-$('#sendBtn').onclick=()=>{const v=$('#inp').value.trim();if(!v){$('#status').textContent='先写点内容';$('#inp').focus();return}if(!room){newProject(v);return}send(v)};
++$('#sendBtn').onclick=()=>{if(RUNNING){requestPause();return}const v0=$('#inp').value.trim();if(!v0&&$('#sendBtn').getAttribute('aria-label')==='继续'){resumeRun();return}const v=v0;if(!v){$('#status').textContent='先写点内容';$('#inp').focus();return}if(!room){newProject(v);return}send(v)};
+ $('#newBtn').onclick=()=>newProject($('#inp').value.trim());
+@@ -876,3 +906,4 @@ $('#drawerNew').onclick=()=>{closeDrawer();newProject($('#inp').value.trim())};
+ $('#modeBtn').onclick=()=>{const cur=curMode||(roomData&&roomData.mode)||'debate';
+-  openSheet('<p class="sub" style="margin-top:0">'+(room?'从下一次发言起按这个模式进行。':'新项目按这个模式开始。')+'</p><div class="menu">'+Object.entries(D.modes||{}).map(([k,v])=>'<button type="button" data-md="'+esc(k)+'" class="'+(k===cur?'on':'')+'">'+icon('mode')+'<span>'+esc(v)+'</span></button>').join('')+'</div>','讨论模式');
++  const MI={debate:'scale',review:'check',free:'chat',task:'tool',host:'mic'};
++  openSheet('<p class="sub" style="margin-top:0">'+(room?'从下一次发言起按这个模式进行。':'新项目按这个模式开始。')+'</p><div class="menu modes" role="radiogroup" aria-label="讨论模式">'+Object.entries(D.modes||{}).map(([k,v])=>'<button type="button" role="radio" aria-checked="'+(k===cur)+'" data-md="'+esc(k)+'" class="'+(k===cur?'on':'')+'">'+icon(MI[k]||'mode')+'<span>'+esc(v)+(k===cur?'<span class="cur">✓ 当前</span>':'')+'<span class="d">'+esc((D.modeInfo||{})[k]||'')+'</span></span></button>').join('')+'</div>','讨论模式');
+   document.querySelectorAll('[data-md]').forEach(b=>b.onclick=()=>{const was=curMode||(roomData&&roomData.mode)||'debate';curMode=b.dataset.md;closeSheet();updateComposer();if(roomData)renderRoom();if(curMode!==was)toast((room?'从下一次发言起用':'新项目将用')+'「'+((D.modes||{})[curMode]||curMode)+'」模式','ok')})};
+@@ -910,3 +941,3 @@ function newProject(topic,ideaId){
+   pickState={};const md=curMode||'debate';
+-  openSheet('<label class="f" for="npTopic">需求 / 议题</label><textarea class="f" id="npTopic" maxlength="4000" placeholder="例如：帮我写一段 Python 脚本，批量重命名照片">'+esc(topic||'')+'</textarea><label class="f" for="npMode">模式</label><select class="full sel" id="npMode">'+Object.entries(D.modes).map(([k,v])=>'<option value="'+k+'"'+(k===md?' selected':'')+'>'+v+'</option>').join('')+'</select><label class="f" for="npIdea">关联点子（可选）</label><select class="full sel" id="npIdea"><option value="">不关联</option></select><p class="sub" style="margin:0">关联后，点子的想法、计划和以前的结论会作为背景发给所有成员。</p><label class="switch" style="margin-top:10px"><input type="checkbox" id="npSens" role="switch"> 敏感项目：不发到中转站/公益站/免 Key 公共接口</label><p class="sub" id="npSensHint" style="margin:0">每位成员下面写了「将用」哪个来源和级别。</p><div class="toolbar"><button class="btn" id="npPlan" type="button">'+icon('users')+'让 Hark 推荐</button><label class="switch"><input type="checkbox" id="npAi" role="switch"> 用强模型复核（耗少量额度）</label></div><div class="card" id="npNoteBox" style="display:none"><div id="npNote" aria-live="polite"></div></div><h3>勾选参加的 '+TERM+'</h3><div class="seg" id="npSortSeg" style="margin-bottom:6px"><button data-s="state" class="on" type="button">按状态</button><button data-s="quota" type="button">按额度</button><button data-s="name" type="button">按名称</button></div><div id="npList"></div><div class="sticky-act"><button class="btn primary block" id="npGo" type="button">开始</button></div>','新项目');
++  openSheet('<label class="f" for="npTopic">需求 / 议题</label><textarea class="f" id="npTopic" maxlength="4000" placeholder="例如：帮我写一段 Python 脚本，批量重命名照片">'+esc(topic||'')+'</textarea><label class="f" for="npMode">模式</label><select class="full sel" id="npMode">'+Object.entries(D.modes).map(([k,v])=>'<option value="'+k+'"'+(k===md?' selected':'')+'>'+v+'</option>').join('')+'</select><label class="f" for="npIdea">关联点子（可选）</label><select class="full sel" id="npIdea"><option value="">不关联</option></select><p class="sub" style="margin:0">关联后，点子的想法、计划和以前的结论会作为背景发给所有成员。</p><label class="switch" style="margin-top:10px"><input type="checkbox" id="npSens" role="switch"> 敏感项目：不发到中转站/公益站/免 Key 公共接口</label><p class="sub" id="npSensHint" style="margin:0">每位成员下面写了「将用」哪个来源和级别。</p><div class="toolbar"><button class="btn" id="npPlan" type="button">'+icon('users')+'让 Hark 推荐</button><label class="switch"><input type="checkbox" id="npAi" role="switch"> 用强模型复核（耗少量额度）</label></div><div class="card" id="npNoteBox" style="display:none"><div id="npNote" aria-live="polite"></div></div><h3>勾选参加的 '+TERM+'</h3><div class="seg" id="npSortSeg" style="margin-bottom:6px"><button data-s="state" class="on" type="button">按状态</button><button data-s="quota" type="button">按额度</button><button data-s="name" type="button">按名称</button></div><div id="npList"></div><div class="sticky-act"><button class="btn block" id="npQuick" type="button" style="margin-bottom:10px">快速建项目（全员加入，负责人主持）</button><button class="btn primary block" id="npGo" type="button">开始</button></div>','新项目');
+   (async()=>{try{const L=IDEAS||await loadIdeas();const sel=$('#npIdea');if(!sel)return;sel.innerHTML='<option value="">不关联</option>'+L.filter(x=>x.status!=='已放弃'||x.id===ideaId).map(x=>'<option value="'+esc(x.id)+'"'+(x.id===ideaId?' selected':'')+'>'+esc(x.title)+'（'+esc(x.status)+'）</option>').join('')}catch(e){}})();
+@@ -921,2 +952,4 @@ function newProject(topic,ideaId){
+     try{const p=await api('/api/plan',{method:'POST',body:JSON.stringify({topic:t,mode:$('#npMode').value,ai:$('#npAi').checked})});pickState={};p.members.forEach(x=>pickState[x.id]={on:true,role:x.role,reason:x.reason});planNote=p.note;note(p.note);draw()}catch(e){note(e.message)}$('#npPlan').disabled=false};
++  $('#npQuick').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){note('先写需求');$('#npTopic').focus();return}
++    const sensitive=$('#npSens').checked;const idea=$('#npIdea')?$('#npIdea').value:'';curMode='host';NP_SENS=false;closeSheet();show('chat');room=null;roomData=null;$('#inp').value='';await send(t,{quick:true,mode:'host',sensitive,idea:idea||undefined})};
+   $('#npGo').onclick=async()=>{const t=$('#npTopic').value.trim();if(!t){note('先写需求');return}

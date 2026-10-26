@@ -1,0 +1,99 @@
+审查 Aroomo 的一个 CSS 布局修复（L1，P0）。背景：page.html 原来 @media (min-width:1000px) 里给 main 设 margin-left:var(--side)（288px 侧栏常驻），但后面的 main{margin:0 auto} 同优先级覆盖了它，导致 1000–1476px 宽时内容被侧栏盖住。修法：侧栏常驻断点改到 1200px（JS 的 wide() 同步），并把 main 的偏移写在 main{margin:0 auto} 之后。底部输入框 footer.composer 是 position:fixed;left:0;right:0;margin-left:var(--side)，内部 .cbox max-width:880px;margin:0 auto。约束：不能用 overflow-x:hidden 掩盖；低视力用户常用浏览器放大。请找出这个修法会出错的情况（例如放大、滚动条宽度、其他依赖 1000px 的代码、抽屉在 1000–1199 时的行为、中心线与输入框不一致等）。
+
+```diff
+diff --git a/page.html b/page.html
+index 6620faa..f9136c0 100644
+--- a/page.html
++++ b/page.html
+@@ -76,10 +76,10 @@ nav.side button:active,.ritem:active{background:var(--s2)}
+ .dfoot{border-top:1px solid var(--line);padding-top:12px;margin-top:8px}
+ .dfoot .lbl{font-size:16px;color:var(--muted);margin:0 4px 6px}
+ .dfoot a{display:inline-block;margin:10px 4px 0;font-size:17px;min-height:44px;line-height:44px}
+-@media (min-width:1000px){
++@media (min-width:1200px){   /* L1：侧栏常驻从 1000 提到 1200（288 侧栏 + 900 内容）；1000–1199 走抽屉 */
+   #drawer{transform:none;width:var(--side);box-shadow:none}
+   #scrim{display:none}
+-  header.top,main,footer.composer,#toasts{margin-left:var(--side)}
++  header.top,footer.composer,#toasts{margin-left:var(--side)}
+   #menuBtn,#drawerX{display:none}
+   #newBtn{display:none} /* v6 评审：桌面抽屉常驻时已有「新项目」大按钮，顶栏铅笔重复 */
+   footer.composer{left:0}
+@@ -94,6 +94,8 @@ nav.side button:active,.ritem:active{background:var(--s2)}
+ 
+ /* ── 主区 ── */
+ main{max-width:900px;margin:0 auto;padding:4px 16px calc(40px + env(safe-area-inset-bottom))}
++/* L1（P0）：偏移必须写在 main{margin:0 auto} 之后，否则被覆盖、1000–1476px 内容被侧栏盖住。居中线与底部输入框一致（侧栏右边到视口右边的中点） */
++@media (min-width:1200px){main{margin-left:calc(var(--side) + max(0px, (100% - var(--side) - 900px) / 2));margin-right:0}}
+ body.chatv main{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
+ .view{display:none}.view.on{display:block;animation:vin .18s var(--ease-out)}
+ @keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@@ -736,7 +738,7 @@ function msgEl(x){
+ document.addEventListener('click',e=>{const t=e.target.closest('[data-mid]');if(t&&t.dataset.mid){e.preventDefault();openMember(t.dataset.mid)}});
+ 
+ /* ── 抽屉 ── */
+-const wide=()=>matchMedia('(min-width:1000px)').matches;
++const wide=()=>matchMedia('(min-width:1200px)').matches;
+ function openDrawer(){$('#drawer').classList.add('open');$('#scrim').classList.add('on')}
+ function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').classList.remove('on')}
+ $('#menuBtn').onclick=openDrawer;$('#scrim').onclick=closeDrawer;$('#drawerX').onclick=closeDrawer;$('#setBtn').onclick=()=>show('settings');
+diff --git a/ui_test.py b/ui_test.py
+index b749da1..bd325a4 100644
+--- a/ui_test.py
++++ b/ui_test.py
+@@ -288,6 +288,20 @@ async def main():
+             await ev("document.querySelector('#roomList .ritem.pin').click()"); await asyncio.sleep(3); await shot(f"v4-{th}-steward.png")
+             await ev("document.querySelector('#setBtn').click()"); await asyncio.sleep(2.5); await shot(f"v4-{th}-settings.png")
+             await ev("document.querySelector('#setLead').scrollIntoView({block:'start'})"); await asyncio.sleep(.5); await shot(f"v5-{th}-settings-lead.png")
++        # L1（P0）：桌面六个宽度——≥1200 侧栏常驻且内容不被盖住（h1 左边 ≥ 侧栏右边 + 16）；<1200 用抽屉（收起、不占位）；消息列与输入框中心线差 ≤4px
++        await cmd("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": "light"}])
++        for W in (1000, 1100, 1199, 1200, 1280, 1440):
++            await cmd("Emulation.setDeviceMetricsOverride", width=W, height=900, deviceScaleFactor=1, mobile=False); await asyncio.sleep(.8)
++            for v in ('members', 'chat'):
++                await ev(f"show('{v}');window.scrollTo(0,0)"); await asyncio.sleep(.6)
++                L = await ev("(()=>{const d=document.querySelector('#drawer').getBoundingClientRect();const vis=getComputedStyle(document.querySelector('#scrim')).display!=='none'?false:true;const h=[...document.querySelectorAll('.view.on h1')].find(x=>x.getBoundingClientRect().width>2);const mn=document.querySelector('main').getBoundingClientRect();const cb=document.querySelector('.cbox').getBoundingClientRect();return {dRight:Math.round(d.right),dOpen:document.querySelector('#drawer').classList.contains('open'),h1:h?Math.round(h.getBoundingClientRect().left):null,mainL:Math.round(mn.left),mc:Math.round(mn.left+mn.width/2),cc:cb.width>0?Math.round(cb.left+cb.width/2):null,ov:document.documentElement.scrollWidth-document.documentElement.clientWidth}})()")
++                if W >= 1200:
++                    ok = L['dRight'] > 200 and (L['h1'] is None or L['h1'] >= L['dRight'] + 16) and L['mainL'] >= L['dRight'] and (L['cc'] is None or abs(L['mc'] - L['cc']) <= 4) and L['ov'] <= 0
++                    check(f"L1 {W}px {v}：侧栏常驻、内容不被盖住（h1 ≥ 侧栏右边+16）、消息列与输入框中心线差 ≤4px", ok, L)
++                else:
++                    ok = L['dRight'] <= 0 and not L['dOpen'] and L['mainL'] >= 0 and (L['cc'] is None or abs(L['mc'] - L['cc']) <= 4) and L['ov'] <= 0 and (L['h1'] is None or L['h1'] >= 16)
++                    check(f"L1 {W}px {v}：用抽屉（收起不占位）、内容完整、消息列与输入框中心线差 ≤4px", ok, L)
++        await cmd("Emulation.setDeviceMetricsOverride", width=390, height=844, deviceScaleFactor=2, mobile=True)
+ 
+ try:
+     asyncio.run(main())
+```
+
+相关上下文（page.html 原有片段）：
+button{touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
+a{color:var(--accent);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:8px}
+.ic{width:24px;height:24px;flex:0 0 24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── 顶栏：☰ · 搜索胶囊 · 新项目（Grok：菜单 · 中间胶囊 · 新对话） ── */
+header.top{position:sticky;top:0;z-index:30;background:var(--bg);padding:env(safe-area-inset-top) 8px 0;border-bottom:1px solid transparent;transition:border-color .2s}
+header.top.scrolled{border-bottom-color:var(--line)}
+#drawer.open{transform:none;box-shadow:var(--shadow-pop)}
+#scrim{position:fixed;inset:0;z-index:44;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+#scrim.on{opacity:1;pointer-events:auto}
+.dhead{display:flex;align-items:center;gap:10px;padding:4px 6px 12px;font-weight:700;font-size:21px}
+.dhead svg{width:34px;height:34px}
+.dhead .dlogo{width:40px;height:40px;color:var(--ink);flex:none}
+.dscroll{flex:1;overflow:auto;margin:0 -12px;padding:0 12px;overscroll-behavior:contain}
+nav.side{display:flex;flex-direction:column;gap:2px;margin:10px 0 6px}
+nav.side button,.ritem{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;border:0;background:transparent;border-radius:12px;padding:8px 12px;text-align:left;color:var(--ink);font-size:19px;position:relative}
+nav.side button .n{margin-left:auto;color:var(--muted);font-size:16px}
+nav.side button.on,.ritem.on{background:var(--s1);font-weight:700}
+.skrow{display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.skrow .c{width:52px;height:52px;border-radius:50%}
+.skrow .l{flex:1}.skrow .l .sk{height:16px;margin:6px 0}
+
+/* ── 底部大输入栏（Grok 胶囊） ── */
+footer.composer{position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,transparent)}
+footer.composer[hidden]{display:none}
+.cbox{max-width:880px;margin:0 auto;background:var(--s1);border:1px solid var(--line);border-radius:28px;padding:8px 8px 8px 8px;transition:border-color .15s,box-shadow .15s}
+.cbox:focus-within{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+742:function openDrawer(){$('#drawer').classList.add('open');$('#scrim').classList.add('on')}
+743:function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').classList.remove('on')}
+744-$('#menuBtn').onclick=openDrawer;$('#scrim').onclick=closeDrawer;$('#drawerX').onclick=closeDrawer;$('#setBtn').onclick=()=>show('settings');
+745-(()=>{let sx=null,sy=0,open=false,dx=0;const dr=$('#drawer');

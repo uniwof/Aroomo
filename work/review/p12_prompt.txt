@@ -1,0 +1,354 @@
+审查 Aroomo（Cloudflare Worker + SQLite Durable Object 的多 AI 群聊）新功能 P1-2「网页成员（代发）」。规格：网页/客户端型模型作为正常 AI 成员出现在成员列表、MCP、负责人视图，但不必知道产品存在；任务进入 kind=web 队列，由代发员（Hark 远程浏览器或用户授权的桌面桥接）领取，向目标网页发送带前情、角色、输出格式的完整提示，回复回传群聊并标「经代发」；同一项目复用同一网页会话；10 分钟超时自动改派；签到由代发员执行；仅客户端型只派给用户同意过的桌面桥接；网页成员不能当负责人。安全背景：kind==='cookie' = 用户本人网页登录（同源已校验）；Bearer ACCESS_TOKEN 与操作员令牌权限更低；代发员令牌 = HMAC(ACCESS_TOKEN,'relay:'+id) 前 40 位。DO 单线程但 await 之间会交错。重点找：鉴权绕过、令牌泄露、重复领取/重复回传、改派错误、测试任务与真实任务串、提示词泄露产品名或回调地址、XSS（前端 esc() 转义）。
+```diff
+diff --git a/caps.js b/caps.js
+index 66d3284..08fe065 100644
+--- a/caps.js
++++ b/caps.js
+@@ -38,7 +38,7 @@ export function capsOf(m, override) {
+   const tags = (Array.isArray(pick('tags')) ? pick('tags') : []).filter(t => CAP_TAGS.includes(t));
+   return {
+     kind: pick('kind') || null,
+-    web: !!pick('web'),
++    web: !!pick('web') || (m && (m.sources || []).some(x => srcKind(x) === 'web')),   // P1-2：网页来源一律是网页成员
+     tags: [...new Set(tags)],
+     context_window: numOrNull(pick('context_window')),
+     tool_call: triBool(pick('tool_call')),
+diff --git a/members.json b/members.json
+index a74a1c8..0d352a5 100644
+--- a/members.json
++++ b/members.json
+@@ -2725,7 +2725,7 @@
+    "name": "gpt-image-2.5",
+    "brand": "openai",
+    "type": "webtool",
+-   "intro": "arena.ai Direct 模式里的 GPT image 2.5。背后由浏览器发指令（Hark 浏览器或浏览器扩展跑 bridge 拉取任务），出图后把图片链接写回房间。",
++   "intro": "arena.ai Direct 模式里的 GPT image 2.5。任务进代发队列，由代发员（Hark 远程浏览器或用户电脑上的桌面桥接）打开 arena.ai Direct 出图，把图片链接回传房间并标「经代发」。",
+    "tags": [
+     {
+      "t": "生图",
+@@ -2748,9 +2748,10 @@
+    "limits": {},
+    "sources": [
+     {
+-     "via": "网页工具 · arena.ai Direct（浏览器代发）",
++     "via": "网页工具 · arena.ai Direct（经代发：代发员用浏览器发送）",
+      "invoke": {
+-      "kind": "bridge"
++      "kind": "web",
++      "site": "https://arena.ai/image/direct?model_a=gpt-image-2.5-sunburst"
+      },
+      "quota": {
+       "kind": "deadline",
+diff --git a/worker.js b/worker.js
+index cb28295..825f8aa 100644
+--- a/worker.js
++++ b/worker.js
+@@ -12,7 +12,8 @@ const FAVICON_SVG = ICON_SVG.replace(/ fill="#000000"/g, '').replace('>', '><sty
+ import RES from './resources.js';
+ import * as TG from './toolgw.js';
+ import OPSKILL from './opskill.js';
+-import * as CAPS from './caps.js';   // P1-1 模型能力分类与负责人资格（纯函数，不调模型）
++import * as CAPS from './caps.js';
++import * as P1 from './p1.js';   // P1-2…P1-6 纯函数（代发队列、点子、主持模式、额度保险）   // P1-1 模型能力分类与负责人资格（纯函数，不调模型）
+ import TRAINING from './training.js';   // docs-training/负责人培训手册.md（主 Hark 撰写；deploy 时打包，缺失则为空串）   // skills/ai-groupchat-operator.md（deploy 时打包成字符串）   // 工具网关执行器（E2B / Daytona / 查网页 + 骨架）   // 资源库静态数据（技能 + 学习与网站资源），data/build_resources.py 生成
+ 
+ const TERM = CONFIG.term || 'AI成员';
+@@ -27,7 +28,7 @@ const RELAYS = Object.fromEntries((CONFIG.relays || []).map((r) => [r.id, r]));
+ const ID_RE = /^[a-z0-9][a-z0-9._-]{1,63}$/;
+ const ROOM_RE = /^[a-z0-9]{6,16}$/;
+ const PROJECT_STATUS = ['进行中', '已完成', '失败'];
+-const ASYNC_KINDS = ['poke', 'webhook', 'tailscale', 'tunnel', 'telegram', 'bridge', 'hark', 'pair'];
++const ASYNC_KINDS = ['poke', 'webhook', 'tailscale', 'tunnel', 'telegram', 'bridge', 'hark', 'pair', 'web'];
+ 
+ // 品牌主色：头像底色 = 气泡底色 = 额度环颜色（文字黑/白按对比度自动选）
+ const BRANDS = {
+@@ -57,10 +58,11 @@ const CONNECTORS = {
+   bridge: { label: '拉取模式小桥（bridge.py）', how: '在能访问该智能体的机器上跑 bridge.py：定时 GET /bridge/pull 拉任务，处理后 POST /hook/reply 写回（成员令牌鉴权）。适合内网、本机、网页工具（浏览器代发）。' },
+   pair: { label: '关联智能体（配对码接入，拉取模式）', how: '设置页「关联智能体」生成一次性配对码；对方（Hark、Poke、Manus 等任何能发 HTTPS 请求的智能体）调 POST /api/pair 换到成员令牌（主负责人另得操作员令牌）。' },
+   hark: { label: 'Hark（另一个 Hark 账号，拉取模式）', how: '对方 Hark 用成员令牌定时 GET /bridge/pull 取任务、POST /hook/reply 交回答（Hark 没有对外 API/OAuth，所以走拉取）。保存后会生成一段可复制给对方 Hark 的中文接入说明；设置页「关联 Hark」可用一次性配对码自动接入。敏感项目默认不派给外部 Hark。' },
++  web: { label: '网页成员（经代发：代发员用浏览器代发）', how: '网页/客户端里的模型（例如各家网页聊天、arena 出图）。任务进入代发队列，由「设置 → 网页代发员」里登记的代发员（Hark 远程浏览器，或用户电脑上的桌面桥接智能体）领取，打开该网址把完整提示（前情 + 角色 + 输出格式）发过去，再把回复回传，群聊里标「经代发」。同一项目复用同一网页会话；10 分钟没回自动改派；签到也由代发员做。勾「仅客户端型」的只派给你同意过的桌面桥接。' },
+   lead: { label: '内置负责人', how: '派工规则在 Worker 内运行；AI 复核用 gpt-oss-120b（Workers AI → Groq）。' },
+   none: { label: '不可调用', how: '' },
+ };
+-const CUSTOM_KINDS = ['hark', 'poke', 'webhook', 'tailscale', 'tunnel', 'telegram', 'bridge', 'openai'];
++const CUSTOM_KINDS = ['hark', 'poke', 'webhook', 'tailscale', 'tunnel', 'telegram', 'bridge', 'openai', 'web'];
+ 
+ // ───────────────────────── Durable Object ─────────────────────────
+ export class ChatStore extends DurableObject {
+@@ -96,6 +98,12 @@ export class ChatStore extends DurableObject {
+     if (!cols('msgs').includes('role')) this.sql.exec('ALTER TABLE msgs ADD COLUMN role TEXT');
+     if (!cols('msgs').includes('test')) this.sql.exec('ALTER TABLE msgs ADD COLUMN test INTEGER DEFAULT 0');
+     if (!rc.includes('sens')) this.sql.exec('ALTER TABLE rooms ADD COLUMN sens INTEGER DEFAULT 0');
++    const tc = cols('tasks');   // P1-2 代发队列：kind=web 的任务记录领取者 / 领取时间 / 派了几次
++    if (!tc.includes('kind')) this.sql.exec("ALTER TABLE tasks ADD COLUMN kind TEXT DEFAULT ''");
++    if (!tc.includes('relay')) this.sql.exec('ALTER TABLE tasks ADD COLUMN relay TEXT');
++    if (!tc.includes('claimed')) this.sql.exec('ALTER TABLE tasks ADD COLUMN claimed INTEGER');
++    if (!tc.includes('attempts')) this.sql.exec('ALTER TABLE tasks ADD COLUMN attempts INTEGER DEFAULT 0');
++    this.sql.exec('CREATE INDEX IF NOT EXISTS tasks_kind ON tasks(kind, status)');
+     this.sql.exec("UPDATE calls SET ok=7 WHERE ok=1 AND detail='你已确认，见下一条执行记录'");
+   }
+   // 仅供本 Worker 内部 RPC 调用（DO 不对外暴露 fetch）
+@@ -263,6 +271,7 @@ function srcMissing(env, src) {
+     case 'webhook': case 'tunnel': if (!(iv.url || (iv.url_secret && env[iv.url_secret]))) need.push(iv.url_secret || '端点地址'); break;
+     case 'telegram': if (!env.TELEGRAM_BOT_TOKEN) need.push('TELEGRAM_BOT_TOKEN'); if (!iv.chat) need.push('chat_id'); break;
+     case 'tailscale': case 'bridge': case 'hark': case 'pair': case 'lead': case 'steward': break;
++    case 'web': if (!iv.site) need.push('网址'); break;
+     case 'selfhost': need.push('待部署：先在算力平台部署推理端点'); break;
+     default: need.push('不可调用');
+   }
+@@ -390,6 +399,11 @@ function srcState(env, m, src, st, need, ctx) {
+   if (iv.kind === 'lead') return { state: 'ok', why: '内置' };
+   if (iv.kind === 'steward') return { state: 'ok', why: '内置：规则随时可用；有免费模型时整理更准' };
+   if (iv.kind === 'workers-ai' && ctx.cfExhausted) return { state: 'down', why: `今天 Workers AI 额度用完（英国 ${londonTime(nextUtcMidnight())} 重置）` };
++  if (iv.kind === 'web') {   // P1-2：在线 = 有能接它的代发员 10 分钟内拉取过
++    const onT = (ctx.relays || []).filter((r) => Date.now() - (r.seen || 0) < P1.RELAY_ONLINE_MS && (!iv.client || (r.kind === 'desktop' && r.consent === true)));
++    if (onT.length) return { state: 'ok', why: `代发员在线（${onT.map((r) => r.name).slice(0, 3).join('、')}）` };
++    return { state: 'down', why: iv.client ? '仅客户端型：没有在线、且你同意过的桌面桥接代发员（设置 → 网页代发员）' : '没有在线的代发员（设置 → 网页代发员）' };
++  }
+   if (isPull(env, iv)) {
+     const seen = st && st.info && st.info.bridge_seen;
+     if (seen && Date.now() - seen < 10 * 60000) return { state: 'ok', why: `小桥在线（${londonTime(seen)} 拉取过）` };
+@@ -412,6 +426,7 @@ async function enrichAll(env, s) {
+   }
+   const ctx = { cfUsed, cfExhausted: (await kvGet(s, 'cf_exhausted')) === utcDay(), relayBal: {}, stewardCalls: (await kvGet(s, 'steward_calls:' + utcDay())) || 0, stewardVCalls: (await kvGet(s, 'steward_vcalls:' + utcDay())) || 0 };
+   for (const r of CONFIG.relays || []) ctx.relayBal[r.id] = await kvGet(s, 'relay_balance:' + r.id);
++  ctx.relays = Object.values((await kvGet(s, 'web_relays')) || {});
+   const learned = await learnedTags(s);
+   return members.map((m) => {
+     const srcs = (m.sources || []).map((src, i) => {
+@@ -884,7 +899,7 @@ async function runTurn(env, s, room, memberId, opts = {}) {
+     if (policy && policy.blockRelay && ['relay', 'public'].includes(srcLevel(src))) { blocked.push(sv.via); await audit(s, room, m.id, src, 'blocked', '敏感项目不发' + LEVELS[srcLevel(src)]); continue; }
+     if (policy && policy.blockHark !== false && (iv.kind === 'hark' || iv.kind === 'pair')) { blocked.push(sv.via); await audit(s, room, m.id, src, 'blocked', '敏感项目默认不派给外部 Hark / 关联智能体'); continue; }
+     if (r0.sens) await audit(s, room, m.id, src, 'used', LEVELS[srcLevel(src)]);
+-    if (ASYNC_KINDS.includes(iv.kind)) return dispatchAsync(env, s, room, m, i, role, mode, system, user, tr);
++    if (ASYNC_KINDS.includes(iv.kind)) return dispatchAsync(env, s, room, m, i, role, mode, system, user, tr, { roster, lastUser: ([...r0.messages].reverse().find((x) => x.kind === 'user') || {}).text || r0.title });
+     const t0 = Date.now();
+     try {
+       let r;
+@@ -937,8 +952,9 @@ async function replace(env, s, r0, slot, m, all, mode, opts) {
+   const res = await runTurn(env, s, r0.id, rep.id, { ...opts, all, noReplace: true });
+   return { ...res, replaced: { from: slot.id, to: rep.id, note } };
+ }
+-async function dispatchAsync(env, s, room, m, i, role, mode, system, user, transcript) {
++async function dispatchAsync(env, s, room, m, i, role, mode, system, user, transcript, wctx = {}) {
+   const iv = srcInvoke(env, m.sources[i]); const k = skey(m, i);
++  if (iv.kind === 'web') return webEnqueue(env, s, room, m, i, role, mode, transcript, wctx);
+   const task = rid(16);
+   const origin = env.PUBLIC_ORIGIN || 'https://chat.pcmanai.com';
+   const token = await memberToken(env, m.id);
+@@ -998,6 +1014,90 @@ async function completeTask(s, task, memberId, text, k) {
+   return true;
+ }
+ 
++
++// ───────────────────────── P1-2 网页成员（代发队列） ─────────────────────────
++// 代发员 = 有浏览器的执行者（Hark 远程浏览器 / 用户电脑上的桌面桥接智能体），在「设置 → 网页代发员」登记，令牌 = HMAC(ACCESS_TOKEN, relay:<id>)。
++// 网页成员的任务进 tasks(kind='web')；代发员 GET /bridge/web/pull 领取（原子地改成 sent + relay + claimed），POST /bridge/web/reply 回传。
++// 10 分钟没回 → 改派（排除原代发员）；第 3 次还不行 → 失败并在房间里说明。同一项目同一成员记住网页会话（websess:<room>:<member>），下次优先给同一代发员。
++const relayToken = async (env, id) => (await hmacHex(env.ACCESS_TOKEN, 'relay:' + id)).slice(0, 40);
++async function webRelays(s) { return (await kvGet(s, 'web_relays')) || {}; }
++async function relayAuth(env, s, req, id) {
++  if (!P1.RELAY_ID_RE.test(id || '')) return null;
++  const R = await webRelays(s); if (!R[id]) return null;
++  const h = req.headers.get('authorization') || '';
++  return h.startsWith('Bearer ') && timingSafeEqual(h.slice(7).trim(), await relayToken(env, id)) ? { id, ...R[id] } : null;
++}
++const taskExt = (t) => { try { return JSON.parse(t.ext || '{}') || {}; } catch { return {}; } };
++async function webEnqueue(env, s, room, m, i, role, mode, transcript, wctx) {
++  const iv = srcInvoke(env, m.sources[i]); const task = rid(16);
++  const c = CAPS.capsOf(m); const isImage = c.tags.includes('image') && !c.tags.includes('chat');
++  const prompt = P1.webPrompt({ name: m.name, role, roleBrief: (ROLE_BRIEF[role] || '').replace(/\s+/g, ' ').slice(0, 300), mode: MODES[mode] || mode, roster: wctx.roster || '', transcript, isImage, lastUser: wctx.lastUser || '', maxChars: role === '裁判' ? 200 : ['写手', '程序员', '翻译'].includes(role) ? 1200 : 150 });
++  const sess = await kvGet(s, `websess:${room}:${m.id}`);
++  const ext = { site: iv.site, client: !!iv.client, prefer: sess ? sess.relay : null, excluded: [], test: await testModeOn(s), src: i };
++  await s.q("INSERT INTO tasks(id,room,member,role,status,created,prompt,ext,kind,attempts) VALUES(?,?,?,?,'pending',?,?,?,'web',0)", task, room, m.id, role, Date.now(), prompt.slice(0, 12000), JSON.stringify(ext));
++  const note = `已排进代发队列：等代发员用浏览器打开 ${iv.site} 发给 ${m.name}${iv.client ? '（仅客户端型：只派给你同意过的桌面桥接）' : ''}，回复会标「经代发」`;
++  return { member: m.id, name: m.name, role, pending: true, task, notice: note, via: m.srcs[i].via };
++}
++async function webSweep(s, now = Date.now()) {
++  const rows = await s.q("SELECT id,room,member,role,relay,claimed,attempts,ext FROM tasks WHERE kind='web' AND status='sent' AND claimed<?", now - P1.WEB_TIMEOUT_MS);
++  const plan = P1.webSweepPlan(rows.map((t) => ({ ...t, excluded: taskExt(t).excluded })), now);
++  if (!plan.length) return plan;
++  const R = await webRelays(s); const all = await loadMembers(s); const nm = (id) => (all.find((x) => x.id === id) || {}).name || id;
++  for (const x of plan) {
++    const t = rows.find((r) => r.id === x.id); const ext = { ...taskExt(t), excluded: x.excluded };
++    const who = (R[x.relay] || {}).name || x.relay || '代发员';
++    if (x.action === 'fail') {
++      await s.q("UPDATE tasks SET status='failed', attempts=?, ext=? WHERE id=?", x.attempts, JSON.stringify(ext), x.id);
++      await addMsg(s, t.room, 'note', t.member, '', `${nm(t.member)}（${t.role}）代发失败：已派 ${x.attempts} 次都没在 10 分钟内拿到回复（最后一次：${who}），这次跳过。`, t.role);
++    } else {
++      await s.q("UPDATE tasks SET status='pending', relay=NULL, claimed=NULL, attempts=?, ext=? WHERE id=?", x.attempts, JSON.stringify(ext), x.id);
++      await addMsg(s, t.room, 'note', t.member, '', `${who} 代发 ${nm(t.member)} 超过 10 分钟没回，已改派给其他代发员（第 ${x.attempts + 1} 次）。`, t.role);
++    }
++  }
++  return plan;
++}
++async function webPull(env, s, relay, url) {
++  await webSweep(s);
++  const R = await webRelays(s); const now = Date.now();
++  if (R[relay.id]) { R[relay.id].seen = now; await kvSet(s, 'web_relays', R); }
++  const relays = Object.entries(R).map(([id, r]) => ({ id, ...r }));
++  const me = relays.find((r) => r.id === relay.id);
++  const rows = await s.q("SELECT id,room,member,role,prompt,created,attempts,ext FROM tasks WHERE kind='web' AND status='pending' AND created>? ORDER BY created LIMIT 30", now - 86400000);
++  const all = await loadMembers(s); const out = [];
++  for (const t of rows) {
++    const ext = taskExt(t);
++    if (!!ext.test !== !!me.test) continue;   // 测试模式里登记的代发员只领测试任务，真实代发员不碰测试任务
++    if (!P1.relayCanTake(me, { ...ext, created: t.created }, now, relays)) continue;
++    await s.q("UPDATE tasks SET status='sent', relay=?, claimed=? WHERE id=? AND status='pending'", relay.id, now, t.id);
++    const sess = await kvGet(s, `websess:${t.room}:${t.member}`);
++    const m = all.find((x) => x.id === t.member) || {};
++    out.push({ task: t.id, member: t.member, name: m.name || t.member, role: t.role, site: ext.site, client: !!ext.client, prompt: t.prompt, session: sess && sess.relay === relay.id ? sess.ref : '', attempt: (t.attempts || 0) + 1, timeout_at: now + P1.WEB_TIMEOUT_MS });
++    if (out.length >= 5) break;
++  }
++  const day = todayLondon(); const checkins = [];
++  for (const m of all) for (const src of m.sources || []) {
++    const iv = src.invoke || {};
++    if (iv.kind !== 'web' || !iv.checkin || m.retired) continue;
++    if (iv.client && !(me.kind === 'desktop' && me.consent === true)) continue;
++    if (await kvGet(s, `webcheckin:${m.id}:${day}`)) continue;
++    checkins.push({ member: m.id, name: m.name, site: iv.checkin_url || iv.site });
++  }
++  return { tasks: out, checkins, reply_url: (env.PUBLIC_ORIGIN || url.origin) + '/bridge/web/reply', timeout_min: P1.WEB_TIMEOUT_MS / 60000 };
++}
++async function webReply(s, relay, body) {
++  const task = String(body.task || ''); const text = typeof body.text === 'string' ? body.text.trim() : '';
++  if (!/^[a-z0-9]{16}$/.test(task) || !text) return [{ error: '需要 task 和 text' }, 400];
++  const t = (await s.q("SELECT id,room,member,role,status,relay,created,ext FROM tasks WHERE id=? AND kind='web'", task))[0];
++  if (!t || t.status !== 'sent' || t.relay !== relay.id || Date.now() - t.created > 86400000) return [{ error: '任务不存在、已完成、已改派给别人或已过期' }, 409];
++  await s.q("UPDATE tasks SET status='done' WHERE id=? AND status='sent'", task);
++  const sess = P1.cleanSession(body.session);
++  if (sess) await kvSet(s, `websess:${t.room}:${t.member}`, { relay: relay.id, ref: sess, ts: Date.now() });
++  else { const old = await kvGet(s, `websess:${t.room}:${t.member}`); if (!old) await kvSet(s, `websess:${t.room}:${t.member}`, { relay: relay.id, ref: '', ts: Date.now() }); }
++  await addMsg(s, t.room, 'ai', t.member, `经代发 · ${relay.name}`, text.slice(0, 8000), t.role);
++  const ext = taskExt(t); if (ext.src !== undefined) await addUsage(s, `${t.member}@${ext.src}`, 0, 0, 0);
++  return [{ ok: true }, 200];
++}
++
+ // ───────────────────────── 打分 / 互评 ─────────────────────────
+ async function peerReview(env, s, room, all) {
+   const r0 = await getRoom(s, room); if (!r0) return { error: '房间不存在' };
+@@ -1073,6 +1173,23 @@ async function handleHooks(req, env, url, path) {
+     const ok = await completeTask(s, task, t.member, text);
+     return ok ? json({ ok: true }) : json({ error: '任务不存在、已完成或已过期' }, 409);
+   }
++  if (path.startsWith('/bridge/web/')) {   // P1-2 代发员接口（代发员令牌鉴权）
++    const rb = req.method === 'POST' ? await readBody(req) : { body: {} }; if (rb.err) return rb.err;
++    const id = url.searchParams.get('relay') || String(rb.body.relay || '') || '';
++    let relay = await relayAuth(env, s, req, id);
++    if (!relay && !id) { const R = await webRelays(s); for (const rid_ of Object.keys(R)) { relay = await relayAuth(env, s, req, rid_); if (relay) break; } }
++    if (!relay) return json({ error: '未授权' }, 401);
++    if (path === '/bridge/web/pull' && req.method === 'GET') return json(await webPull(env, s, relay, url));
++    if (path === '/bridge/web/reply' && req.method === 'POST') { const [o, c] = await webReply(s, relay, rb.body); return json(o, c); }
++    if (path === '/bridge/web/checkin' && req.method === 'POST') {
++      const mid = String(rb.body.member || ''); const m = (await loadMembers(s)).find((x) => x.id === mid && (x.sources || []).some((y) => (y.invoke || {}).kind === 'web'));
++      if (!m) return json({ error: '没有这个网页成员' }, 404);
++      await kvSet(s, `webcheckin:${mid}:${todayLondon()}`, { relay: relay.id, ok: rb.body.ok !== false, note: String(rb.body.note || '').slice(0, 200), at: Date.now() });
++      await setStatus(s, skey(m, Math.max(0, (m.sources || []).findIndex((y) => (y.invoke || {}).kind === 'web'))), rb.body.ok !== false ? 'ok' : 'down', rb.body.ok !== false ? '' : '签到失败：' + String(rb.body.note || '').slice(0, 100), { last_checkin: Date.now() });
++      return json({ ok: true });
++    }
++    return json({ error: '找不到' }, 404);
++  }
+   if (path === '/bridge/pull' && req.method === 'GET') {
+     const member = url.searchParams.get('member') || '';
+     if (!ID_RE.test(member)) return json({ error: 'member 不对' }, 400);
+@@ -1114,7 +1231,7 @@ async function handleHooks(req, env, url, path) {
+ }
+ 
+ const WORKER = {
+-  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
++  async scheduled(event, env, ctx) { ctx.waitUntil((async () => { const s = store(env); const t = await kvGet(s, 'testmode'); if (t && t.until <= Date.now()) await testModeEnd(s); })().catch(() => {})); ctx.waitUntil(probeAll(env)); ctx.waitUntil(expiryCheck(env, store(env), false)); ctx.waitUntil(webSweep(store(env)).catch(() => {})); ctx.waitUntil((async () => { const s = store(env); try { await stewardWeekly(await withKeys(env, s), s, false); } catch {} })()); ctx.waitUntil((async () => { const s = store(env); const e2 = await withKeys(env, s); for (const r of await s.q("SELECT k FROM kv WHERE k LIKE 'leadwait:%'")) { try { await leadCheck(e2, s, r.k.slice(9)); } catch {} } })()); },
+   async fetch(req, env, ctx) {
+     const url = new URL(req.url);
+     const path = url.pathname;
+@@ -1333,6 +1450,7 @@ const WORKER = {
+       const rm = path.match(/^\/api\/room\/([a-z0-9]{6,16})$/);
+       if (rm && req.method === 'GET') {
+         let r = await getRoom(s, rm[1]); if (!r) return json({ error: '房间不存在' }, 404);
++        if (await webSweep(s).then((x) => x.length).catch(() => 0)) r = await getRoom(s, rm[1]);
+         const lw = await leadCheck(env, s, rm[1]); if (!lw && r.pending.some((p) => p.role === '负责人')) r = await getRoom(s, rm[1]);
+         r.leadWait = lw; r.lead = await roomLeadId(s, rm[1]);
+         const after = +url.searchParams.get('after') || 0; if (after) r.messages = r.messages.filter((x) => x.id > after);
+@@ -1384,6 +1502,27 @@ const WORKER = {
+         }
+         return json({ room: st.room, mode: st.mode, lineup: st.lineup, plan: st.planNote, replies, verdict });
+       }
++      // ── P1-2 网页代发员：登记/同意/删除只认网页 cookie（用户本人）；Bearer/操作员只读、看不到令牌 ──
++      if (path === '/api/relays' && req.method === 'GET') {
++        const R = await webRelays(s); const now = Date.now();
++        return json({ relays: await Promise.all(Object.entries(R).map(async ([id, r]) => ({ id, name: r.name, kind: r.kind, consent: !!r.consent, seen: r.seen || null, online: now - (r.seen || 0) < P1.RELAY_ONLINE_MS, created: r.created, ...(kind === 'cookie' ? { token: await relayToken(rawEnv, id) } : {}) }))), pull: (env.PUBLIC_ORIGIN || url.origin) + '/bridge/web/pull?relay=<ID>', timeoutMin: P1.WEB_TIMEOUT_MS / 60000 });
++      }
++      if ((path === '/api/relays' || path === '/api/relays/consent') && req.method === 'POST') {
++        if (kind !== 'cookie') return json({ error: 
+```
+```js
+// p1.js — P1-2…P1-6 的纯函数（无网络、无模型调用、无存储），worker.js 与 node 单测共用。
+// 每个函数只做「输入 → 输出」，存储和 HTTP 都在 worker.js 里。
+
+// ───────────── P1-2 网页成员（代发） ─────────────
+export const WEB_TIMEOUT_MS = 10 * 60000;   // 代发员领走后 10 分钟没回 → 自动改派
+export const WEB_MAX_ATTEMPTS = 3;          // 最多派 3 次（含首次），还不行就标失败
+export const RELAY_ONLINE_MS = 10 * 60000;  // 代发员 10 分钟内拉取过 = 在线
+export const RELAY_ID_RE = /^[a-z0-9][a-z0-9_-]{1,31}$/;
+
+// 给网页模型的完整提示：前情 + 角色 + 输出格式。网页模型不必知道群聊产品的存在，所以这里不写产品名、不写接口地址。
+export function webPrompt({ name, role, roleBrief, mode, roster, transcript, isImage, lastUser, maxChars }) {
+  if (isImage) {
+    return [
+      '请根据下面的描述生成一张图片。',
+      '【描述】' + String(lastUser || '').slice(0, 1500),
+      '【输出格式】只回图片（或图片链接），不要附加解释。',
+    ].join('\n\n');
+  }
+  const lim = maxChars || 150;
+  return [
+    `【背景】你在参与一场多人协作讨论（其他参与者有 AI，也有一位人类用户）。下面是讨论记录，请以「${role}」的身份接着发言。你在讨论里的名字是「${name}」。`,
+    `【你的角色】${role}${roleBrief ? '：' + roleBrief : ''}${mode ? `（当前讨论方式：${mode}）` : ''}`,
+    roster ? `【参与者】${roster}` : '',
+    '【前情】\n' + String(transcript || '（还没有记录）').slice(-3500),
+    `【输出格式】只输出你这次的发言正文，用简体中文，不超过 ${lim} 字；不要复述这段说明，不要寒暄，不要用 Markdown 标题。`,
+  ].filter(Boolean).join('\n\n');
+}
+
+// 某个代发员能不能领这条任务
+// relay: {id, kind:'hark'|'desktop', consent, seen}; task: {client, excluded:[], prefer, created}; relays: 全部代发员（判断首选是否在线）
+export function relayCanTake(relay, task, now, relays) {
+  if (!relay) return false;
+  if (relay.kind === 'desktop' && relay.consent !== true) return false;   // 桌面桥接会操作用户电脑：用户没同意前一条都不领
+  if (task.client && !(relay.kind === 'desktop' && relay.consent === true)) return false;   // 仅客户端型：必须是用户电脑桥接且用户已同意
+  const ex = task.excluded || [];
+  if (ex.includes(relay.id)) {
+    // 超时改派过：除非已经没有别的在线、能接的代发员
+    const others = (relays || []).filter((r) => r.id !== relay.id && !ex.includes(r.id) && now - (r.seen || 0) < RELAY_ONLINE_MS && (!task.client || (r.kind === 'desktop' && r.consent === true)));
+    if (others.length) return false;
+  }
+  if (task.prefer && task.prefer !== relay.id && !ex.includes(task.prefer)) {
+    // 同一项目复用同一网页会话：首选代发员在线时，先留给它 2 分钟
+    const p = (relays || []).find((r) => r.id === task.prefer);
+    if (p && now - (p.seen || 0) < RELAY_ONLINE_MS && now - (task.created || 0) < 2 * 60000) return false;
+  }
+  return true;
+}
+
+// 超时扫描：返回要改派 / 标失败的任务
+// tasks: [{id, relay, claimed, attempts, excluded}]
+export function webSweepPlan(tasks, now, timeoutMs = WEB_TIMEOUT_MS) {
+  const out = [];
+  for (const t of tasks || []) {
+    if (!t.claimed || now - t.claimed < timeoutMs) continue;
+    const attempts = (t.attempts || 0) + 1;
+    const excluded = [...new Set([...(t.excluded || []), t.relay].filter(Boolean))];
+    out.push({ id: t.id, action: attempts >= WEB_MAX_ATTEMPTS ? 'fail' : 'requeue', attempts, excluded, relay: t.relay });
+  }
+  return out;
+}
+
+// 网页会话引用：只收 https 链接或简单的会话 id（不收脚本、不收超长串）
+export function cleanSession(x) {
+  const s = String(x == null ? '' : x).trim();
+  if (!s) return '';
+  if (s.length > 400) return '';
+  if (/^https:\/\/[^\s<>"']+$/.test(s)) return s;
+  if (/^[A-Za-z0-9._:-]{4,120}$/.test(s)) return s;
+  return '';
+}
+```
